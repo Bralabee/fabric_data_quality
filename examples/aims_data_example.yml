@@ -1,0 +1,168 @@
+# AIMS Data Quality Configuration
+# Project: AIMS_LOCAL
+# Purpose: Validate AIMS data platform parquet files
+
+validation_name: "aims_data_validation"
+description: "Data quality validation for AIMS data platform"
+
+# Data source configuration
+data_source:
+  type: "lakehouse"
+  lakehouse_name: "AIMS_Lakehouse"
+  file_path: "Files/data/aims_data.parquet"
+  file_format: "parquet"
+  
+  # Alternative: Delta table
+  # type: "delta_table"
+  # table_name: "aims.data_platform"
+
+# Expectations (data quality rules)
+expectations:
+  # Structural validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "AIMS data file must not be empty"
+  
+  - expectation_type: "expect_table_column_count_to_equal"
+    kwargs:
+      value: null  # Set to expected column count from schema
+    meta:
+      severity: "high"
+      description: "Column count should match AIMS schema"
+  
+  # Required columns (based on AIMS schema)
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "record_id"
+    meta:
+      severity: "critical"
+      description: "Record ID is required"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "timestamp"
+    meta:
+      severity: "critical"
+      description: "Timestamp is required for time-series analysis"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "data_source"
+    meta:
+      severity: "high"
+      description: "Data source tracking is required"
+  
+  # Primary key validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "record_id"
+    meta:
+      severity: "critical"
+      description: "Record ID cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "record_id"
+    meta:
+      severity: "critical"
+      description: "Record ID must be unique"
+  
+  # Timestamp validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "timestamp"
+    meta:
+      severity: "critical"
+      description: "Timestamp cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "timestamp"
+    meta:
+      severity: "critical"
+      description: "Timestamp must be valid date format"
+  
+  # Data source validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "data_source"
+      value_set: ["API", "Database", "File", "Stream"]
+    meta:
+      severity: "high"
+      description: "Data source must be from known sources"
+  
+  # Data type validations (adjust based on your schema)
+  - expectation_type: "expect_column_values_to_be_of_type"
+    kwargs:
+      column: "timestamp"
+      type_: "timestamp"
+    meta:
+      severity: "high"
+      description: "Timestamp should be correct type"
+  
+  # Value range validations (example for numeric columns)
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "metric_value"
+      min_value: 0
+      max_value: null
+    meta:
+      severity: "medium"
+      description: "Metric value should be non-negative"
+  
+  # Parquet-specific validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "partition_date"
+      mostly: 0.99  # Allow 1% nulls for edge cases
+    meta:
+      severity: "high"
+      description: "Partition date needed for performance"
+  
+  # Data quality score
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "quality_score"
+      min_value: 0
+      max_value: 100
+    meta:
+      severity: "medium"
+      description: "Quality score should be percentage"
+  
+  # Freshness check
+  - expectation_type: "expect_column_max_to_be_between"
+    kwargs:
+      column: "timestamp"
+      min_value: "2023-01-01"
+      max_value: null
+      parse_strings_as_datetimes: true
+    meta:
+      severity: "high"
+      description: "Data should be relatively recent"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"
+  notification:
+    enabled: false
+
+# Metadata
+metadata:
+  project: "AIMS_LOCAL"
+  data_layer: "bronze"
+  owner: "aims_data_team"
+  last_updated: "2025-01-01"
+  tags:
+    - "aims"
+    - "parquet"
+    - "data_platform"

@@ -1,0 +1,397 @@
+# Fabric Data Quality Framework
+
+A reusable, configurable data quality framework using Great Expectations, designed for Microsoft Fabric environments and usable across all your HS2 projects.
+
+## 🎯 Purpose
+
+This standalone framework provides data quality validation capabilities that can be used by:
+- `full_stack_hss` - Incident data analysis
+- `AIMS_LOCAL` - AIMS data processing
+- `ACA_COMMERCIAL` - Commercial data pipelines
+- Any other project in your workspace
+
+## 📁 Project Structure
+
+```
+fabric_data_quality/
+├── README.md                          # This file
+├── requirements.txt                   # Dependencies
+├── setup.py                           # Installation script
+│
+├── dq_framework/                      # Core framework package
+│   ├── __init__.py                   # Package exports
+│   ├── validator.py                  # Core validation engine
+│   ├── fabric_connector.py           # MS Fabric integration
+│   └── config_loader.py              # YAML configuration loader
+│
+├── scripts/                           # Utility scripts
+│   ├── profile_data.py               # Data profiling CLI tool
+│   └── activate_and_test.sh          # Environment setup & test
+│
+├── config_templates/                  # Reusable YAML templates
+│   ├── bronze_layer_template.yml     # Raw data validation
+│   ├── silver_layer_template.yml     # Cleaned data validation
+│   ├── gold_layer_template.yml       # Business logic validation
+│   └── custom_template.yml           # Blank template
+│
+├── examples/                          # Project-specific examples
+│   ├── hss_incidents_example.yml     # HSS project
+│   ├── aims_data_example.yml         # AIMS project
+│   ├── aca_commercial_example.yml    # ACA project
+│   └── usage_examples.py             # Code examples
+│
+├── tests/                             # Unit tests
+│   ├── test_validator.py
+│   └── test_config_loader.py
+│
+└── docs/                              # Documentation
+    ├── CONFIGURATION_GUIDE.md
+    ├── FABRIC_INTEGRATION.md
+    ├── FABRIC_ETL_INTEGRATION.md     # Complete ETL integration guide
+    ├── FABRIC_QUICK_START.md         # 5-minute Fabric setup
+    ├── PROFILING_WORKFLOW.md         # Profiling guide
+    └── ...                           # Other documentation
+```
+
+## 🚀 Quick Start
+
+### 1. Setup (One Time)
+
+```bash
+# Activate the conda environment
+conda activate fabric-dq
+
+# Verify installation
+python -c "from dq_framework import DataProfiler; print('✅ Ready')"
+```
+
+### 2. Profile Your Data (One Time Per Dataset)
+
+```bash
+# Profile any data source (CSV, Parquet, Excel, JSON)
+python scripts/profile_data.py path/to/your/data.csv \
+    --output config/my_validation.yml \
+    --null-tolerance 10 \
+    --severity medium
+
+# Example: Profile CAUSEWAY data
+python scripts/profile_data.py sample_source_data/CAUSEWAY_combined_scr_2024.csv \
+    --output config/causeway_validation.yml \
+    --sample 50000
+```
+
+**Output**: A data quality report + validation config file
+
+### 3. Enhance Config (One Time Per Dataset)
+
+Review and add business rules to `config/my_validation.yml`:
+
+```yaml
+expectations:
+  # Auto-generated rules
+  - expectation_type: expect_column_to_exist
+    kwargs: {column: customer_id}
+  
+  # Add your business rules
+  - expectation_type: expect_column_values_to_be_unique
+    kwargs: {column: customer_id}
+    meta: {severity: critical, description: "Customer IDs must be unique"}
+```
+
+### 4. Use for All Future Runs
+
+```python
+from dq_framework import DataQualityValidator, ConfigLoader
+import pandas as pd
+
+# Load new data
+df = pd.read_csv('new_data_batch.csv')
+
+# Validate using config created once
+config = ConfigLoader().load('config/my_validation.yml')
+validator = DataQualityValidator(config_dict=config)
+results = validator.validate(df)
+
+print(f"Success: {results['success']}")
+```
+
+**Key Principle**: Profile once, validate forever!
+
+## 🔍 Universal Data Profiler
+
+The framework includes a **universal data profiler** that works with any data source:
+
+### Supported Formats
+- ✅ CSV (auto-detects encoding)
+- ✅ Parquet
+- ✅ Excel (.xlsx, .xls)
+- ✅ JSON
+- ✅ Any pandas DataFrame
+
+### CLI Usage
+
+```bash
+# Basic profiling
+python scripts/profile_data.py data/file.csv
+
+# With all options
+python scripts/profile_data.py data/file.csv \
+    --output config/validation.yml \
+    --name "my_validation" \
+    --null-tolerance 5.0 \
+    --severity high \
+    --sample 100000
+
+# Just profile (no config generation)
+python scripts/profile_data.py data/file.csv --profile-only
+```
+
+See **[PROFILING_WORKFLOW.md](docs/PROFILING_WORKFLOW.md)** for complete guide.
+
+#### Option A: Install as editable package (Recommended for development)
+```bash
+cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality
+pip install -e .
+```
+
+#### Option B: Direct import (Add to Python path)
+```python
+import sys
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+```
+
+#### Option C: Install dependencies only
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Basic Usage
+
+#### In ANY project (e.g., full_stack_hss):
+
+```python
+from dq_framework import DataQualityValidator
+
+# Load your data
+import pandas as pd
+df = pd.read_parquet('data/my_data.parquet')
+
+# Create validator with config
+validator = DataQualityValidator(
+    config_path='/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality/config_templates/bronze_layer_template.yml'
+)
+
+# Validate
+results = validator.validate(df)
+
+# Check results
+if results['success']:
+    print("✅ Data quality checks passed!")
+else:
+    print(f"❌ {results['failed_checks']} checks failed")
+```
+
+### 3. MS Fabric Usage
+
+```python
+from dq_framework import FabricDataQualityRunner
+
+# Initialize for Fabric
+runner = FabricDataQualityRunner(
+    config_path="Files/dq_configs/my_table_config.yml"
+)
+
+# Validate Delta table
+results = runner.validate_delta_table("my_table_name")
+
+# Handle results
+if not results['success']:
+    runner.handle_failure(results, action="alert")
+```
+
+## 🔧 Integration Guide
+
+### Using in `full_stack_hss` project:
+
+```python
+# In full_stack_hss/src/transform/transform.py
+import sys
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+
+from dq_framework import DataQualityValidator
+
+def transform_with_quality_checks():
+    # Your existing code
+    df = load_data()
+    
+    # Add DQ check
+    validator = DataQualityValidator(
+        config_path='../../fabric_data_quality/examples/hss_incidents_example.yml'
+    )
+    results = validator.validate(df)
+    
+    if not results['success']:
+        logger.warning(f"Data quality issues detected: {results['summary']}")
+    
+    # Continue transformation
+    df_transformed = transform(df)
+    return df_transformed
+```
+
+### Using in `AIMS_LOCAL` project:
+
+```python
+# In AIMS_LOCAL/src/your_script.py
+import sys
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+
+from dq_framework import DataQualityValidator
+
+# Use AIMS-specific config
+validator = DataQualityValidator(
+    config_path='../../fabric_data_quality/examples/aims_data_example.yml'
+)
+
+df_aims = pd.read_parquet('data/aims_data.parquet')
+results = validator.validate(df_aims)
+```
+
+### Using in `ACA_COMMERCIAL` project:
+
+```python
+# In ACA_COMMERCIAL notebooks
+import sys
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+
+from dq_framework import DataQualityValidator
+
+validator = DataQualityValidator(
+    config_path='../../fabric_data_quality/examples/aca_commercial_example.yml'
+)
+
+results = validator.validate(df_commercial)
+```
+
+## 📝 Creating Custom Configurations
+
+### Step 1: Copy a template
+
+```bash
+cp config_templates/bronze_layer_template.yml my_configs/my_data_checks.yml
+```
+
+### Step 2: Customize expectations
+
+```yaml
+# my_configs/my_data_checks.yml
+data_source:
+  name: "my_data_source"
+  description: "My custom data validation"
+
+expectations:
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "id"
+    meta:
+      severity: "critical"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "email"
+```
+
+### Step 3: Use in your project
+
+```python
+validator = DataQualityValidator(
+    config_path='path/to/my_data_checks.yml'
+)
+results = validator.validate(df)
+```
+
+## 🎨 Configuration Templates Available
+
+### 1. Bronze Layer Template
+- Basic schema validation
+- Row count checks
+- Null checks for critical columns
+- **Use for:** Raw data landing validation
+
+### 2. Silver Layer Template
+- Data type validation
+- Format validation (emails, dates, etc.)
+- Range checks
+- **Use for:** Cleaned/transformed data
+
+### 3. Gold Layer Template
+- Business rule validation
+- Aggregation checks
+- Cross-column validation
+- **Use for:** Final business-ready data
+
+### 4. Custom Template
+- Blank template with examples
+- **Use for:** Your specific needs
+
+## 📊 Features
+
+✅ **Configurable** - YAML-based rules, no code changes needed  
+✅ **Reusable** - One framework, multiple projects  
+✅ **Fabric-Native** - Works with Spark DataFrames and Delta tables  
+✅ **Flexible** - Severity levels, sampling, smart error handling  
+✅ **Documented** - Examples for each project type  
+
+## 📚 Documentation
+
+- **[Installation Guide](docs/INSTALLATION.md)** - Setup instructions
+- **[Configuration Guide](docs/CONFIGURATION_GUIDE.md)** - How to create configs
+- **[Fabric Integration](docs/FABRIC_INTEGRATION.md)** - MS Fabric specific guidance
+- **[Examples](examples/usage_examples.py)** - Code examples
+
+## 📚 Documentation
+
+### For MS Fabric Users
+
+- **[FABRIC_QUICK_START.md](docs/FABRIC_QUICK_START.md)** - 5-minute setup guide for MS Fabric
+- **[FABRIC_ETL_INTEGRATION.md](docs/FABRIC_ETL_INTEGRATION.md)** - Complete ETL pipeline integration
+- **[fabric_etl_example.py](examples/fabric_etl_example.py)** - Copy-paste Fabric notebook code
+
+### For All Users
+
+- **[PROFILING_WORKFLOW.md](docs/PROFILING_WORKFLOW.md)** - "Profile once, validate forever" workflow
+- **[CONFIGURATION_GUIDE.md](docs/CONFIGURATION_GUIDE.md)** - YAML configuration reference
+- **[FABRIC_INTEGRATION.md](docs/FABRIC_INTEGRATION.md)** - PySpark integration patterns
+- **[QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - One-page API cheat sheet
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest tests/
+```
+
+## 🔄 Version History
+
+- **v1.0.0** (2025-10-28) - Initial standalone framework with universal profiler
+- **v1.1.0** (2025-10-28) - Added MS Fabric ETL integration guides
+
+## 🤝 Contributing
+
+To add new features or templates:
+1. Create your feature in `dq_framework/`
+2. Add tests in `tests/`
+3. Add examples in `examples/`
+4. Update this README
+
+## 📞 Support
+
+For questions or issues:
+- Check examples in `examples/`
+- Review configuration templates in `config_templates/`
+- See detailed docs in `docs/`
+
+---
+
+**Framework Owner:** Data Engineering Team  
+**Last Updated:** October 2025  
+**Status:** Production Ready

@@ -1,0 +1,170 @@
+# HSS Incidents Data Quality Configuration
+# Project: full_stack_hss
+# Purpose: Validate HSS incident data pipeline
+
+validation_name: "hss_incidents_validation"
+description: "Data quality validation for HSS incident processing pipeline"
+
+# Data source configuration
+data_source:
+  type: "spark_dataframe"  # Will be passed directly from pipeline
+  # Alternative configurations:
+  # type: "delta_table"
+  # table_name: "silver.hss_incidents"
+  
+  # Or from Lakehouse:
+  # type: "lakehouse"
+  # lakehouse_name: "HSS_Lakehouse"
+  # file_path: "Tables/silver/incidents"
+
+# Expectations (data quality rules)
+expectations:
+  # Critical structural validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Incident data must not be empty"
+  
+  # Required columns for incident processing
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "incident_id"
+    meta:
+      severity: "critical"
+      description: "Incident ID is required"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "description"
+    meta:
+      severity: "critical"
+      description: "Description is required for NLP processing"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "category"
+    meta:
+      severity: "high"
+      description: "Category needed for classification"
+  
+  # Primary key validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "incident_id"
+    meta:
+      severity: "critical"
+      description: "Incident ID cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "incident_id"
+    meta:
+      severity: "critical"
+      description: "Incident ID must be unique"
+  
+  # Description quality checks (critical for NLP)
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "description"
+    meta:
+      severity: "critical"
+      description: "Description required for NLP analysis"
+  
+  - expectation_type: "expect_column_value_lengths_to_be_between"
+    kwargs:
+      column: "description"
+      min_value: 10
+      max_value: 10000
+    meta:
+      severity: "high"
+      description: "Description should have meaningful content"
+  
+  # Category validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "category"
+      value_set: ["Hardware", "Software", "Network", "Security", "Other"]
+    meta:
+      severity: "high"
+      description: "Category must be valid incident type"
+  
+  # Priority validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "priority"
+      value_set: ["Low", "Medium", "High", "Critical"]
+    meta:
+      severity: "high"
+      description: "Priority must be valid value"
+  
+  # Status validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "status"
+      value_set: ["Open", "In Progress", "Resolved", "Closed", "Pending"]
+    meta:
+      severity: "high"
+      description: "Status must be valid workflow state"
+  
+  # Date validations
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "created_date"
+    meta:
+      severity: "critical"
+      description: "Created date must be valid timestamp"
+  
+  - expectation_type: "expect_column_max_to_be_between"
+    kwargs:
+      column: "created_date"
+      min_value: "2020-01-01"
+      max_value: null
+      parse_strings_as_datetimes: true
+    meta:
+      severity: "medium"
+      description: "Check data freshness"
+  
+  # Cross-column validations (if applicable)
+  - expectation_type: "expect_column_pair_values_A_to_be_greater_than_B"
+    kwargs:
+      column_A: "resolved_date"
+      column_B: "created_date"
+      or_equal: true
+    meta:
+      severity: "high"
+      description: "Resolved date must be after created date"
+  
+  # Text quality for NLP
+  - expectation_type: "expect_column_values_to_not_match_regex"
+    kwargs:
+      column: "description"
+      regex: "^\\s*$"  # Not just whitespace
+    meta:
+      severity: "critical"
+      description: "Description cannot be empty or whitespace only"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"  # Log failures but continue processing
+  notification:
+    enabled: false
+
+# Metadata
+metadata:
+  project: "full_stack_hss"
+  data_layer: "silver"
+  owner: "hss_data_team"
+  last_updated: "2025-01-01"
+  tags:
+    - "incidents"
+    - "nlp"
+    - "hss"

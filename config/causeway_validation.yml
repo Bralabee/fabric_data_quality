@@ -1,0 +1,427 @@
+validation_name: causeway_financial_validation
+description: CAUSEWAY financial transactions - production validation
+generated_at: '2025-10-28T13:08:59.458884'
+data_source:
+  type: runtime_dataframe
+  profiled_rows: 50000
+  profiled_columns: 39
+expectations:
+- expectation_type: expect_table_row_count_to_be_between
+  kwargs:
+    min_value: 1
+    max_value: null
+  meta:
+    severity: critical
+    description: Table should not be empty
+- expectation_type: expect_table_column_count_to_equal
+  kwargs:
+    value: 39
+  meta:
+    severity: high
+    description: Detect schema drift - column count should remain stable
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: 'Unnamed: 0'
+  meta:
+    severity: critical
+    description: 'Column Unnamed: 0 must exist in the data'
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: 'Unnamed: 0'
+  meta:
+    severity: medium
+    description: 'Column Unnamed: 0 should have minimal nulls (currently 0.0%)'
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Contract description
+  meta:
+    severity: critical
+    description: Column Contract description must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Contract description
+  meta:
+    severity: medium
+    description: Column Contract description should have minimal nulls (currently
+      0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Activity
+  meta:
+    severity: critical
+    description: Column Activity must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Activity
+  meta:
+    severity: medium
+    description: Column Activity should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Activity description
+  meta:
+    severity: critical
+    description: Column Activity description must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Activity description
+  meta:
+    severity: medium
+    description: Column Activity description should have minimal nulls (currently
+      0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Resource code
+  meta:
+    severity: critical
+    description: Column Resource code must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Resource code
+  meta:
+    severity: medium
+    description: Column Resource code should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Resource Desc
+  meta:
+    severity: critical
+    description: Column Resource Desc must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Resource Desc
+  meta:
+    severity: medium
+    description: Column Resource Desc should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Cost head code
+  meta:
+    severity: critical
+    description: Column Cost head code must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Cost head code
+  meta:
+    severity: medium
+    description: Column Cost head code should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Cost head description
+  meta:
+    severity: critical
+    description: Column Cost head description must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Cost head description
+  meta:
+    severity: medium
+    description: Column Cost head description should have minimal nulls (currently
+      0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Vendor account nr
+  meta:
+    severity: critical
+    description: Column Vendor account nr must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Vendor account nr
+  meta:
+    severity: medium
+    description: Column Vendor account nr should have minimal nulls (currently 0.4%)
+    observed_null_percent: 0.44200000000000006
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Vendor name
+  meta:
+    severity: critical
+    description: Column Vendor name must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Vendor name
+  meta:
+    severity: medium
+    description: Column Vendor name should have minimal nulls (currently 0.4%)
+    observed_null_percent: 0.44200000000000006
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Accounting Period YYYY/PP
+  meta:
+    severity: critical
+    description: Column Accounting Period YYYY/PP must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Accounting Period YYYY/PP
+  meta:
+    severity: medium
+    description: Column Accounting Period YYYY/PP should have minimal nulls (currently
+      0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Cost date
+  meta:
+    severity: critical
+    description: Column Cost date must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Cost date
+  meta:
+    severity: medium
+    description: Column Cost date should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Reference
+  meta:
+    severity: critical
+    description: Column Reference must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Reference
+  meta:
+    severity: medium
+    description: Column Reference should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: 'Our_Ref:'
+  meta:
+    severity: critical
+    description: 'Column Our_Ref: must exist in the data'
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: 'Our_Ref:'
+  meta:
+    severity: medium
+    description: 'Column Our_Ref: should have minimal nulls (currently 45.8%)'
+    observed_null_percent: 45.766
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: 'Sup_Ref:'
+  meta:
+    severity: critical
+    description: 'Column Sup_Ref: must exist in the data'
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: 'Sup_Ref:'
+  meta:
+    severity: medium
+    description: 'Column Sup_Ref: should have minimal nulls (currently 45.8%)'
+    observed_null_percent: 45.766
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Order suffix
+  meta:
+    severity: critical
+    description: Column Order suffix must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Order number
+  meta:
+    severity: critical
+    description: Column Order number must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Value type (A,D,E)
+  meta:
+    severity: critical
+    description: Column Value type (A,D,E) must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Value type (A,D,E)
+  meta:
+    severity: medium
+    description: Column Value type (A,D,E) should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Order nr
+  meta:
+    severity: critical
+    description: Column Order nr must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Description
+  meta:
+    severity: critical
+    description: Column Description must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Description.1
+  meta:
+    severity: critical
+    description: Column Description.1 must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Description.1
+  meta:
+    severity: medium
+    description: Column Description.1 should have minimal nulls (currently 46.1%)
+    observed_null_percent: 46.14
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Journal notes
+  meta:
+    severity: critical
+    description: Column Journal notes must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Source Type
+  meta:
+    severity: critical
+    description: Column Source Type must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Source Type
+  meta:
+    severity: medium
+    description: Column Source Type should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Quantity
+  meta:
+    severity: critical
+    description: Column Quantity must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Quantity
+  meta:
+    severity: medium
+    description: Column Quantity should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Base Value
+  meta:
+    severity: critical
+    description: Column Base Value must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Base Value
+  meta:
+    severity: medium
+    description: Column Base Value should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Allocation Uniqid
+  meta:
+    severity: critical
+    description: Column Allocation Uniqid must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Allocation Uniqid
+  meta:
+    severity: medium
+    description: Column Allocation Uniqid should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Source Description
+  meta:
+    severity: critical
+    description: Column Source Description must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Source Description
+  meta:
+    severity: medium
+    description: Column Source Description should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Period Accruals
+  meta:
+    severity: critical
+    description: Column Period Accruals must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Prior Period Accruals
+  meta:
+    severity: critical
+    description: Column Prior Period Accruals must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Reporting Project
+  meta:
+    severity: critical
+    description: Column Reporting Project must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: Reporting Project
+  meta:
+    severity: medium
+    description: Column Reporting Project should have minimal nulls (currently 0.1%)
+    observed_null_percent: 0.06
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: SMARTcost Section
+  meta:
+    severity: critical
+    description: Column SMARTcost Section must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: SMARTcost Section
+  meta:
+    severity: medium
+    description: Column SMARTcost Section should have minimal nulls (currently 0.1%)
+    observed_null_percent: 0.06
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Type
+  meta:
+    severity: critical
+    description: Column Type must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: New Project
+  meta:
+    severity: critical
+    description: Column New Project must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: New Activity Code
+  meta:
+    severity: critical
+    description: Column New Activity Code must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: New Resource Code
+  meta:
+    severity: critical
+    description: Column New Resource Code must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Description.2
+  meta:
+    severity: critical
+    description: Column Description.2 must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Date
+  meta:
+    severity: critical
+    description: Column Date must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Previous Code
+  meta:
+    severity: critical
+    description: Column Previous Code must exist in the data
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: Contract code
+  meta:
+    severity: critical
+    description: Column Contract code must exist in the data

@@ -1,0 +1,145 @@
+# Silver Layer Data Quality Configuration
+# Purpose: Validate cleaned and transformed data with business logic checks
+# Layer: Silver (Cleaned/Transformed Data)
+
+validation_name: "silver_layer_validation"
+description: "Enhanced validation suite for silver layer transformed data"
+
+# Data source configuration
+data_source:
+  type: "delta_table"  # Silver layer typically uses Delta tables
+  table_name: "silver.YOUR_TABLE_NAME"
+  
+  # Alternative: Lakehouse path
+  # type: "lakehouse"
+  # lakehouse_name: "YOUR_LAKEHOUSE_NAME"
+  # file_path: "Tables/silver/your_table"
+
+# Expectations (data quality rules)
+expectations:
+  # Row-level validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Ensure transformed data exists"
+  
+  # Column existence (critical business columns)
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "business_key"
+    meta:
+      severity: "critical"
+      description: "Business key must exist after transformation"
+  
+  # Data quality rules
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "business_key"
+    meta:
+      severity: "critical"
+      description: "Business key cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "business_key"
+    meta:
+      severity: "critical"
+      description: "Business key must be unique in silver layer"
+  
+  # Value range validations
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "amount"
+      min_value: 0
+      max_value: 1000000
+    meta:
+      severity: "high"
+      description: "Amount should be within expected range"
+  
+  # Categorical validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "status"
+      value_set: ["active", "inactive", "pending", "completed"]
+    meta:
+      severity: "high"
+      description: "Status must be valid category"
+  
+  # String length validations
+  - expectation_type: "expect_column_value_lengths_to_be_between"
+    kwargs:
+      column: "description"
+      min_value: 1
+      max_value: 500
+    meta:
+      severity: "medium"
+      description: "Description length validation"
+  
+  # Date logic validations
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "processed_date"
+    meta:
+      severity: "high"
+      description: "Date should be parseable"
+  
+  # Cross-column validations
+  - expectation_type: "expect_column_pair_values_A_to_be_greater_than_B"
+    kwargs:
+      column_A: "end_date"
+      column_B: "start_date"
+      or_equal: true
+    meta:
+      severity: "high"
+      description: "End date must be after or equal to start date"
+  
+  # Statistical validations
+  - expectation_type: "expect_column_mean_to_be_between"
+    kwargs:
+      column: "score"
+      min_value: 0
+      max_value: 100
+    meta:
+      severity: "medium"
+      description: "Average score within expected range"
+  
+  - expectation_type: "expect_column_values_to_not_match_regex"
+    kwargs:
+      column: "cleaned_text"
+      regex: "[<>{}\\[\\]]"  # Should not contain these characters after cleaning
+    meta:
+      severity: "medium"
+      description: "Text should be cleaned of special characters"
+  
+  # Duplicate detection
+  - expectation_type: "expect_compound_columns_to_be_unique"
+    kwargs:
+      column_list: ["source_id", "date"]
+    meta:
+      severity: "high"
+      description: "Combination of source_id and date should be unique"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"
+  notification:
+    enabled: false
+
+# Metadata
+metadata:
+  data_layer: "silver"
+  owner: "data_engineering_team"
+  last_updated: "2025-01-01"
+  tags:
+    - "transformed_data"
+    - "cleaned_data"
+    - "silver"

@@ -1,0 +1,184 @@
+# Gold Layer Data Quality Configuration
+# Purpose: Validate aggregated/business-ready data with strict quality requirements
+# Layer: Gold (Aggregated/Business Data)
+
+validation_name: "gold_layer_validation"
+description: "Comprehensive validation suite for gold layer business-ready data"
+
+# Data source configuration
+data_source:
+  type: "delta_table"  # Gold layer uses Delta tables for reliability
+  table_name: "gold.YOUR_BUSINESS_TABLE"
+  
+  # Alternative: Lakehouse path
+  # type: "lakehouse"
+  # lakehouse_name: "YOUR_LAKEHOUSE_NAME"
+  # file_path: "Tables/gold/your_business_table"
+
+# Expectations (data quality rules)
+expectations:
+  # Business-critical validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Business data must exist"
+  
+  # Required business columns
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "metric_date"
+    meta:
+      severity: "critical"
+      description: "Metric date is required for time-series analysis"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "metric_value"
+    meta:
+      severity: "critical"
+      description: "Metric value is the core business metric"
+  
+  # Completeness requirements (gold layer should have high completeness)
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "metric_value"
+    meta:
+      severity: "critical"
+      description: "Business metrics cannot have nulls"
+  
+  # Data freshness (critical for business reporting)
+  - expectation_type: "expect_column_max_to_be_between"
+    kwargs:
+      column: "metric_date"
+      min_value: "2020-01-01"  # Earliest expected date
+      max_value: null  # Should be recent
+      parse_strings_as_datetimes: true
+    meta:
+      severity: "critical"
+      description: "Data must be fresh and up-to-date"
+  
+  # Aggregation validations
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "total_revenue"
+      min_value: 0
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Revenue cannot be negative"
+  
+  # Statistical consistency
+  - expectation_type: "expect_column_stdev_to_be_between"
+    kwargs:
+      column: "metric_value"
+      min_value: 0
+      max_value: null
+    meta:
+      severity: "medium"
+      description: "Standard deviation within expected range"
+  
+  # Dimension validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "region"
+      value_set: ["North", "South", "East", "West", "Central"]
+    meta:
+      severity: "high"
+      description: "Region must be valid business dimension"
+  
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "product_category"
+      value_set: ["Category_A", "Category_B", "Category_C"]
+    meta:
+      severity: "high"
+      description: "Product category must match master data"
+  
+  # Referential integrity (if applicable)
+  - expectation_type: "expect_column_distinct_values_to_be_in_set"
+    kwargs:
+      column: "customer_segment"
+      value_set: ["Enterprise", "SMB", "Consumer"]
+    meta:
+      severity: "high"
+      description: "Customer segments must align with business definitions"
+  
+  # Trend validations (optional but useful for gold layer)
+  - expectation_type: "expect_column_quantile_values_to_be_between"
+    kwargs:
+      column: "daily_transactions"
+      quantile_ranges:
+        quantiles: [0.25, 0.5, 0.75]
+        value_ranges: [[0, null], [0, null], [0, null]]
+    meta:
+      severity: "medium"
+      description: "Transaction distribution within expected quantiles"
+  
+  # Business logic validations
+  - expectation_type: "expect_column_sum_to_be_between"
+    kwargs:
+      column: "item_count"
+      min_value: 0
+      max_value: null
+    meta:
+      severity: "high"
+      description: "Total item count should be positive"
+  
+  # Percentage validations
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "conversion_rate"
+      min_value: 0
+      max_value: 1
+    meta:
+      severity: "high"
+      description: "Conversion rate must be between 0 and 1"
+  
+  # Outlier detection
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "average_order_value"
+      min_value: 0
+      max_value: 10000  # Based on business context
+      mostly: 0.95  # Allow 5% outliers
+    meta:
+      severity: "medium"
+      description: "Average order value within business expectations"
+  
+  # Time-series continuity
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "report_date"
+    meta:
+      severity: "critical"
+      description: "Report date must be valid for time-series analysis"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling (stricter for gold layer)
+failure_handling:
+  on_failure: "raise"  # Raise exceptions for gold layer failures
+  notification:
+    enabled: true
+    # email: "business-team@example.com,data-team@example.com"
+    # slack_webhook: "your-slack-webhook-url"
+
+# Metadata
+metadata:
+  data_layer: "gold"
+  owner: "business_intelligence_team"
+  last_updated: "2025-01-01"
+  sla: "99.9%"
+  criticality: "high"
+  tags:
+    - "business_data"
+    - "reporting"
+    - "gold"
+    - "production"

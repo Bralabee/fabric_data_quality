@@ -1,0 +1,229 @@
+# ACA Commercial Data Quality Configuration
+# Project: ACA_COMMERCIAL
+# Purpose: Validate SharePoint file migration data
+
+validation_name: "aca_sharepoint_migration_validation"
+description: "Data quality validation for ACA commercial SharePoint migration"
+
+# Data source configuration
+data_source:
+  type: "lakehouse"
+  lakehouse_name: "ACA_Lakehouse"
+  file_path: "Files/commercial/sharepoint_files.parquet"
+  file_format: "parquet"
+  
+  # Alternative: Delta table
+  # type: "delta_table"
+  # table_name: "aca.sharepoint_files"
+
+# Expectations (data quality rules)
+expectations:
+  # File migration validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 5
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Migration data must exist"
+  
+  # Required columns for file tracking
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "file_id"
+    meta:
+      severity: "critical"
+      description: "File ID is required for tracking"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "file_name"
+    meta:
+      severity: "critical"
+      description: "File name is required"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "file_path"
+    meta:
+      severity: "critical"
+      description: "File path is required for migration"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "file_size"
+    meta:
+      severity: "high"
+      description: "File size needed for migration planning"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "migration_status"
+    meta:
+      severity: "critical"
+      description: "Migration status is critical for tracking"
+  
+  # Primary key validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "file_id"
+    meta:
+      severity: "critical"
+      description: "File ID cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "file_id"
+    meta:
+      severity: "critical"
+      description: "File ID must be unique"
+  
+  # File name validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "file_name"
+    meta:
+      severity: "critical"
+      description: "File name cannot be null"
+  
+  - expectation_type: "expect_column_value_lengths_to_be_between"
+    kwargs:
+      column: "file_name"
+      min_value: 1
+      max_value: 255
+    meta:
+      severity: "high"
+      description: "File name should be valid length"
+  
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "file_name"
+      regex: "^[^<>:\"/\\\\|?*]+\\.[a-zA-Z0-9]+$"
+    meta:
+      severity: "high"
+      description: "File name should be valid format with extension"
+  
+  # File path validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "file_path"
+    meta:
+      severity: "critical"
+      description: "File path cannot be null"
+  
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "file_path"
+      regex: "^/.*"
+    meta:
+      severity: "high"
+      description: "File path should start with /"
+  
+  # File size validations
+  - expectation_type: "expect_column_values_to_be_between"
+    kwargs:
+      column: "file_size"
+      min_value: 0
+      max_value: 5368709120  # 5GB max file size
+    meta:
+      severity: "high"
+      description: "File size should be within SharePoint limits"
+  
+  # Migration status validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "migration_status"
+      value_set: ["Pending", "In Progress", "Completed", "Failed", "Skipped"]
+    meta:
+      severity: "critical"
+      description: "Migration status must be valid state"
+  
+  # File type validations
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "file_type"
+      value_set: ["docx", "xlsx", "pptx", "pdf", "txt", "csv", "jpg", "png", "zip"]
+    meta:
+      severity: "medium"
+      description: "File type should be supported format"
+  
+  # Date validations
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "created_date"
+    meta:
+      severity: "high"
+      description: "Created date must be valid"
+  
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "modified_date"
+    meta:
+      severity: "high"
+      description: "Modified date must be valid"
+  
+  # Cross-column validations
+  - expectation_type: "expect_column_pair_values_A_to_be_greater_than_B"
+    kwargs:
+      column_A: "modified_date"
+      column_B: "created_date"
+      or_equal: true
+    meta:
+      severity: "high"
+      description: "Modified date must be after or equal to created date"
+  
+  # Owner/author validations
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "owner"
+    meta:
+      severity: "medium"
+      description: "Owner should be tracked for governance"
+  
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "owner_email"
+      regex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    meta:
+      severity: "medium"
+      description: "Owner email should be valid format"
+  
+  # Migration metadata
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "migration_date"
+    meta:
+      severity: "high"
+      description: "Migration date should be valid for completed files"
+  
+  # Duplicate detection
+  - expectation_type: "expect_compound_columns_to_be_unique"
+    kwargs:
+      column_list: ["file_path", "file_name"]
+    meta:
+      severity: "high"
+      description: "Combination of path and name should be unique"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"
+  notification:
+    enabled: false
+
+# Metadata
+metadata:
+  project: "ACA_COMMERCIAL"
+  data_layer: "bronze"
+  owner: "aca_commercial_team"
+  last_updated: "2025-01-01"
+  tags:
+    - "sharepoint"
+    - "migration"
+    - "aca"
+    - "files"

@@ -1,0 +1,249 @@
+# CAUSEWAY Financial Data Quality Configuration
+# Data Source: CAUSEWAY combined SCR 2024 financial data
+# Purpose: Validate financial transaction data for reporting
+
+validation_name: "causeway_financial_validation"
+description: "Data quality validation for CAUSEWAY financial transaction data"
+
+# Data source configuration
+data_source:
+  type: "csv_file"  # Will be loaded as pandas/spark DataFrame
+  file_path: "sample_source_data/CAUSEWAY_combined_scr_2024.csv"
+
+# Expectations (data quality rules)
+expectations:
+  # ===== CRITICAL STRUCTURAL VALIDATIONS =====
+  
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: "critical"
+      description: "Financial data file must not be empty"
+  
+  - expectation_type: "expect_table_column_count_to_equal"
+    kwargs:
+      value: 40
+    meta:
+      severity: "critical"
+      description: "Expected 40 columns as per CAUSEWAY schema"
+  
+  # ===== KEY COLUMN EXISTENCE =====
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "Allocation Uniqid"
+    meta:
+      severity: "critical"
+      description: "Allocation Uniqid is primary identifier"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "Contract code"
+    meta:
+      severity: "critical"
+      description: "Contract code is required for grouping"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "Base Value"
+    meta:
+      severity: "critical"
+      description: "Base Value is core financial metric"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "Accounting Period YYYY/PP"
+    meta:
+      severity: "critical"
+      description: "Accounting period required for time-series analysis"
+  
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "Vendor name"
+    meta:
+      severity: "high"
+      description: "Vendor name needed for supplier analysis"
+  
+  # ===== PRIMARY KEY VALIDATION =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Allocation Uniqid"
+    meta:
+      severity: "critical"
+      description: "Allocation Uniqid cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "Allocation Uniqid"
+    meta:
+      severity: "critical"
+      description: "Allocation Uniqid must be unique"
+  
+  # ===== FINANCIAL VALUE VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Base Value"
+    meta:
+      severity: "critical"
+      description: "Base Value is mandatory for all transactions"
+  
+  # Note: Base Value can be negative (credits/reversals), so we don't restrict range
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Quantity"
+      mostly: 0.80  # Allow 20% nulls for non-quantity-based transactions
+    meta:
+      severity: "medium"
+      description: "Quantity should be present for most transactions"
+  
+  # ===== CONTRACT & ACTIVITY VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Contract code"
+      mostly: 0.95
+    meta:
+      severity: "high"
+      description: "Contract code should be present for most transactions"
+  
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "Contract code"
+      regex: "^[A-Z0-9]+$"
+      mostly: 0.90  # Allow some variations
+    meta:
+      severity: "medium"
+      description: "Contract code should follow standard format"
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Activity"
+      mostly: 0.85
+    meta:
+      severity: "medium"
+      description: "Activity code should be present for most records"
+  
+  # ===== ACCOUNTING PERIOD VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Accounting Period YYYY/PP"
+    meta:
+      severity: "critical"
+      description: "Accounting period is mandatory for financial reporting"
+  
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "Accounting Period YYYY/PP"
+      regex: "^202[0-9]/[0-1][0-9]$"
+    meta:
+      severity: "high"
+      description: "Accounting period should match YYYY/PP format"
+  
+  # ===== DATE VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Cost date"
+      mostly: 0.95
+    meta:
+      severity: "high"
+      description: "Cost date should be present for financial transactions"
+  
+  - expectation_type: "expect_column_values_to_be_dateutil_parseable"
+    kwargs:
+      column: "Cost date"
+      mostly: 0.95
+    meta:
+      severity: "high"
+      description: "Cost date must be valid date format"
+  
+  # ===== VENDOR VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Vendor name"
+      mostly: 0.90
+    meta:
+      severity: "medium"
+      description: "Vendor name should be present for subcontractor transactions"
+  
+  - expectation_type: "expect_column_value_lengths_to_be_between"
+    kwargs:
+      column: "Vendor name"
+      min_value: 1
+      max_value: 200
+      mostly: 0.95
+    meta:
+      severity: "low"
+      description: "Vendor name length should be reasonable"
+  
+  # ===== SOURCE TYPE VALIDATION =====
+  
+  - expectation_type: "expect_column_values_to_be_in_set"
+    kwargs:
+      column: "Source Type"
+      value_set: ["S", "J", null]  # S=Standard, J=Journal
+      mostly: 0.95
+    meta:
+      severity: "medium"
+      description: "Source Type should be S (Standard) or J (Journal)"
+  
+  # ===== REFERENCE FIELD VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Reference"
+      mostly: 0.90
+    meta:
+      severity: "medium"
+      description: "Reference field helps trace transactions"
+  
+  # ===== COST HEAD VALIDATIONS =====
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Cost head code"
+      mostly: 0.85
+    meta:
+      severity: "medium"
+      description: "Cost head code needed for cost categorization"
+  
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "Cost head description"
+      mostly: 0.85
+    meta:
+      severity: "low"
+      description: "Cost head description helps with reporting"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"  # Log failures but continue for bronze layer
+  notification:
+    enabled: false
+
+# Metadata
+metadata:
+  data_source: "CAUSEWAY"
+  data_type: "financial_transactions"
+  data_layer: "bronze"
+  owner: "finance_data_team"
+  last_updated: "2025-10-28"
+  expected_row_count: "~350000+"
+  tags:
+    - "financial"
+    - "causeway"
+    - "transactions"
+    - "bronze"

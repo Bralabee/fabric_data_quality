@@ -1,0 +1,116 @@
+# Bronze Layer Data Quality Configuration
+# Purpose: Validate raw data ingestion with basic data quality checks
+# Layer: Bronze (Raw Data)
+
+validation_name: "bronze_layer_validation"
+description: "Standard validation suite for bronze layer raw data"
+
+# Data source configuration
+data_source:
+  type: "lakehouse"  # Options: lakehouse, delta_table, spark_dataframe
+  # For lakehouse files
+  lakehouse_name: "YOUR_LAKEHOUSE_NAME"
+  file_path: "Files/bronze/YOUR_DATA_PATH"
+  file_format: "parquet"  # Options: parquet, csv, delta, json
+  
+  # For Delta tables
+  # table_name: "bronze.your_table_name"
+  
+  # Read options (optional)
+  read_options:
+    header: true
+    inferSchema: false
+
+# Expectations (data quality rules)
+expectations:
+  # Basic structural validations
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null  # null means no upper limit
+    meta:
+      severity: "critical"
+      description: "Ensure data file is not empty"
+  
+  - expectation_type: "expect_table_column_count_to_equal"
+    kwargs:
+      value: null  # Set to expected number of columns
+    meta:
+      severity: "high"
+      description: "Verify expected column count matches schema"
+  
+  # Column existence checks
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "id"  # Replace with your actual column name
+    meta:
+      severity: "critical"
+      description: "Primary key column must exist"
+  
+  # Null/completeness checks
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "id"
+    meta:
+      severity: "critical"
+      description: "Primary key cannot be null"
+  
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "id"
+    meta:
+      severity: "high"
+      description: "Primary key must be unique"
+  
+  # Data type validations
+  - expectation_type: "expect_column_values_to_be_of_type"
+    kwargs:
+      column: "created_date"
+      type_: "timestamp"  # Options: string, integer, float, boolean, timestamp, date
+    meta:
+      severity: "high"
+      description: "Date column should be timestamp type"
+  
+  # String format validations
+  - expectation_type: "expect_column_values_to_match_regex"
+    kwargs:
+      column: "email"
+      regex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+    meta:
+      severity: "medium"
+      description: "Email format validation"
+  
+  # Freshness check (for date columns)
+  - expectation_type: "expect_column_max_to_be_between"
+    kwargs:
+      column: "created_date"
+      min_value: null
+      max_value: null  # Set to current date in runtime
+      parse_strings_as_datetimes: true
+    meta:
+      severity: "medium"
+      description: "Check data freshness"
+
+# Validation settings
+validation_settings:
+  result_format: "COMPLETE"  # Options: BASIC, SUMMARY, COMPLETE
+  catch_exceptions: true
+  include_config: true
+
+# Failure handling
+failure_handling:
+  on_failure: "log"  # Options: raise, log, continue
+  notification:
+    enabled: false
+    # email: "your-email@example.com"
+    # slack_webhook: "your-slack-webhook-url"
+
+# Metadata
+metadata:
+  data_layer: "bronze"
+  owner: "data_engineering_team"
+  last_updated: "2025-01-01"
+  tags:
+    - "raw_data"
+    - "ingestion"
+    - "bronze"
