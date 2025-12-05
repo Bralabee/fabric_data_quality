@@ -271,6 +271,9 @@ python scripts/profile_data.py data.csv --output config.yml
 
 # Profile directory (batch mode)
 python scripts/profile_data.py data_folder/ --output config_dir/
+
+# Parallel processing (faster for many files)
+python scripts/profile_data.py data_folder/ --output config_dir/ --workers 4
 ```
 
 ## Files Location

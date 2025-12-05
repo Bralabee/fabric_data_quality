@@ -104,7 +104,8 @@ class DataProfiler:
                 'null_percent': 0.0,
                 'unique_count': 0,
                 'unique_percent': 0.0,
-                'sample_values': []
+                'sample_values': [],
+                'detected_type': 'empty'
             }
         
         col_profile = {
@@ -113,6 +114,7 @@ class DataProfiler:
             'null_percent': float(series.isna().sum() / total_rows * 100),
             'unique_count': int(series.nunique()),
             'unique_percent': float(series.nunique() / total_rows * 100),
+            'detected_type': 'unknown'
         }
         
         # Non-null values for further analysis

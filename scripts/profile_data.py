@@ -39,6 +39,8 @@ from pathlib import Path
 import pandas as pd
 from typing import Optional, List, Union
 import yaml
+import concurrent.futures
+import multiprocessing
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -56,7 +58,8 @@ def load_data(file_path: Path, sample_size: Optional[int] = None, **kwargs) -> p
     
     suffix = file_path.suffix.lower()
     
-    print(f"📥 Loading data from: {file_path.name}")
+    # Only print if not running in parallel (handled by caller)
+    # print(f"📥 Loading data from: {file_path.name}")
     
     try:
         if suffix == '.csv':
@@ -72,7 +75,7 @@ def load_data(file_path: Path, sample_size: Optional[int] = None, **kwargs) -> p
             for encoding in encodings:
                 try:
                     df = pd.read_csv(file_path, encoding=encoding, low_memory=False, nrows=sample_size)
-                    print(f"   ✓ Detected encoding: {encoding}")
+                    # print(f"   ✓ Detected encoding: {encoding}")
                     break
                 except (UnicodeDecodeError, Exception) as e:
                     last_error = e
@@ -97,21 +100,23 @@ def load_data(file_path: Path, sample_size: Optional[int] = None, **kwargs) -> p
         else:
             raise ValueError(f"Unsupported file format: {suffix}")
         
-        print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
+        # print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
         return df
         
     except Exception as e:
-        print(f"   ❌ Error loading file: {e}")
+        # print(f"   ❌ Error loading file: {e}")
         raise
 
 
-def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None):
+def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None, quiet: bool = False):
     """
     Process a single file: load, profile, and generate config.
     """
-    print(f"\n{'='*40}")
-    print(f"Processing: {file_path.name}")
-    print(f"{'='*40}")
+    if not quiet:
+        print(f"\n{'='*40}")
+        print(f"Processing: {file_path.name}")
+        print(f"{'='*40}")
+        print(f"📥 Loading data from: {file_path.name}")
 
     # Load data
     try:
@@ -120,28 +125,33 @@ def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None
             sample_size=args.sample,
             encoding=args.encoding
         )
+        if not quiet:
+            print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
     except Exception as e:
-        print(f"❌ Skipping {file_path.name}: {e}")
-        return
+        msg = f"❌ Skipping {file_path.name}: {e}"
+        if not quiet:
+            print(msg)
+        return msg
 
-    print()
+    if not quiet:
+        print()
+        print("🔍 Profiling data structure...")
     
-    # Profile data
-    print("🔍 Profiling data structure...")
     profiler = DataProfiler(df, sample_size=args.sample)
     profile = profiler.profile()
     
-    print(f"   ✓ Analysis complete")
-    print(f"   ✓ Data Quality Score: {profile['data_quality_score']:.1f}/100")
-    print()
-    
-    # Show profile summary
-    profiler.print_summary()
-    print()
+    if not quiet:
+        print(f"   ✓ Analysis complete")
+        print(f"   ✓ Data Quality Score: {profile['data_quality_score']:.1f}/100")
+        print()
+        # Show profile summary
+        profiler.print_summary()
+        print()
     
     # Generate config unless --profile-only
     if not args.profile_only:
-        print("⚙️  Generating validation configuration...")
+        if not quiet:
+            print("⚙️  Generating validation configuration...")
         
         # Determine validation name
         validation_name = args.name if args.name else f"{file_path.stem}_validation"
@@ -169,14 +179,21 @@ def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None
             null_tolerance=args.null_tolerance,
         )
         
-        print(f"   ✓ Generated {len(config['expectations'])} expectations")
+        if not quiet:
+            print(f"   ✓ Generated {len(config['expectations'])} expectations")
         
         # Ensure output directory exists
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Save config
         profiler.save_config(config, str(output_path))
-        print(f"   ✓ Saved to: {output_path}")
+        
+        if not quiet:
+            print(f"   ✓ Saved to: {output_path}")
+        
+        return f"✅ {file_path.name} -> {output_path} ({len(config['expectations'])} rules)"
+    
+    return f"✅ {file_path.name} profiled (Score: {profile['data_quality_score']:.1f})"
 
 
 def main():
@@ -256,6 +273,13 @@ Examples:
         help='File encoding for CSV files (default: auto-detect)'
     )
     
+    parser.add_argument(
+        '--workers',
+        type=int,
+        default=1,
+        help='Number of parallel workers for batch processing (default: 1)'
+    )
+    
     # Feature flags
     parser.add_argument(
         '--no-structural',
@@ -291,6 +315,12 @@ Examples:
 
     # Check if directory
     if input_path.is_dir():
+        # Validate output path for directory input
+        if args.output and Path(args.output).suffix != '' and not args.output.endswith('/'):
+            print(f"❌ Error: When input is a directory, output must be a directory (or end with /).")
+            print(f"   Received: {args.output}")
+            return 1
+
         print(f"📂 Directory detected: {input_path}")
         print("   Scanning for supported files (csv, parquet, xlsx, json)...")
         
@@ -306,8 +336,28 @@ Examples:
             
         print(f"   Found {len(files_to_process)} files to process.")
         
-        for file_path in files_to_process:
-            process_single_file(file_path, args)
+        if args.workers > 1:
+            print(f"🚀 Starting parallel processing with {args.workers} workers...")
+            print(f"{'='*80}")
+            
+            with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as executor:
+                # Submit all tasks
+                futures = [
+                    executor.submit(process_single_file, fp, args, None, True) 
+                    for fp in files_to_process
+                ]
+                
+                # Process results as they complete
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        result = future.result()
+                        print(result)
+                    except Exception as e:
+                        print(f"❌ Worker failed: {e}")
+        else:
+            # Sequential processing
+            for file_path in files_to_process:
+                process_single_file(file_path, args)
             
     else:
         # Single file mode

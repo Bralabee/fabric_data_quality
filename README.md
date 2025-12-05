@@ -75,7 +75,8 @@ python scripts/profile_data.py path/to/your/data.csv \
     --severity medium
 
 # Profile a directory of mixed files (Batch Mode)
-python scripts/profile_data.py path/to/data_folder/ --output config/
+# Use --workers to speed up processing with parallel execution
+python scripts/profile_data.py path/to/data_folder/ --output config/ --workers 4
 
 # Example: Profile CAUSEWAY data
 python scripts/profile_data.py sample_source_data/CAUSEWAY_combined_scr_2024.csv \

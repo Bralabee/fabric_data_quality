@@ -25,7 +25,8 @@ conda activate fabric-dq
 python scripts/profile_data.py path/to/your/data.csv --output config/my_project_validation.yml
 
 # Profile a directory of mixed files (generates multiple configs)
-python scripts/profile_data.py path/to/data_folder/ --output config/
+# Use --workers for parallel processing
+python scripts/profile_data.py path/to/data_folder/ --output config/ --workers 4
 ```
 
 **This generates:**

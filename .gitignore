@@ -70,3 +70,4 @@ local_config.yml
 tmp/
 temp/
 *.tmp
+tests/output_parallel/
