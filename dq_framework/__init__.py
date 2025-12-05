@@ -23,10 +23,14 @@ from .validator import DataQualityValidator
 from .fabric_connector import FabricDataQualityRunner
 from .config_loader import ConfigLoader
 from .data_profiler import DataProfiler
+from .batch_profiler import BatchProfiler
+from .loader import DataLoader
 
 __all__ = [
     "DataQualityValidator",
     "FabricDataQualityRunner",
     "ConfigLoader",
     "DataProfiler",
+    "BatchProfiler",
+    "DataLoader",
 ]

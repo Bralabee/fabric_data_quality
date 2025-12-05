@@ -55,163 +55,12 @@ except ImportError:
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from dq_framework import DataProfiler
+from dq_framework import DataProfiler, DataLoader
+from dq_framework.utils import FileSystemHandler
 
 
-class FileSystemHandler:
-    """Handles file system operations for both local and ABFSS paths."""
-    
-    @staticmethod
-    def is_abfss(path: str) -> bool:
-        return str(path).startswith("abfss://")
+# FileSystemHandler and load_data are now imported from dq_framework
 
-    @staticmethod
-    def list_files(path: str) -> List[str]:
-        """List files in a directory (local or ABFSS)."""
-        if FileSystemHandler.is_abfss(path):
-            if not FABRIC_AVAILABLE:
-                print("⚠️  Warning: ABFSS path detected but mssparkutils not found. Assuming local mount or fsspec support.")
-                # If mssparkutils is missing, we can't list files easily unless we use fsspec/adlfs
-                # But for now, let's try to fail gracefully or assume the user knows what they are doing
-                raise ImportError("Cannot list ABFSS directory without mssparkutils (Fabric environment).")
-            
-            try:
-                files = mssparkutils.fs.ls(path)
-                return [f.path for f in files if not f.isDir]
-            except Exception as e:
-                print(f"❌ Error listing ABFSS directory: {e}")
-                return []
-        else:
-            p = Path(path)
-            if p.is_dir():
-                return [str(f) for f in p.iterdir() if f.is_file()]
-            return [str(path)]
-
-    @staticmethod
-    def exists(path: str) -> bool:
-        if FileSystemHandler.is_abfss(path):
-            if FABRIC_AVAILABLE:
-                try:
-                    mssparkutils.fs.ls(path)
-                    return True
-                except:
-                    return False
-            return True # Optimistic assumption if no utils
-        return Path(path).exists()
-
-    @staticmethod
-    def is_dir(path: str) -> bool:
-        if FileSystemHandler.is_abfss(path):
-            if FABRIC_AVAILABLE:
-                try:
-                    return mssparkutils.fs.isDirectory(path)
-                except:
-                    # Fallback: if ls works and has items, treat as dir? 
-                    # Or just assume trailing slash means dir
-                    return str(path).endswith('/')
-            return str(path).endswith('/')
-        return Path(path).is_dir()
-    
-    @staticmethod
-    def get_suffix(path: str) -> str:
-        return Path(path).suffix.lower()
-    
-    @staticmethod
-    def get_name(path: str) -> str:
-        return Path(path).name
-
-
-def load_data(file_path: Union[Path, str], sample_size: Optional[int] = None, **kwargs) -> pd.DataFrame:
-    """
-    Load data from various file formats.
-    
-    Supports: CSV, Parquet, Excel, JSON
-    """
-    # Convert to string for ABFSS checks, Path for local
-    path_str = str(file_path)
-    is_abfss = FileSystemHandler.is_abfss(path_str)
-    
-    if not FileSystemHandler.exists(path_str):
-        raise FileNotFoundError(f"File not found: {path_str}")
-    
-    suffix = FileSystemHandler.get_suffix(path_str)
-    
-    # Only print if not running in parallel (handled by caller)
-    # print(f"📥 Loading data from: {FileSystemHandler.get_name(path_str)}")
-    
-    try:
-        if suffix == '.csv':
-            # Auto-detect encoding
-            encoding_arg = kwargs.get('encoding')
-            if encoding_arg:
-                encodings = [encoding_arg] if isinstance(encoding_arg, str) else encoding_arg
-            else:
-                encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
-            
-            df = None
-            last_error = None
-            for encoding in encodings:
-                try:
-                    df = pd.read_csv(path_str, encoding=encoding, low_memory=False, nrows=sample_size)
-                    # print(f"   ✓ Detected encoding: {encoding}")
-                    break
-                except (UnicodeDecodeError, Exception) as e:
-                    last_error = e
-                    continue
-            
-            if df is None:
-                raise ValueError(f"Could not detect file encoding. Last error: {last_error}")
-                
-        elif suffix == '.parquet':
-            if sample_size and pq and not is_abfss:
-                try:
-                    # Efficiently read only the needed rows using PyArrow (Local only)
-                    parquet_file = pq.ParquetFile(path_str)
-                    # Read batches until we have enough data
-                    batches = []
-                    rows_loaded = 0
-                    for batch in parquet_file.iter_batches(batch_size=sample_size):
-                        batches.append(batch)
-                        rows_loaded += batch.num_rows
-                        if rows_loaded >= sample_size:
-                            break
-                    
-                    if batches:
-                        import pyarrow as pa
-                        table = pa.Table.from_batches(batches)
-                        df = table.to_pandas()
-                        if len(df) > sample_size:
-                            df = df.head(sample_size)
-                    else:
-                        df = pd.read_parquet(path_str)
-                except Exception:
-                    # Fallback if efficient read fails
-                    df = pd.read_parquet(path_str)
-                    if sample_size:
-                        df = df.head(sample_size)
-            else:
-                # For ABFSS or if pyarrow optimization skipped
-                df = pd.read_parquet(path_str)
-                if sample_size:
-                    df = df.head(sample_size)
-                
-        elif suffix in ['.xlsx', '.xls']:
-            df = pd.read_excel(path_str, nrows=sample_size)
-            
-        elif suffix == '.json':
-            df = pd.read_json(path_str)
-            if sample_size:
-                df = df.head(sample_size)
-                
-        else:
-            raise ValueError(f"Unsupported file format: {suffix}")
-        
-        # print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
-        return df
-        
-    except Exception as e:
-        # print(f"   ❌ Error loading file: {e}")
-        raise
 
 
 def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[Path] = None, quiet: bool = False):
@@ -229,19 +78,11 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
 
     # Check file size and auto-sample if too large (Local only for now)
     local_sample = args.sample
-    if not FileSystemHandler.is_abfss(path_str):
-        try:
-            file_size_mb = Path(path_str).stat().st_size / (1024 * 1024)
-            if file_size_mb > 500 and local_sample is None:
-                if not quiet:
-                    print(f"⚠️  Large file detected ({file_size_mb:.1f} MB). Auto-limiting to 100,000 rows to prevent memory issues.")
-                local_sample = 100000
-        except Exception:
-            pass
+    # Note: DataLoader handles auto-sampling for large files internally now
 
     # Load data
     try:
-        df = load_data(
+        df = DataLoader.load_data(
             path_str,
             sample_size=local_sample,
             encoding=args.encoding

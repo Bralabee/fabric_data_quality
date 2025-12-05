@@ -22,7 +22,11 @@ fabric_data_quality/
 │   ├── __init__.py                   # Package exports
 │   ├── validator.py                  # Core validation engine
 │   ├── fabric_connector.py           # MS Fabric integration
-│   └── config_loader.py              # YAML configuration loader
+│   ├── config_loader.py              # YAML configuration loader
+│   ├── data_profiler.py              # Data profiling engine
+│   ├── batch_profiler.py             # Parallel batch profiling
+│   ├── loader.py                     # Robust data loading (local/ABFSS)
+│   └── utils.py                      # File system utilities
 │
 ├── scripts/                           # Utility scripts
 │   ├── profile_data.py               # Data profiling CLI tool
