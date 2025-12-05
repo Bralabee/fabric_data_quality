@@ -262,6 +262,17 @@ pytest tests/ -v
 pytest tests/ --cov=dq_framework
 ```
 
+## CLI Tools
+
+### Data Profiler
+```bash
+# Profile single file
+python scripts/profile_data.py data.csv --output config.yml
+
+# Profile directory (batch mode)
+python scripts/profile_data.py data_folder/ --output config_dir/
+```
+
 ## Files Location
 
 ```

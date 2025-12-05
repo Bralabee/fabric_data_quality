@@ -95,13 +95,24 @@ class DataProfiler:
     def _profile_column(self, col: str) -> Dict[str, Any]:
         """Profile a single column."""
         series = self.df[col]
+        total_rows = len(series)
+        
+        if total_rows == 0:
+            return {
+                'dtype': str(series.dtype),
+                'null_count': 0,
+                'null_percent': 0.0,
+                'unique_count': 0,
+                'unique_percent': 0.0,
+                'sample_values': []
+            }
         
         col_profile = {
             'dtype': str(series.dtype),
             'null_count': int(series.isna().sum()),
-            'null_percent': float(series.isna().sum() / len(series) * 100),
+            'null_percent': float(series.isna().sum() / total_rows * 100),
             'unique_count': int(series.nunique()),
-            'unique_percent': float(series.nunique() / len(series) * 100),
+            'unique_percent': float(series.nunique() / total_rows * 100),
         }
         
         # Non-null values for further analysis
@@ -172,8 +183,11 @@ class DataProfiler:
     def _looks_like_date(self, sample: pd.Series) -> bool:
         """Check if string column looks like dates."""
         try:
-            pd.to_datetime(sample, errors='coerce')
-            return True
+            # Try to convert to datetime
+            converted = pd.to_datetime(sample, errors='coerce')
+            # Check if we have a significant number of valid dates
+            valid_dates = converted.notna().sum()
+            return valid_dates / len(sample) > 0.8  # >80% must be valid dates
         except:
             return False
     

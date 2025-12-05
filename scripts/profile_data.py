@@ -15,6 +15,9 @@ Usage:
     # Profile any file
     python scripts/profile_data.py path/to/data.csv --output my_validation.yml
     
+    # Profile a directory of mixed files (generates multiple configs)
+    python scripts/profile_data.py path/to/data_folder/ --output config/
+    
     # Profile with options
     python scripts/profile_data.py data.parquet --null-tolerance 5 --severity high
     
@@ -34,7 +37,7 @@ import argparse
 import sys
 from pathlib import Path
 import pandas as pd
-from typing import Optional
+from typing import Optional, List, Union
 import yaml
 
 # Add parent directory to path for imports
@@ -42,14 +45,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from dq_framework import DataProfiler
 
 
-def load_data(file_path: str, sample_size: Optional[int] = None, **kwargs) -> pd.DataFrame:
+def load_data(file_path: Path, sample_size: Optional[int] = None, **kwargs) -> pd.DataFrame:
     """
     Load data from various file formats.
     
     Supports: CSV, Parquet, Excel, JSON
     """
-    file_path = Path(file_path)
-    
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
     
@@ -104,6 +105,80 @@ def load_data(file_path: str, sample_size: Optional[int] = None, **kwargs) -> pd
         raise
 
 
+def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None):
+    """
+    Process a single file: load, profile, and generate config.
+    """
+    print(f"\n{'='*40}")
+    print(f"Processing: {file_path.name}")
+    print(f"{'='*40}")
+
+    # Load data
+    try:
+        df = load_data(
+            file_path,
+            sample_size=args.sample,
+            encoding=args.encoding
+        )
+    except Exception as e:
+        print(f"❌ Skipping {file_path.name}: {e}")
+        return
+
+    print()
+    
+    # Profile data
+    print("🔍 Profiling data structure...")
+    profiler = DataProfiler(df, sample_size=args.sample)
+    profile = profiler.profile()
+    
+    print(f"   ✓ Analysis complete")
+    print(f"   ✓ Data Quality Score: {profile['data_quality_score']:.1f}/100")
+    print()
+    
+    # Show profile summary
+    profiler.print_summary()
+    print()
+    
+    # Generate config unless --profile-only
+    if not args.profile_only:
+        print("⚙️  Generating validation configuration...")
+        
+        # Determine validation name
+        validation_name = args.name if args.name else f"{file_path.stem}_validation"
+        
+        # Determine output path
+        if args.output:
+            # If output is a directory (or ends in /), treat as dir
+            if Path(args.output).suffix == '' or args.output.endswith('/'):
+                out_dir = Path(args.output)
+                output_path = out_dir / f"{validation_name}.yml"
+            else:
+                # If explicit file path given, use it (only valid for single file mode really)
+                output_path = Path(args.output)
+        else:
+            output_path = Path(f"config/{validation_name}.yml")
+            
+        # Generate config
+        config = profiler.generate_expectations(
+            validation_name=validation_name,
+            description=args.description or f"Auto-generated validation for {file_path.name}",
+            severity_threshold=args.severity,
+            include_structural=not args.no_structural,
+            include_completeness=not args.no_completeness,
+            include_validity=not args.no_validity,
+            null_tolerance=args.null_tolerance,
+        )
+        
+        print(f"   ✓ Generated {len(config['expectations'])} expectations")
+        
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Save config
+        profiler.save_config(config, str(output_path))
+        print(f"   ✓ Saved to: {output_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Profile data and generate data quality validation configs",
@@ -111,29 +186,26 @@ def main():
         epilog="""
 Examples:
   # Profile CSV and generate validation config
-  python profile_data.py data/transactions.csv --output config/transactions_validation.yml
+  python scripts/profile_data.py data/transactions.csv --output config/transactions_validation.yml
+  
+  # Profile ALL files in a directory
+  python scripts/profile_data.py data/raw_files/ --output config/
   
   # Profile parquet with custom settings
-  python profile_data.py data/events.parquet --null-tolerance 10 --severity medium
-  
-  # Profile only (no config generation)
-  python profile_data.py data/survey.xlsx --profile-only
-  
-  # Profile large file with sampling
-  python profile_data.py data/huge.csv --sample 100000 --output config/huge_validation.yml
+  python scripts/profile_data.py data/events.parquet --null-tolerance 10 --severity medium
         """
     )
     
     # Required arguments
     parser.add_argument(
-        'input_file',
-        help='Path to data file (CSV, Parquet, Excel, JSON)'
+        'input_path',
+        help='Path to data file OR directory containing data files'
     )
     
     # Output options
     parser.add_argument(
         '-o', '--output',
-        help='Output path for generated validation config (default: auto-generated name)',
+        help='Output path (file path for single file, directory for folder input)',
         default=None
     )
     
@@ -211,100 +283,40 @@ Examples:
     print("=" * 80)
     print()
     
-    # Load data
-    try:
-        df = load_data(
-            args.input_file,
-            sample_size=args.sample,
-            encoding=args.encoding
-        )
-    except Exception as e:
-        print(f"\n❌ Failed to load data: {e}")
+    input_path = Path(args.input_path)
+    
+    if not input_path.exists():
+        print(f"❌ Error: Path not found: {input_path}")
         return 1
-    
-    print()
-    
-    # Profile data
-    print("🔍 Profiling data structure...")
-    profiler = DataProfiler(df, sample_size=args.sample)
-    profile = profiler.profile()
-    
-    print(f"   ✓ Analysis complete")
-    print(f"   ✓ Data Quality Score: {profile['data_quality_score']:.1f}/100")
-    print()
-    
-    # Show profile summary
-    profiler.print_summary()
-    print()
-    
-    # Generate config unless --profile-only
-    if not args.profile_only:
-        print("⚙️  Generating validation configuration...")
+
+    # Check if directory
+    if input_path.is_dir():
+        print(f"📂 Directory detected: {input_path}")
+        print("   Scanning for supported files (csv, parquet, xlsx, json)...")
         
-        # Determine validation name
-        validation_name = args.name
-        if not validation_name:
-            file_stem = Path(args.input_file).stem
-            validation_name = f"{file_stem}_validation"
+        supported_extensions = {'.csv', '.parquet', '.xlsx', '.xls', '.json'}
+        files_to_process = [
+            p for p in input_path.iterdir() 
+            if p.is_file() and p.suffix.lower() in supported_extensions
+        ]
         
-        # Determine output path
-        output_path = args.output
-        if not output_path:
-            output_path = f"config/{validation_name}.yml"
+        if not files_to_process:
+            print("❌ No supported files found in directory.")
+            return 1
+            
+        print(f"   Found {len(files_to_process)} files to process.")
         
-        # Generate config
-        config = profiler.generate_expectations(
-            validation_name=validation_name,
-            description=args.description or f"Auto-generated validation for {Path(args.input_file).name}",
-            severity_threshold=args.severity,
-            include_structural=not args.no_structural,
-            include_completeness=not args.no_completeness,
-            include_validity=not args.no_validity,
-            null_tolerance=args.null_tolerance,
-        )
-        
-        print(f"   ✓ Generated {len(config['expectations'])} expectations")
-        
-        # Ensure output directory exists
-        output_file = Path(output_path)
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Save config
-        profiler.save_config(config, str(output_file))
-        print()
-        
-        # Show next steps
-        print("=" * 80)
-        print("✅ PROFILING COMPLETE!")
-        print("=" * 80)
-        print()
-        print("📁 Generated file:")
-        print(f"   {output_file}")
-        print()
-        print("💡 NEXT STEPS:")
-        print("   1. Review the generated config file")
-        print("   2. Enhance with business-specific rules")
-        print("   3. Save to your project's config directory")
-        print("   4. Use for all future validations (no need to re-profile)")
-        print()
-        print("📋 Example usage in code:")
-        print(f"""
-   from dq_framework import DataQualityValidator, ConfigLoader
-   
-   config = ConfigLoader().load('{output_file}')
-   validator = DataQualityValidator(config_dict=config)
-   results = validator.validate(df)
-        """)
+        for file_path in files_to_process:
+            process_single_file(file_path, args)
+            
     else:
-        print("=" * 80)
-        print("✅ PROFILING COMPLETE!")
-        print("=" * 80)
-        print()
-        print("💡 To generate validation config, run without --profile-only flag")
-    
+        # Single file mode
+        process_single_file(input_path, args)
+
     print()
-    return 0
+    print("=" * 80)
+    print("✅ ALL OPERATIONS COMPLETE!")
+    print("=" * 80)
 
-
-if __name__ == '__main__':
-    sys.exit(main())
+if __name__ == "__main__":
+    main()

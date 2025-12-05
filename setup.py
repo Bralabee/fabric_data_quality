@@ -30,6 +30,8 @@ setup(
         "great-expectations>=0.18.0",
         "pyyaml>=6.0",
         "pandas>=1.5.0",
+        "openpyxl>=3.1.0",  # For Excel support
+        "pyarrow>=12.0.0",  # For Parquet support
     ],
     extras_require={
         "dev": [

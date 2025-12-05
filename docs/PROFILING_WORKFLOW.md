@@ -21,8 +21,11 @@ When you start working with a new dataset, profile it ONCE to understand its str
 # Activate environment
 conda activate fabric-dq
 
-# Profile your data
-python profile_data.py path/to/your/data.csv --output config/my_project_validation.yml
+# Profile a single file
+python scripts/profile_data.py path/to/your/data.csv --output config/my_project_validation.yml
+
+# Profile a directory of mixed files (generates multiple configs)
+python scripts/profile_data.py path/to/data_folder/ --output config/
 ```
 
 **This generates:**

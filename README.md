@@ -74,13 +74,16 @@ python scripts/profile_data.py path/to/your/data.csv \
     --null-tolerance 10 \
     --severity medium
 
+# Profile a directory of mixed files (Batch Mode)
+python scripts/profile_data.py path/to/data_folder/ --output config/
+
 # Example: Profile CAUSEWAY data
 python scripts/profile_data.py sample_source_data/CAUSEWAY_combined_scr_2024.csv \
     --output config/causeway_validation.yml \
     --sample 50000
 ```
 
-**Output**: A data quality report + validation config file
+**Output**: A data quality report + validation config file (or multiple files for directories)
 
 ### 3. Enhance Config (One Time Per Dataset)
 
