@@ -98,6 +98,51 @@ if not results['success']:
 
 ## Universal Profiler CLI
 
+The `scripts/profile_data.py` tool is your Swiss Army knife for data understanding.
+
+### Usage Scenarios
+
+#### Scenario 1: Single File Profiling (Standard)
+Best for: Ad-hoc analysis of a specific dataset.
+```bash
+python scripts/profile_data.py data/sales_2024.csv --output config/sales_validation.yml
+```
+
+#### Scenario 2: Batch Profiling (Directory)
+Best for: Onboarding a new data source with many files.
+```bash
+# Profiles all CSV, Parquet, Excel, and JSON files in the folder
+python scripts/profile_data.py data/raw_layer/ --output config/raw_layer/
+```
+
+#### Scenario 3: High-Performance Parallel Profiling
+Best for: Large directories with many files.
+```bash
+# Use 4 CPU cores to process files in parallel
+python scripts/profile_data.py data/raw_layer/ --output config/raw_layer/ --workers 4
+```
+
+#### Scenario 4: Large Dataset Handling (Smart Sampling)
+Best for: Massive files (GBs) that won't fit in memory.
+```bash
+# The tool AUTOMATICALLY detects files >500MB and limits to 100k rows.
+# You can also manually force a sample size:
+python scripts/profile_data.py data/huge_dataset.parquet --sample 50000
+```
+
+### Key Features
+
+1.  **Universal Support**: Handles CSV, Parquet, Excel, JSON automatically.
+2.  **Parallel Processing**: Uses `concurrent.futures` to utilize all CPU cores.
+3.  **Smart Sampling**:
+    *   Automatically detects large files (>500MB).
+    *   Uses efficient `pyarrow` batch reading for Parquet to avoid loading the whole file.
+    *   Prevents system crashes by limiting rows for profiling (default 100k for large files).
+4.  **Robustness**: Handles empty files, encoding errors, and missing columns gracefully.
+
+## Next Steps
+
+
 ### Basic Usage
 
 ```bash

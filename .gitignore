@@ -71,3 +71,4 @@ tmp/
 temp/
 *.tmp
 tests/output_parallel/
+tests/output_real_data/

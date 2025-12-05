@@ -1,5 +1,16 @@
 # Fabric Data Quality Framework - Quick Reference
 
+## CLI Commands (Profiler)
+
+| Task | Command |
+|------|---------|
+| **Profile Single File** | `python scripts/profile_data.py data.csv` |
+| **Profile Directory** | `python scripts/profile_data.py data_folder/` |
+| **Parallel Processing** | `python scripts/profile_data.py data_folder/ --workers 4` |
+| **Specify Output** | `python scripts/profile_data.py data.csv --output config/` |
+| **Manual Sampling** | `python scripts/profile_data.py big_data.parquet --sample 50000` |
+| **Help** | `python scripts/profile_data.py --help` |
+
 ## Quick Start
 
 ```python

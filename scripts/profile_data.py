@@ -41,6 +41,10 @@ from typing import Optional, List, Union
 import yaml
 import concurrent.futures
 import multiprocessing
+try:
+    import pyarrow.parquet as pq
+except ImportError:
+    pq = None
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -85,9 +89,36 @@ def load_data(file_path: Path, sample_size: Optional[int] = None, **kwargs) -> p
                 raise ValueError(f"Could not detect file encoding. Last error: {last_error}")
                 
         elif suffix == '.parquet':
-            df = pd.read_parquet(file_path)
-            if sample_size:
-                df = df.head(sample_size)
+            if sample_size and pq:
+                try:
+                    # Efficiently read only the needed rows using PyArrow
+                    parquet_file = pq.ParquetFile(file_path)
+                    # Read batches until we have enough data
+                    batches = []
+                    rows_loaded = 0
+                    for batch in parquet_file.iter_batches(batch_size=sample_size):
+                        batches.append(batch)
+                        rows_loaded += batch.num_rows
+                        if rows_loaded >= sample_size:
+                            break
+                    
+                    if batches:
+                        import pyarrow as pa
+                        table = pa.Table.from_batches(batches)
+                        df = table.to_pandas()
+                        if len(df) > sample_size:
+                            df = df.head(sample_size)
+                    else:
+                        df = pd.read_parquet(file_path)
+                except Exception:
+                    # Fallback if efficient read fails
+                    df = pd.read_parquet(file_path)
+                    if sample_size:
+                        df = df.head(sample_size)
+            else:
+                df = pd.read_parquet(file_path)
+                if sample_size:
+                    df = df.head(sample_size)
                 
         elif suffix in ['.xlsx', '.xls']:
             df = pd.read_excel(file_path, nrows=sample_size)
@@ -118,11 +149,22 @@ def process_single_file(file_path: Path, args, output_dir: Optional[Path] = None
         print(f"{'='*40}")
         print(f"📥 Loading data from: {file_path.name}")
 
+    # Check file size and auto-sample if too large
+    local_sample = args.sample
+    try:
+        file_size_mb = file_path.stat().st_size / (1024 * 1024)
+        if file_size_mb > 500 and local_sample is None:
+            if not quiet:
+                print(f"⚠️  Large file detected ({file_size_mb:.1f} MB). Auto-limiting to 100,000 rows to prevent memory issues.")
+            local_sample = 100000
+    except Exception:
+        pass
+
     # Load data
     try:
         df = load_data(
             file_path,
-            sample_size=args.sample,
+            sample_size=local_sample,
             encoding=args.encoding
         )
         if not quiet:

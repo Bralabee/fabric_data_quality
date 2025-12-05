@@ -84,9 +84,14 @@ python scripts/profile_data.py sample_source_data/CAUSEWAY_combined_scr_2024.csv
     --sample 50000
 ```
 
-**Output**: A data quality report + validation config file (or multiple files for directories)
+### 3. Advanced Features
 
-### 3. Enhance Config (One Time Per Dataset)
+- **Parallel Processing**: Use `--workers N` to profile multiple files simultaneously.
+- **Smart Sampling**: Automatically limits large files (>500MB) to 100k rows to prevent memory crashes.
+- **Efficient Parquet Reading**: Uses `pyarrow` batch reading for massive parquet files.
+- **Batch Mode**: Point to a directory to profile all supported files (CSV, Parquet, Excel, JSON) at once.
+
+### 4. Enhance Config (One Time Per Dataset)
 
 Review and add business rules to `config/my_validation.yml`:
 
