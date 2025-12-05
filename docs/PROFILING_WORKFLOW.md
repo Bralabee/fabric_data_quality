@@ -130,6 +130,13 @@ Best for: Massive files (GBs) that won't fit in memory.
 python scripts/profile_data.py data/huge_dataset.parquet --sample 50000
 ```
 
+#### Scenario 5: Microsoft Fabric (ABFSS)
+Best for: Profiling data directly in OneLake from a Fabric Notebook.
+```python
+# Run directly in a notebook cell
+%run scripts/profile_data.py abfss://workspace@onelake/lakehouse.Lakehouse/Files/data/ --output /lakehouse/default/Files/configs/
+```
+
 ### Key Features
 
 1.  **Universal Support**: Handles CSV, Parquet, Excel, JSON automatically.
@@ -138,7 +145,8 @@ python scripts/profile_data.py data/huge_dataset.parquet --sample 50000
     *   Automatically detects large files (>500MB).
     *   Uses efficient `pyarrow` batch reading for Parquet to avoid loading the whole file.
     *   Prevents system crashes by limiting rows for profiling (default 100k for large files).
-4.  **Robustness**: Handles empty files, encoding errors, and missing columns gracefully.
+4.  **Fabric Native**: Supports `abfss://` paths directly using `mssparkutils`.
+5.  **Robustness**: Handles empty files, encoding errors, and missing columns gracefully.
 
 ## Next Steps
 

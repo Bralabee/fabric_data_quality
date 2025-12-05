@@ -9,6 +9,7 @@
 | **Parallel Processing** | `python scripts/profile_data.py data_folder/ --workers 4` |
 | **Specify Output** | `python scripts/profile_data.py data.csv --output config/` |
 | **Manual Sampling** | `python scripts/profile_data.py big_data.parquet --sample 50000` |
+| **Fabric (ABFSS)** | `python scripts/profile_data.py abfss://workspace/path/to/data/` |
 | **Help** | `python scripts/profile_data.py --help` |
 
 ## Quick Start
