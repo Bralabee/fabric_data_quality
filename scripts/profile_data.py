@@ -249,7 +249,7 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
         if not quiet:
             print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
     except Exception as e:
-        msg = f"❌ Skipping {file_path.name}: {e}"
+        msg = f"❌ Skipping {file_name}: {e}"
         if not quiet:
             print(msg)
         return msg
@@ -275,13 +275,17 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
             print("⚙️  Generating validation configuration...")
         
         # Determine validation name
-        validation_name = args.name if args.name else f"{file_path.stem}_validation"
+        stem = Path(file_name).stem
+        validation_name = args.name if args.name else f"{stem}_validation"
         
         # Determine output path
         if args.output:
             # If output is a directory (or ends in /), treat as dir
             if Path(args.output).suffix == '' or args.output.endswith('/'):
                 out_dir = Path(args.output)
+                # Ensure output dir exists (local only)
+                if not FileSystemHandler.is_abfss(str(out_dir)):
+                    out_dir.mkdir(parents=True, exist_ok=True)
                 output_path = out_dir / f"{validation_name}.yml"
             else:
                 # If explicit file path given, use it (only valid for single file mode really)
@@ -292,7 +296,7 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
         # Generate config
         config = profiler.generate_expectations(
             validation_name=validation_name,
-            description=args.description or f"Auto-generated validation for {file_path.name}",
+            description=args.description or f"Auto-generated validation for {file_name}",
             severity_threshold=args.severity,
             include_structural=not args.no_structural,
             include_completeness=not args.no_completeness,
@@ -303,8 +307,9 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
         if not quiet:
             print(f"   ✓ Generated {len(config['expectations'])} expectations")
         
-        # Ensure output directory exists
-        output_path.parent.mkdir(parents=True, exist_ok=True)
+        # Ensure output directory exists (local only)
+        if not FileSystemHandler.is_abfss(str(output_path)):
+            output_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Save config
         profiler.save_config(config, str(output_path))
@@ -312,9 +317,9 @@ def process_single_file(file_path: Union[Path, str], args, output_dir: Optional[
         if not quiet:
             print(f"   ✓ Saved to: {output_path}")
         
-        return f"✅ {file_path.name} -> {output_path} ({len(config['expectations'])} rules)"
+        return f"✅ {file_name} -> {output_path} ({len(config['expectations'])} rules)"
     
-    return f"✅ {file_path.name} profiled (Score: {profile['data_quality_score']:.1f})"
+    return f"✅ {file_name} profiled (Score: {profile['data_quality_score']:.1f})"
 
 
 def main():
