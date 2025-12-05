@@ -90,6 +90,7 @@ python scripts/profile_data.py sample_source_data/CAUSEWAY_combined_scr_2024.csv
 - **Smart Sampling**: Automatically limits large files (>500MB) to 100k rows to prevent memory crashes.
 - **Efficient Parquet Reading**: Uses `pyarrow` batch reading for massive parquet files.
 - **Batch Mode**: Point to a directory to profile all supported files (CSV, Parquet, Excel, JSON) at once.
+- **Fabric Native Support**: Works directly with `abfss://` paths in MS Fabric environments.
 
 ### 4. Enhance Config (One Time Per Dataset)
 
