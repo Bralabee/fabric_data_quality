@@ -13,45 +13,46 @@ This guide explains how to integrate the Data Quality Framework with Microsoft F
 
 ## Setup in Fabric Workspace
 
-### Step 1: Upload Framework to Workspace
+There are two ways to deploy the framework: **Library (Recommended)** or **Source Code**.
 
-1. **Upload the folder** to your Fabric workspace:
-   - In Fabric, navigate to your workspace
-   - Upload the entire `fabric_data_quality` folder
-   - Place it in a location accessible by all notebooks (e.g., `/Workspace/shared/fabric_data_quality`)
+### Method 1: Custom Library (Recommended)
 
-2. **Verify file structure**:
+This method installs the framework as a proper Python library in your Fabric Environment.
+
+1.  **Build the Library (Locally)**:
+    ```bash
+    python setup.py bdist_wheel
+    ```
+    This generates a file like `dist/fabric_data_quality-1.0.0-py3-none-any.whl`.
+
+2.  **Upload to Fabric Environment**:
+    *   In Fabric, go to **Workspaces** -> Select your workspace.
+    *   Click **New** -> **Environment** (or select an existing one).
+    *   In **Public Libraries**, add: `great-expectations`, `pyyaml`.
+    *   In **Custom Libraries**, click **Upload** and select the `.whl` file you built.
+    *   Click **Publish**.
+
+3.  **Attach to Notebook**:
+    *   Open your notebook.
+    *   Click the **Environment** dropdown in the top menu.
+    *   Select your published environment.
+
+### Method 2: Source Code Upload (Quick Testing)
+
+1. **Upload the folder** to your Fabric workspace (Lakehouse Files):
+   - Upload the `fabric_data_quality` folder to `/Lakehouse/Files/libs/`.
+
+2. **Add to Path**:
+   ```python
+   import sys
+   sys.path.insert(0, "/lakehouse/default/Files/libs/fabric_data_quality")
    ```
-   /Workspace/shared/fabric_data_quality/
-   ├── dq_framework/
-   │   ├── __init__.py
-   │   ├── config_loader.py
-   │   ├── validator.py
-   │   └── fabric_connector.py
-   ├── config_templates/
-   ├── examples/
-   └── README.md
-   ```
-
-### Step 2: Install Dependencies
-
-In your Fabric notebook, run:
-
-```python
-# Install required packages (one-time setup per environment)
-%pip install great-expectations pyyaml pandas
-```
 
 ### Step 3: Test Installation
 
 ```python
-# Add framework to path
-import sys
-sys.path.insert(0, '/Workspace/shared/fabric_data_quality')
-
-# Test import
 from dq_framework import FabricDataQualityRunner
-print("✅ Framework installed successfully!")
+print("✅ Framework loaded successfully")
 ```
 
 ## Using in Fabric Notebooks

@@ -108,7 +108,30 @@ expectations:
     meta: {severity: critical, description: "Customer IDs must be unique"}
 ```
 
-### 4. Use for All Future Runs
+## 📦 Deployment to Microsoft Fabric
+
+To use this framework as a standard library in Fabric:
+
+1.  **Build the Wheel**:
+    ```bash
+    python setup.py bdist_wheel
+    ```
+    This creates `dist/fabric_data_quality-1.0.0-py3-none-any.whl`.
+
+2.  **Upload to Fabric**:
+    *   Go to your Fabric Workspace -> **Manage environments**.
+    *   Select your environment -> **Custom libraries** -> **Upload**.
+    *   Select the `.whl` file.
+    *   **Publish** the environment.
+
+3.  **Use in Notebooks**:
+    ```python
+    from dq_framework import FabricDataQualityRunner
+    ```
+
+## 🚀 Quick Start (Local)
+
+### 1. Setup (One Time)
 
 ```python
 from dq_framework import DataQualityValidator, ConfigLoader
