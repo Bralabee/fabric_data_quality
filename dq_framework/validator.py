@@ -103,7 +103,8 @@ class DataQualityValidator:
         self,
         df: pd.DataFrame,
         batch_name: Optional[str] = None,
-        suite_name: Optional[str] = None
+        suite_name: Optional[str] = None,
+        threshold: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Validate a DataFrame against configured expectations.
@@ -112,6 +113,7 @@ class DataQualityValidator:
             df: DataFrame to validate
             batch_name: Name for this validation batch
             suite_name: Override suite name from config
+            threshold: Success threshold percentage (0-100). Defaults to config value or 100.0
         
         Returns:
             Dictionary with validation results:
@@ -125,7 +127,11 @@ class DataQualityValidator:
         suite_name = suite_name or self.config.get('suite_name', 'default_suite')
         batch_name = batch_name or f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
-        logger.info(f"Running validation: suite='{suite_name}', batch='{batch_name}'")
+        # Determine threshold
+        if threshold is None:
+            threshold = self.config.get('threshold', 100.0)
+        
+        logger.info(f"Running validation: suite='{suite_name}', batch='{batch_name}', threshold={threshold}%")
         
         # Create expectation suite
         self._create_expectation_suite(suite_name)
@@ -167,7 +173,7 @@ class DataQualityValidator:
         validation_result = results.list_validation_results()[0]
         
         # Format results
-        summary = self._format_results(validation_result, batch_name, suite_name)
+        summary = self._format_results(validation_result, batch_name, suite_name, threshold)
         
         # Include the validation result for detailed access
         summary['validation_result'] = validation_result
@@ -215,7 +221,8 @@ class DataQualityValidator:
         self,
         validation_result,
         batch_name: str,
-        suite_name: str
+        suite_name: str,
+        threshold: float = 100.0
     ) -> Dict[str, Any]:
         """Format validation results into summary dictionary."""
         
@@ -229,9 +236,17 @@ class DataQualityValidator:
             success_rate = (successful / evaluated) * 100
         elif success_rate is None:
             success_rate = 0
+            
+        # Determine success based on threshold
+        # If threshold is 100, we use strict GX success (all must pass)
+        # Otherwise we use the calculated success rate
+        if threshold >= 100.0:
+            is_success = validation_result.success
+        else:
+            is_success = success_rate >= threshold
         
         summary = {
-            'success': validation_result.success,
+            'success': is_success,
             'suite_name': suite_name,
             'batch_name': batch_name,
             'timestamp': datetime.now().isoformat(),
@@ -239,6 +254,7 @@ class DataQualityValidator:
             'successful_checks': successful,
             'failed_checks': stats.get('unsuccessful_expectations', 0),
             'success_rate': success_rate,
+            'threshold': threshold,
         }
         
         # Add details for failed expectations

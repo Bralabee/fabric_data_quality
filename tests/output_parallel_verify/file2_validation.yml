@@ -1,0 +1,73 @@
+validation_name: file2_validation
+description: Auto-generated validation for file2.csv
+generated_at: '2025-12-05T21:10:34.754113'
+data_source:
+  type: runtime_dataframe
+  profiled_rows: 0
+  profiled_columns: 4
+expectations:
+- expectation_type: expect_table_row_count_to_be_between
+  kwargs:
+    min_value: 1
+    max_value: null
+  meta:
+    severity: critical
+    description: Table should not be empty
+- expectation_type: expect_table_column_count_to_equal
+  kwargs:
+    value: 4
+  meta:
+    severity: high
+    description: Detect schema drift - column count should remain stable
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: col1
+  meta:
+    severity: critical
+    description: Column col1 must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: col1
+  meta:
+    severity: medium
+    description: Column col1 should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: col2\n3
+  meta:
+    severity: critical
+    description: Column col2\n3 must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: col2\n3
+  meta:
+    severity: medium
+    description: Column col2\n3 should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: c\n4
+  meta:
+    severity: critical
+    description: Column c\n4 must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: c\n4
+  meta:
+    severity: medium
+    description: Column c\n4 should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
+- expectation_type: expect_column_to_exist
+  kwargs:
+    column: d
+  meta:
+    severity: critical
+    description: Column d must exist in the data
+- expectation_type: expect_column_values_to_not_be_null
+  kwargs:
+    column: d
+  meta:
+    severity: medium
+    description: Column d should have minimal nulls (currently 0.0%)
+    observed_null_percent: 0.0
