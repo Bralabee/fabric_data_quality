@@ -29,6 +29,7 @@ try:
     GX_AVAILABLE = True
 except ImportError:
     GX_AVAILABLE = False
+    AbstractDataContext = Any  # Define for type hinting if GE not available
 
 from .config_loader import ConfigLoader
 
