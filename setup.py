@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="fabric-data-quality",
-    version="1.1.2",
+    version="1.1.3",
     author="HS2 Data Engineering Team",
     description="Reusable data quality framework for MS Fabric using Great Expectations",
     long_description=long_description,

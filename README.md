@@ -414,8 +414,27 @@ pytest tests/
 
 ## 🔄 Version History
 
-- **v1.0.0** (2025-10-28) - Initial standalone framework with universal profiler
+- **v1.1.3** (2025-12-06) - Added configurable global thresholds and ABFSS support
 - **v1.1.0** (2025-10-28) - Added MS Fabric ETL integration guides
+- **v1.0.0** (2025-10-28) - Initial standalone framework with universal profiler
+
+## 💻 Code Example: Using Thresholds
+
+```python
+from dq_framework import DataQualityValidator
+
+# Initialize
+validator = DataQualityValidator("config/my_checks.yml")
+
+# Validate with a custom 95% threshold
+# (Overrides config file settings if provided)
+result = validator.validate(df, threshold=95.0)
+
+if result['success']:
+    print(f"Passed! Score: {result['success_rate']}%")
+else:
+    print(f"Failed. Score: {result['success_rate']}%")
+```
 
 ## 🤝 Contributing
 
