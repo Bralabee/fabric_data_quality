@@ -30,10 +30,7 @@ class TestFabricDataQualityRunner:
         
         return str(config_file)
     
-    @pytest.mark.skipif(
-        not pytest.config.getoption("--fabric"),
-        reason="Fabric environment required"
-    )
+    @pytest.mark.fabric
     def test_validate_spark_dataframe(self, sample_config_path):
         """Test validation of Spark DataFrame (requires Fabric)"""
         from dq_framework import FabricDataQualityRunner
