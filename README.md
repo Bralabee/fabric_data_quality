@@ -2,6 +2,11 @@
 
 A reusable, configurable data quality framework using Great Expectations, designed for Microsoft Fabric environments and usable across all your HS2 projects.
 
+## 🚀 What's New in v1.1.1
+- **ABFSS Support**: Added support for loading configuration files directly from `abfss://` paths in Microsoft Fabric.
+- **Configurable Thresholds**: Set custom pass/fail thresholds (e.g., 95%) instead of hardcoded 100%.
+- **Enhanced Reporting**: Validation results now include threshold details.
+
 ## 🎯 Purpose
 
 This standalone framework provides data quality validation capabilities that can be used by:

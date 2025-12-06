@@ -64,8 +64,27 @@ class FabricDataQualityRunner:
         self.workspace_id = workspace_id
         self.results_location = results_location
         
+        # Try to load config using Fabric utils if available (supports abfss)
+        config_dict = None
+        if FABRIC_UTILS_AVAILABLE:
+            try:
+                # Check if path looks like abfss or if it's a Fabric path
+                if config_path.startswith("abfss://") or config_path.startswith("Files/") or config_path.startswith("https://"):
+                    logger.info(f"Attempting to load config from Fabric path: {config_path}")
+                    # Read file content using mssparkutils
+                    # head reads the first N bytes. 1MB should be enough for config files.
+                    content = mssparkutils.fs.head(config_path, 1000000)
+                    import yaml
+                    config_dict = yaml.safe_load(content)
+                    logger.info("Successfully loaded config using mssparkutils")
+            except Exception as e:
+                logger.warning(f"Could not load config using mssparkutils: {e}. Falling back to standard file I/O.")
+        
         # Initialize core validator
-        self.validator = DataQualityValidator(config_path=config_path)
+        if config_dict:
+            self.validator = DataQualityValidator(config_dict=config_dict)
+        else:
+            self.validator = DataQualityValidator(config_path=config_path)
         
         logger.info(f"FabricDataQualityRunner initialized for workspace: {workspace_id}")
     

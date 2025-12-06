@@ -411,7 +411,7 @@ class DataProfiler:
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
         
         logger.info(f"Saved configuration to {output_path}")
-        print(f"✅ Configuration saved: {output_path}")
+        print(f"Configuration saved: {output_path}")
         print(f"   - {len(config['expectations'])} expectations generated")
     
     def print_summary(self) -> None:

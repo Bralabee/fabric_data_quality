@@ -24,7 +24,7 @@ class BatchProfiler:
     """
     
     @staticmethod
-    def process_single_file(file_path: str, output_dir: str, sample_size: Optional[int] = None) -> Dict[str, Any]:
+    def process_single_file(file_path: str, output_dir: str, sample_size: Optional[int] = None, thresholds: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Profiles a single file and saves the configuration.
         """
@@ -40,10 +40,14 @@ class BatchProfiler:
             profiler.profile()
             
             # Generate Expectations
-            config = profiler.generate_expectations(
-                validation_name=f"validation_{file_path_obj.stem}",
-                severity_threshold="medium"
-            )
+            gen_kwargs = {
+                "validation_name": f"validation_{file_path_obj.stem}",
+                "severity_threshold": "medium"
+            }
+            if thresholds:
+                gen_kwargs.update(thresholds)
+
+            config = profiler.generate_expectations(**gen_kwargs)
             
             # Save Configuration
             output_path = Path(output_dir) / f"{file_path_obj.stem}_validation.yml"
@@ -68,13 +72,13 @@ class BatchProfiler:
             }
 
     @classmethod
-    def run_parallel_profiling(cls, input_dir: str, output_dir: str, workers: int = 1, sample_size: Optional[int] = None) -> List[Dict[str, Any]]:
+    def run_parallel_profiling(cls, input_dir: str, output_dir: str, workers: int = 1, sample_size: Optional[int] = None, thresholds: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Runs profiling in parallel for all supported files in the directory.
         """
         
         if not FileSystemHandler.exists(input_dir):
-            print(f"❌ Input path does not exist: {input_dir}")
+            print(f"Input path does not exist: {input_dir}")
             return []
 
         # Find all files
@@ -83,10 +87,10 @@ class BatchProfiler:
         files = [f for f in all_files if FileSystemHandler.get_suffix(f) in supported_extensions]
         
         if not files:
-            print(f"❌ No supported files found in {input_dir}")
+            print(f"No supported files found in {input_dir}")
             return []
         
-        print(f"🚀 Found {len(files)} files. Starting processing with {workers} workers...")
+        print(f"Found {len(files)} files. Starting processing with {workers} workers...")
         
         start_time = time.time()
         results = []
@@ -95,7 +99,7 @@ class BatchProfiler:
         with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
             # Submit tasks
             future_to_file = {
-                executor.submit(cls.process_single_file, f, output_dir, sample_size): f 
+                executor.submit(cls.process_single_file, f, output_dir, sample_size, thresholds): f 
                 for f in files
             }
             
@@ -105,9 +109,9 @@ class BatchProfiler:
                 results.append(result)
                 
                 if result['status'] == 'success':
-                    print(f"✅ {result['file']}: {result['rows']} rows -> {result['expectations']} rules")
+                    print(f"{result['file']}: {result['rows']} rows -> {result['expectations']} rules")
                 else:
-                    print(f"❌ {result['file']}: Failed - {result['error']}")
+                    print(f"{result['file']}: Failed - {result['error']}")
                     
         duration = time.time() - start_time
         print(f"\n✨ Completed in {duration:.2f} seconds.")

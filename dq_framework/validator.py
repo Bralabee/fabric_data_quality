@@ -271,9 +271,9 @@ class DataQualityValidator:
         
         # Log summary
         if summary['success']:
-            logger.info(f"✅ Validation PASSED: {summary['success_rate']:.1f}% success rate")
+            logger.info(f"Validation PASSED: {summary['success_rate']:.1f}% success rate")
         else:
-            logger.error(f"❌ Validation FAILED: {summary['failed_checks']} checks failed")
+            logger.error(f"Validation FAILED: {summary['failed_checks']} checks failed")
         
         return summary
     
