@@ -129,9 +129,9 @@ class DataQualityValidator:
         
         # Determine threshold
         if threshold is None:
-            threshold = self.config.get('threshold', 100.0)
+            threshold = self.config.get('threshold')
         
-        logger.info(f"Running validation: suite='{suite_name}', batch='{batch_name}', threshold={threshold}%")
+        logger.info(f"Running validation: suite='{suite_name}', batch='{batch_name}', threshold={threshold if threshold is not None else 'Custom'}%")
         
         # Create expectation suite
         self._create_expectation_suite(suite_name)
@@ -222,7 +222,7 @@ class DataQualityValidator:
         validation_result,
         batch_name: str,
         suite_name: str,
-        threshold: float = 100.0
+        threshold: Optional[float] = None
     ) -> Dict[str, Any]:
         """Format validation results into summary dictionary."""
         
@@ -266,13 +266,19 @@ class DataQualityValidator:
         is_success = True
         
         # 1. Check global threshold (legacy support)
-        if threshold >= 100.0:
+        if threshold is not None:
+            if threshold >= 100.0:
+                if not validation_result.success:
+                    is_success = False
+                    threshold_failures.append(f"Global threshold 100% failed (actual: {success_rate:.1f}%)")
+            elif success_rate < threshold:
+                is_success = False
+                threshold_failures.append(f"Global threshold {threshold}% failed (actual: {success_rate:.1f}%)")
+        elif not quality_thresholds:
+            # Fallback: if no thresholds defined at all, enforce 100% success
             if not validation_result.success:
                 is_success = False
                 threshold_failures.append(f"Global threshold 100% failed (actual: {success_rate:.1f}%)")
-        elif success_rate < threshold:
-            is_success = False
-            threshold_failures.append(f"Global threshold {threshold}% failed (actual: {success_rate:.1f}%)")
             
         # 2. Check per-severity thresholds
         for severity, s_stats in severity_stats.items():
