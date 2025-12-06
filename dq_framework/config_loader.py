@@ -26,20 +26,23 @@ class ConfigLoader:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
     
-    def load(self, config_path: Any) -> Dict[str, Any]:
+    def load(self, config_path: Any) -> Any:
         """
-        Load configuration from YAML file or dictionary.
+        Load configuration from YAML file, dictionary, or list of them.
         
         Args:
-            config_path: Path to YAML configuration file OR configuration dictionary
+            config_path: Path to YAML configuration file, configuration dictionary, or list of them
         
         Returns:
-            Dictionary containing configuration
+            Dictionary containing configuration or list of configurations
         
         Raises:
             FileNotFoundError: If config file doesn't exist
             ValueError: If config is invalid
         """
+        if isinstance(config_path, list):
+            return [self.load(path) for path in config_path]
+
         if isinstance(config_path, dict):
             config = config_path
             self.validate(config)
@@ -72,6 +75,10 @@ class ConfigLoader:
         Raises:
             ValueError: If configuration is invalid
         """
+        # Check for validation_name
+        if 'validation_name' not in config:
+            raise ValueError("Configuration must contain 'validation_name' key")
+
         # Check for expectations
         if 'expectations' not in config:
             raise ValueError("Configuration must contain 'expectations' key")
@@ -117,6 +124,7 @@ class ConfigLoader:
             Merged configuration dictionary
         """
         merged_config = {
+            'validation_name': 'merged_validation',
             'expectations': [],
             'data_source': {}
         }

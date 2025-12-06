@@ -302,7 +302,13 @@ class DataQualityValidator:
             'threshold': threshold,
             'quality_thresholds': quality_thresholds,
             'severity_stats': severity_stats,
-            'threshold_failures': threshold_failures
+            'threshold_failures': threshold_failures,
+            'statistics': {
+                'evaluated_expectations': evaluated,
+                'successful_expectations': successful,
+                'unsuccessful_expectations': stats.get('unsuccessful_expectations', 0),
+                'success_percent': success_rate
+            }
         }
         
         # Add details for failed expectations
