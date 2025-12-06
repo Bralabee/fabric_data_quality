@@ -87,6 +87,11 @@ class FabricDataQualityRunner:
             self.validator = DataQualityValidator(config_path=config_path)
         
         logger.info(f"FabricDataQualityRunner initialized for workspace: {workspace_id}")
+
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Get current configuration."""
+        return self.validator.config
     
     def validate_spark_dataframe(
         self,

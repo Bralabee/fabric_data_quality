@@ -26,12 +26,12 @@ class ConfigLoader:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
     
-    def load(self, config_path: str) -> Dict[str, Any]:
+    def load(self, config_path: Any) -> Dict[str, Any]:
         """
-        Load configuration from YAML file.
+        Load configuration from YAML file or dictionary.
         
         Args:
-            config_path: Path to YAML configuration file
+            config_path: Path to YAML configuration file OR configuration dictionary
         
         Returns:
             Dictionary containing configuration
@@ -40,6 +40,11 @@ class ConfigLoader:
             FileNotFoundError: If config file doesn't exist
             ValueError: If config is invalid
         """
+        if isinstance(config_path, dict):
+            config = config_path
+            self.validate(config)
+            return config
+
         config_file = Path(config_path)
         
         if not config_file.exists():
@@ -52,12 +57,12 @@ class ConfigLoader:
             raise ValueError(f"Invalid YAML in config file: {e}")
         
         # Validate configuration structure
-        self._validate_config(config)
+        self.validate(config)
         
         self.logger.info(f"Loaded configuration from {config_path}")
         return config
     
-    def _validate_config(self, config: Dict[str, Any]) -> None:
+    def validate(self, config: Dict[str, Any]) -> None:
         """
         Validate that configuration has required structure.
         
