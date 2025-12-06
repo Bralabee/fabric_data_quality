@@ -224,6 +224,7 @@ class DataProfiler:
         include_completeness: bool = True,
         include_validity: bool = True,
         null_tolerance: float = 5.0,
+        quality_thresholds: Optional[Dict[str, float]] = None,
     ) -> Dict[str, Any]:
         """
         Generate data quality expectations based on profiling results.
@@ -236,12 +237,22 @@ class DataProfiler:
             include_completeness: Include null/completeness checks
             include_validity: Include type/range/pattern checks
             null_tolerance: Percentage of nulls to tolerate before flagging (default 5%)
+            quality_thresholds: Dictionary of success thresholds per severity level
         
         Returns:
             Dictionary in YAML config format
         """
         if self.profile_results is None:
             self.profile()
+            
+        # Default thresholds if not provided
+        if quality_thresholds is None:
+            quality_thresholds = {
+                'critical': 100.0,
+                'high': 95.0,
+                'medium': 80.0,
+                'low': 50.0
+            }
         
         config = {
             'validation_name': validation_name,
@@ -252,6 +263,7 @@ class DataProfiler:
                 'profiled_rows': self.profile_results['row_count'],
                 'profiled_columns': self.profile_results['column_count'],
             },
+            'quality_thresholds': quality_thresholds,
             'expectations': []
         }
         

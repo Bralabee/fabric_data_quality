@@ -228,7 +228,7 @@ class DataQualityValidator:
         
         stats = validation_result.statistics
         
-        # Calculate success rate safely
+        # Calculate overall success rate
         evaluated = stats.get('evaluated_expectations', 0)
         successful = stats.get('successful_expectations', 0)
         success_rate = stats.get('success_percent')
@@ -237,13 +237,52 @@ class DataQualityValidator:
         elif success_rate is None:
             success_rate = 0
             
-        # Determine success based on threshold
-        # If threshold is 100, we use strict GX success (all must pass)
-        # Otherwise we use the calculated success rate
+        # Get quality thresholds from config
+        quality_thresholds = self.config.get('quality_thresholds', {})
+        
+        # Calculate success per severity
+        severity_stats = {}
+        
+        # Initialize stats for known severities
+        for severity in quality_thresholds.keys():
+            severity_stats[severity] = {'total': 0, 'passed': 0}
+            
+        # Also track 'unknown' severity
+        severity_stats['unknown'] = {'total': 0, 'passed': 0}
+
+        for result in validation_result.results:
+            meta = result.expectation_config.meta or {}
+            severity = meta.get('severity', 'unknown')
+            
+            if severity not in severity_stats:
+                severity_stats[severity] = {'total': 0, 'passed': 0}
+                
+            severity_stats[severity]['total'] += 1
+            if result.success:
+                severity_stats[severity]['passed'] += 1
+        
+        # Check thresholds
+        threshold_failures = []
+        is_success = True
+        
+        # 1. Check global threshold (legacy support)
         if threshold >= 100.0:
-            is_success = validation_result.success
-        else:
-            is_success = success_rate >= threshold
+            if not validation_result.success:
+                is_success = False
+                threshold_failures.append(f"Global threshold 100% failed (actual: {success_rate:.1f}%)")
+        elif success_rate < threshold:
+            is_success = False
+            threshold_failures.append(f"Global threshold {threshold}% failed (actual: {success_rate:.1f}%)")
+            
+        # 2. Check per-severity thresholds
+        for severity, s_stats in severity_stats.items():
+            if s_stats['total'] > 0:
+                s_rate = (s_stats['passed'] / s_stats['total']) * 100
+                s_threshold = quality_thresholds.get(severity)
+                
+                if s_threshold is not None and s_rate < s_threshold:
+                    is_success = False
+                    threshold_failures.append(f"Severity '{severity}' threshold {s_threshold}% failed (actual: {s_rate:.1f}%)")
         
         summary = {
             'success': is_success,
@@ -255,6 +294,9 @@ class DataQualityValidator:
             'failed_checks': stats.get('unsuccessful_expectations', 0),
             'success_rate': success_rate,
             'threshold': threshold,
+            'quality_thresholds': quality_thresholds,
+            'severity_stats': severity_stats,
+            'threshold_failures': threshold_failures
         }
         
         # Add details for failed expectations
@@ -262,9 +304,11 @@ class DataQualityValidator:
             failed = []
             for result in validation_result.results:
                 if not result.success:
+                    meta = result.expectation_config.meta or {}
                     failed.append({
                         'expectation': result.expectation_config.expectation_type,
                         'column': result.expectation_config.kwargs.get('column', 'N/A'),
+                        'severity': meta.get('severity', 'unknown'),
                         'details': result.result
                     })
             summary['failed_expectations'] = failed
@@ -273,7 +317,7 @@ class DataQualityValidator:
         if summary['success']:
             logger.info(f"Validation PASSED: {summary['success_rate']:.1f}% success rate")
         else:
-            logger.error(f"Validation FAILED: {summary['failed_checks']} checks failed")
+            logger.error(f"Validation FAILED: {summary['failed_checks']} checks failed. Reasons: {', '.join(threshold_failures)}")
         
         return summary
     
