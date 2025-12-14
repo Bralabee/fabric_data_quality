@@ -83,7 +83,7 @@ class BatchProfiler:
 
         # Find all files
         all_files = FileSystemHandler.list_files(input_dir)
-        supported_extensions = {'.parquet', '.csv'}
+        supported_extensions = {'.parquet', '.csv', '.json', '.xlsx', '.xls'}
         files = [f for f in all_files if FileSystemHandler.get_suffix(f) in supported_extensions]
         
         if not files:

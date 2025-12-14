@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="fabric-data-quality",
-    version="1.1.3",
+    version="1.2.0",
     author="HS2 Data Engineering Team",
     description="Reusable data quality framework for MS Fabric using Great Expectations",
     long_description=long_description,
@@ -27,16 +27,22 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "great-expectations>=0.18.0",
-        "pyyaml>=6.0",
-        "pandas>=1.5.0",
-        "openpyxl>=3.1.0",  # For Excel support
-        "pyarrow>=12.0.0",  # For Parquet support
+        "great-expectations>=0.18.0,<1.0.0",
+        "pyyaml>=6.0,<7.0",
+        "pandas>=1.5.0,<3.0.0",
+        "numpy>=1.24.0,<2.0.0",
+        "pyarrow>=12.0.0,<15.0.0",
+        "openpyxl>=3.0.0,<4.0.0",
+        "xlrd>=2.0.0,<3.0.0",
+        "sqlalchemy>=1.4.0,<3.0.0",
+        "jsonschema>=4.0.0,<5.0.0",
+        "marshmallow>=3.0.0,<4.0.0",
     ],
     extras_require={
         "dev": [
             "pytest>=7.4.0",
             "pytest-cov>=4.1.0",
+            "pytest-mock>=3.11.0",
         ],
     },
 )

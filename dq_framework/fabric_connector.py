@@ -8,6 +8,7 @@ Fabric-specific integration for data quality validation.
 import logging
 from typing import Dict, Optional, Any
 from datetime import datetime
+from pathlib import Path
 
 try:
     from pyspark.sql import SparkSession, DataFrame as SparkDataFrame
@@ -16,10 +17,18 @@ except ImportError:
     SPARK_AVAILABLE = False
     SparkDataFrame = Any
 
-try:
-    from notebookutils import mssparkutils
-    FABRIC_UTILS_AVAILABLE = True
-except ImportError:
+def _is_fabric_runtime() -> bool:
+    """Best-effort check for Microsoft Fabric runtime without importing notebookutils."""
+    return Path("/lakehouse/default/Files").exists()
+
+
+if _is_fabric_runtime():
+    try:
+        from notebookutils import mssparkutils
+        FABRIC_UTILS_AVAILABLE = True
+    except Exception:
+        FABRIC_UTILS_AVAILABLE = False
+else:
     FABRIC_UTILS_AVAILABLE = False
 
 from .validator import DataQualityValidator

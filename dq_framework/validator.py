@@ -6,6 +6,7 @@ Core validation engine using Great Expectations.
 """
 
 import logging
+import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ except ImportError:
     pd = None
 
 try:
+    os.environ.setdefault("GX_ANALYTICS_ENABLED", "False")
     import great_expectations as gx
     from great_expectations.data_context import AbstractDataContext
     from great_expectations.data_context.types.base import (

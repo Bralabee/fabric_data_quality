@@ -2,10 +2,15 @@
 
 A reusable, configurable data quality framework using Great Expectations, designed for Microsoft Fabric environments and usable across all your HS2 projects.
 
-## 🚀 What's New in v1.1.1
+## 🚀 What's New in v1.2.0
 - **ABFSS Support**: Added support for loading configuration files directly from `abfss://` paths in Microsoft Fabric.
 - **Configurable Thresholds**: Set custom pass/fail thresholds (e.g., 95%) instead of hardcoded 100%.
 - **Enhanced Reporting**: Validation results now include threshold details.
+
+## 🧭 Environment & Path Support
+
+- **Local Python**: use local filesystem paths (e.g., `config/my_table.yml`, `/tmp/data.parquet`).
+- **Microsoft Fabric**: `abfss://...` and `Files/...` paths require Fabric utilities (`mssparkutils`). Outside Fabric these paths are not supported and will fail fast.
 
 ## 🎯 Purpose
 
@@ -123,9 +128,9 @@ To use this framework as a standard library in Fabric:
 
 1.  **Build the Wheel**:
     ```bash
-    python setup.py bdist_wheel
+    python -m build --wheel --no-isolation
     ```
-    This creates `dist/fabric_data_quality-1.0.0-py3-none-any.whl`.
+    This creates `dist/fabric_data_quality-1.2.0-py3-none-any.whl`.
 
 2.  **Upload to Fabric**:
     *   Go to your Fabric Workspace -> **Manage environments**.

@@ -16,7 +16,16 @@ Usage:
     results = runner.validate_delta_table('table_name')
 """
 
-__version__ = "1.0.0"
+try:
+    from importlib.metadata import PackageNotFoundError, version
+except ImportError:  # pragma: no cover
+    from importlib_metadata import PackageNotFoundError, version  # type: ignore
+
+
+try:
+    __version__ = version("fabric-data-quality")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 __author__ = "HS2 Data Engineering Team"
 
 from .validator import DataQualityValidator
@@ -25,6 +34,8 @@ from .config_loader import ConfigLoader
 from .data_profiler import DataProfiler
 from .batch_profiler import BatchProfiler
 from .loader import DataLoader
+from .ingestion import DataIngester
+from .utils import FileSystemHandler
 
 __all__ = [
     "DataQualityValidator",
@@ -33,4 +44,6 @@ __all__ = [
     "DataProfiler",
     "BatchProfiler",
     "DataLoader",
+    "DataIngester",
+    "FileSystemHandler",
 ]

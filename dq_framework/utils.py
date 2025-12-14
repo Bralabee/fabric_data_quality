@@ -1,14 +1,21 @@
 """
 Utility functions for Fabric Data Quality Framework.
 """
-import sys
 from pathlib import Path
 from typing import List, Union
 
-try:
-    from notebookutils import mssparkutils
-    FABRIC_AVAILABLE = True
-except ImportError:
+def _is_fabric_runtime() -> bool:
+    """Best-effort check for Microsoft Fabric runtime without importing notebookutils."""
+    return Path("/lakehouse/default/Files").exists()
+
+
+if _is_fabric_runtime():
+    try:
+        from notebookutils import mssparkutils
+        FABRIC_AVAILABLE = True
+    except Exception:
+        FABRIC_AVAILABLE = False
+else:
     FABRIC_AVAILABLE = False
 
 class FileSystemHandler:
@@ -41,13 +48,13 @@ class FileSystemHandler:
     @staticmethod
     def exists(path: str) -> bool:
         if FileSystemHandler.is_abfss(path):
-            if FABRIC_AVAILABLE:
-                try:
-                    mssparkutils.fs.ls(path)
-                    return True
-                except:
-                    return False
-            return True 
+            if not FABRIC_AVAILABLE:
+                return False
+            try:
+                mssparkutils.fs.ls(path)
+                return True
+            except Exception:
+                return False
         return Path(path).exists()
 
     @staticmethod
