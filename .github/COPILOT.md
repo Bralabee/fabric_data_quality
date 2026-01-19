@@ -19,11 +19,11 @@ The **Fabric Data Quality Framework** is a reusable data quality validation libr
 dq_framework/
 ├── __init__.py          # Main exports (import from here)
 ├── validator.py         # DataQualityValidator - core validation
-├── fabric_runner.py     # FabricDataQualityRunner - Fabric integration
+├── fabric_connector.py  # FabricDataQualityRunner - Fabric integration
 ├── config_loader.py     # ConfigLoader - YAML parsing
 ├── data_profiler.py     # DataProfiler - auto-generate expectations
 ├── batch_profiler.py    # BatchProfiler - parallel processing
-├── data_loader.py       # DataLoader - file loading utilities
+├── loader.py            # DataLoader - file loading utilities
 ├── ingestion.py         # DataIngester - data ingestion
 ├── utils.py             # FileSystemHandler, Fabric detection
 └── constants.py         # Centralized constants
@@ -45,17 +45,17 @@ from dq_framework.validator import DataQualityValidator
 Use constants from `dq_framework.constants`:
 ```python
 from dq_framework.constants import (
-    DEFAULT_SEVERITY_THRESHOLDS,
-    SAMPLE_SIZE_DEFAULT,
-    QUALITY_SCORE_PRECISION,
+    DEFAULT_QUALITY_THRESHOLDS,
+    DEFAULT_AUTO_SAMPLE_ROWS,
+    QUALITY_SCORE_NULL_WEIGHT,
 )
 ```
 
 **Key Constants:**
-- `DEFAULT_SEVERITY_THRESHOLDS`: {"critical": 100, "high": 95, "medium": 85, "low": 70}
-- `SAMPLE_SIZE_DEFAULT`: 10000
-- `NULL_THRESHOLD_PCT`: 50
-- `UNIQUENESS_THRESHOLD_PCT`: 95
+- `DEFAULT_QUALITY_THRESHOLDS`: {"critical": 100, "high": 95, "medium": 80, "low": 50}
+- `DEFAULT_AUTO_SAMPLE_ROWS`: 100000
+- `NULL_THRESHOLD_PCT`: 50 (via `ID_NULL_THRESHOLD_FOR_UNIQUENESS`)
+- `ID_UNIQUENESS_THRESHOLD`: 0.9 (90%)
 
 ### Error Handling
 - Log errors with context, don't suppress silently
