@@ -17,7 +17,7 @@
 ```python
 # 1. Setup (first cell in notebook)
 import sys
-sys.path.insert(0, '/Workspace/fabric_data_quality')
+sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
 from dq_framework import FabricDataQualityRunner
 
 # 2. Validate DataFrame
@@ -291,7 +291,7 @@ python scripts/profile_data.py data_folder/ --output config_dir/ --workers 4
 ## Files Location
 
 ```
-fabric_data_quality/
+2_DATA_QUALITY_LIBRARY/
 ├── dq_framework/          # Core code
 ├── config_templates/      # Bronze/Silver/Gold templates
 ├── examples/              # Project-specific examples

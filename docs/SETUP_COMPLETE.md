@@ -13,7 +13,7 @@ Your Fabric Data Quality Framework is fully installed and operational!
 ### What Was Installed
 
 1. **Core Framework**
-   - `fabric-data-quality` package (v1.0.0) in development mode
+   - `fabric-data-quality` package (v1.2.0) in development mode
    - All core dependencies (pandas, numpy, pyarrow, pyyaml)
    - Great Expectations data validation library
 
@@ -38,7 +38,7 @@ Your Fabric Data Quality Framework is fully installed and operational!
 conda activate fabric-dq
 
 # 2. Run the simple demo
-cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality
+cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY
 python examples/simple_demo.py
 
 # 3. Try it with your own data
@@ -318,4 +318,4 @@ Your environment is configured following all Python/conda best practices:
 
 ---
 
-*Last Updated: 2025 - Framework v1.0.0*
+*Last Updated: January 2026 - Framework v1.2.0*

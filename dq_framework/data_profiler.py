@@ -12,6 +12,21 @@ from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
+from .constants import (
+    ID_UNIQUENESS_THRESHOLD,
+    CATEGORICAL_UNIQUENESS_THRESHOLD,
+    DATE_DETECTION_THRESHOLD,
+    TEXT_LENGTH_THRESHOLD,
+    TYPE_DETECTION_SAMPLE_SIZE,
+    MAX_UNIQUE_VALUES_DISPLAY,
+    QUALITY_SCORE_NULL_WEIGHT,
+    QUALITY_SCORE_UNIQUENESS_WEIGHT,
+    UNIQUENESS_SWEET_SPOT,
+    DEFAULT_NULL_TOLERANCE,
+    ID_NULL_THRESHOLD_FOR_UNIQUENESS,
+    DEFAULT_QUALITY_THRESHOLDS,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -138,8 +153,8 @@ class DataProfiler:
                 col_profile['avg_length'] = float(non_null.astype(str).str.len().mean())
                 
                 # Sample values
-                if col_profile['unique_count'] <= 10:
-                    col_profile['unique_values'] = non_null.unique().tolist()[:10]
+                if col_profile['unique_count'] <= MAX_UNIQUE_VALUES_DISPLAY:
+                    col_profile['unique_values'] = non_null.unique().tolist()[:MAX_UNIQUE_VALUES_DISPLAY]
                 else:
                     col_profile['sample_values'] = non_null.head(5).tolist()
         
@@ -147,14 +162,14 @@ class DataProfiler:
     
     def _detect_column_type(self, series: pd.Series) -> str:
         """Detect the semantic type of a column."""
-        sample = series.astype(str).head(100)
+        sample = series.astype(str).head(TYPE_DETECTION_SAMPLE_SIZE)
         
         # Date patterns
         if series.dtype == 'datetime64[ns]' or self._looks_like_date(sample):
             return 'date'
         
         # ID patterns (mostly numeric, high uniqueness)
-        if series.nunique() / len(series) > 0.9 and ('id' in series.name.lower() or 'uniqid' in series.name.lower()):
+        if series.nunique() / len(series) > ID_UNIQUENESS_THRESHOLD and ('id' in series.name.lower() or 'uniqid' in series.name.lower()):
             return 'id'
         
         # Code patterns (alphanumeric, limited length, moderate uniqueness)
@@ -170,13 +185,13 @@ class DataProfiler:
             return 'numeric'
         
         # Categorical (low uniqueness)
-        if series.nunique() / len(series) < 0.05:
+        if series.nunique() / len(series) < CATEGORICAL_UNIQUENESS_THRESHOLD:
             return 'categorical'
         
         # Text
         if pd.api.types.is_string_dtype(series) or pd.api.types.is_object_dtype(series):
             avg_len = series.astype(str).str.len().mean()
-            if avg_len > 50:
+            if avg_len > TEXT_LENGTH_THRESHOLD:
                 return 'text'
             return 'string'
         
@@ -189,8 +204,9 @@ class DataProfiler:
             converted = pd.to_datetime(sample, errors='coerce')
             # Check if we have a significant number of valid dates
             valid_dates = converted.notna().sum()
-            return valid_dates / len(sample) > 0.8  # >80% must be valid dates
-        except:
+            return valid_dates / len(sample) > DATE_DETECTION_THRESHOLD  # >80% must be valid dates
+        except (ValueError, TypeError, OverflowError) as e:
+            logger.debug(f"Date detection failed for sample: {e}")
             return False
     
     def _calculate_quality_score(self, columns: Dict[str, Any]) -> float:
@@ -208,9 +224,9 @@ class DataProfiler:
             if col_info.get('detected_type') == 'id':
                 uniqueness_score = uniqueness  # IDs should be unique
             else:
-                uniqueness_score = 1 - abs(0.5 - uniqueness)  # Sweet spot around 50%
+                uniqueness_score = 1 - abs(UNIQUENESS_SWEET_SPOT - uniqueness)  # Sweet spot around 50%
             
-            col_score = (1 - null_penalty) * 0.6 + uniqueness_score * 0.4
+            col_score = (1 - null_penalty) * QUALITY_SCORE_NULL_WEIGHT + uniqueness_score * QUALITY_SCORE_UNIQUENESS_WEIGHT
             scores.append(col_score * 100)
         
         return sum(scores) / len(scores)
@@ -247,12 +263,7 @@ class DataProfiler:
             
         # Default thresholds if not provided
         if quality_thresholds is None:
-            quality_thresholds = {
-                'critical': 100.0,
-                'high': 95.0,
-                'medium': 80.0,
-                'low': 50.0
-            }
+            quality_thresholds = DEFAULT_QUALITY_THRESHOLDS.copy()
         
         config = {
             'validation_name': validation_name,
@@ -353,7 +364,7 @@ class DataProfiler:
         detected_type = col_info.get('detected_type', 'unknown')
         
         # ID columns should be unique
-        if detected_type == 'id' and col_info['null_percent'] < 50:
+        if detected_type == 'id' and col_info['null_percent'] < ID_NULL_THRESHOLD_FOR_UNIQUENESS:
             expectations.append({
                 'expectation_type': 'expect_column_values_to_be_unique',
                 'kwargs': {'column': col},
@@ -423,8 +434,8 @@ class DataProfiler:
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
         
         logger.info(f"Saved configuration to {output_path}")
-        print(f"Configuration saved: {output_path}")
-        print(f"   - {len(config['expectations'])} expectations generated")
+        logger.info(f"Configuration saved: {output_path}")
+        logger.info(f"   - {len(config['expectations'])} expectations generated")
     
     def print_summary(self) -> None:
         """Print a human-readable summary of the profiling results."""

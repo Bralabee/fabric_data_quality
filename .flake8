@@ -4,6 +4,9 @@ exclude =
     __pycache__,
     build,
     dist,
-    examples
-max-line-length = 127
+    examples,
+    tests/data_parallel,
+    tests/output_parallel,
+    tests/output_parallel_verify
+max-line-length = 100
 max-complexity = 10

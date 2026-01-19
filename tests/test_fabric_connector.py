@@ -62,14 +62,8 @@ class TestFabricDataQualityRunner:
         assert runner.config is not None
 
 
-def pytest_addoption(parser):
-    """Add custom pytest options"""
-    parser.addoption(
-        "--fabric",
-        action="store_true",
-        default=False,
-        help="Run tests that require Fabric environment"
-    )
+# NOTE: pytest_addoption for --fabric is defined in tests/conftest.py
+# Do not duplicate it here as pytest only allows one definition
 
 
 if __name__ == "__main__":

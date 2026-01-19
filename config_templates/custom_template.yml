@@ -1,0 +1,313 @@
+# Custom Data Quality Configuration Template
+# Purpose: Template for creating custom validation configurations
+# Use Case: Starting point for domain-specific data quality rules
+# Version: 1.2.0
+
+# ============================================================================
+# INSTRUCTIONS FOR CUSTOMIZATION
+# ============================================================================
+# 1. Copy this template to your config/ directory
+# 2. Rename to match your dataset (e.g., customer_orders_config.yml)
+# 3. Update the validation_name and description
+# 4. Configure your data source settings
+# 5. Define expectations matching your data quality requirements
+# 6. Adjust severity levels and thresholds as needed
+
+validation_name: "custom_validation"
+description: "Custom validation suite - update with your description"
+
+# ============================================================================
+# DATA SOURCE CONFIGURATION
+# ============================================================================
+data_source:
+  # Source type: lakehouse, delta_table, spark_dataframe, or file
+  type: "lakehouse"
+  
+  # Lakehouse configuration (when type=lakehouse)
+  lakehouse_name: "your_lakehouse_name"
+  file_path: "Files/your_layer/your_dataset"
+  file_format: "parquet"  # Options: parquet, csv, delta, json
+  
+  # Delta table configuration (when type=delta_table)
+  # table_name: "your_catalog.your_schema.your_table"
+  
+  # File system configuration (when type=file)
+  # file_path: "/path/to/your/data.parquet"
+  
+  # Read options for CSV files
+  read_options:
+    header: true
+    inferSchema: true
+    # delimiter: ","
+    # encoding: "utf-8"
+    # nullValue: ""
+
+# ============================================================================
+# GLOBAL THRESHOLDS (Override defaults per validation)
+# ============================================================================
+thresholds:
+  critical_pass_rate: 100    # Critical expectations must all pass
+  high_pass_rate: 95         # High severity: 95% pass rate required
+  medium_pass_rate: 85       # Medium severity: 85% pass rate required  
+  low_pass_rate: 70          # Low severity: 70% pass rate required
+
+# ============================================================================
+# EXPECTATIONS (DATA QUALITY RULES)
+# ============================================================================
+# Each expectation follows the Great Expectations format:
+#   - expectation_type: The GE expectation class name
+#     kwargs: Arguments passed to the expectation
+#     meta: Metadata including severity and description
+# 
+# Severity Levels:
+#   - critical: Must pass for validation success
+#   - high: Important checks, some failures acceptable
+#   - medium: Standard quality checks
+#   - low: Nice-to-have, informational checks
+
+expectations:
+  # --------------------------------------------------------------------------
+  # STRUCTURAL VALIDATIONS
+  # --------------------------------------------------------------------------
+  
+  # Row count check
+  - expectation_type: "expect_table_row_count_to_be_between"
+    kwargs:
+      min_value: 1
+      max_value: null  # Set upper limit if known
+    meta:
+      severity: "critical"
+      description: "Table must contain at least one row"
+      tags: ["structural", "completeness"]
+  
+  # Column count check (uncomment and set value)
+  # - expectation_type: "expect_table_column_count_to_equal"
+  #   kwargs:
+  #     value: 10  # Expected number of columns
+  #   meta:
+  #     severity: "high"
+  #     description: "Schema must have expected column count"
+
+  # --------------------------------------------------------------------------
+  # COLUMN EXISTENCE CHECKS
+  # --------------------------------------------------------------------------
+  
+  # Primary key column exists
+  - expectation_type: "expect_column_to_exist"
+    kwargs:
+      column: "id"  # Update with your primary key column
+    meta:
+      severity: "critical"
+      description: "Primary key column must exist"
+      tags: ["schema", "required"]
+  
+  # Add more column existence checks as needed:
+  # - expectation_type: "expect_column_to_exist"
+  #   kwargs:
+  #     column: "created_date"
+  #   meta:
+  #     severity: "high"
+  #     description: "Audit timestamp column must exist"
+
+  # --------------------------------------------------------------------------
+  # NULL/COMPLETENESS CHECKS
+  # --------------------------------------------------------------------------
+  
+  # Primary key cannot be null
+  - expectation_type: "expect_column_values_to_not_be_null"
+    kwargs:
+      column: "id"
+    meta:
+      severity: "critical"
+      description: "Primary key cannot contain null values"
+      tags: ["completeness", "integrity"]
+  
+  # Required field completeness (with tolerance)
+  # - expectation_type: "expect_column_values_to_not_be_null"
+  #   kwargs:
+  #     column: "customer_name"
+  #     mostly: 0.99  # Allow up to 1% nulls
+  #   meta:
+  #     severity: "high"
+  #     description: "Customer name required for 99% of records"
+
+  # --------------------------------------------------------------------------
+  # UNIQUENESS CONSTRAINTS
+  # --------------------------------------------------------------------------
+  
+  # Primary key uniqueness
+  - expectation_type: "expect_column_values_to_be_unique"
+    kwargs:
+      column: "id"
+    meta:
+      severity: "critical"
+      description: "Primary key must be unique"
+      tags: ["uniqueness", "integrity"]
+  
+  # Compound uniqueness (uncomment if needed)
+  # - expectation_type: "expect_compound_columns_to_be_unique"
+  #   kwargs:
+  #     column_list:
+  #       - "customer_id"
+  #       - "order_date"
+  #       - "product_id"
+  #   meta:
+  #     severity: "high"
+  #     description: "Business key combination must be unique"
+
+  # --------------------------------------------------------------------------
+  # DATA TYPE VALIDATIONS
+  # --------------------------------------------------------------------------
+  
+  # Integer column validation
+  # - expectation_type: "expect_column_values_to_be_of_type"
+  #   kwargs:
+  #     column: "quantity"
+  #     type_: "int"  # Options: int, float, str, bool, datetime
+  #   meta:
+  #     severity: "high"
+  #     description: "Quantity must be an integer"
+  
+  # Date format validation
+  # - expectation_type: "expect_column_values_to_match_strftime_format"
+  #   kwargs:
+  #     column: "order_date"
+  #     strftime_format: "%Y-%m-%d"
+  #   meta:
+  #     severity: "medium"
+  #     description: "Order date must be in YYYY-MM-DD format"
+
+  # --------------------------------------------------------------------------
+  # VALUE RANGE CHECKS
+  # --------------------------------------------------------------------------
+  
+  # Numeric range validation
+  # - expectation_type: "expect_column_values_to_be_between"
+  #   kwargs:
+  #     column: "price"
+  #     min_value: 0
+  #     max_value: 1000000
+  #     strictly: true  # Use strict comparison
+  #   meta:
+  #     severity: "medium"
+  #     description: "Price must be between 0 and 1M"
+  
+  # Percentage validation
+  # - expectation_type: "expect_column_values_to_be_between"
+  #   kwargs:
+  #     column: "discount_rate"
+  #     min_value: 0
+  #     max_value: 100
+  #   meta:
+  #     severity: "medium"
+  #     description: "Discount rate must be 0-100%"
+
+  # --------------------------------------------------------------------------
+  # SET MEMBERSHIP / ALLOWED VALUES
+  # --------------------------------------------------------------------------
+  
+  # Categorical value validation
+  # - expectation_type: "expect_column_values_to_be_in_set"
+  #   kwargs:
+  #     column: "status"
+  #     value_set:
+  #       - "pending"
+  #       - "approved"
+  #       - "rejected"
+  #       - "cancelled"
+  #   meta:
+  #     severity: "high"
+  #     description: "Status must be a valid enum value"
+  
+  # Boolean column check
+  # - expectation_type: "expect_column_values_to_be_in_set"
+  #   kwargs:
+  #     column: "is_active"
+  #     value_set: [true, false, 1, 0]
+  #   meta:
+  #     severity: "medium"
+  #     description: "Active flag must be boolean"
+
+  # --------------------------------------------------------------------------
+  # PATTERN/REGEX VALIDATIONS
+  # --------------------------------------------------------------------------
+  
+  # Email format validation
+  # - expectation_type: "expect_column_values_to_match_regex"
+  #   kwargs:
+  #     column: "email"
+  #     regex: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+  #     mostly: 0.95
+  #   meta:
+  #     severity: "medium"
+  #     description: "Email must be valid format"
+  
+  # Phone number format
+  # - expectation_type: "expect_column_values_to_match_regex"
+  #   kwargs:
+  #     column: "phone"
+  #     regex: "^\\+?[0-9\\s\\-()]{10,20}$"
+  #     mostly: 0.90
+  #   meta:
+  #     severity: "low"
+  #     description: "Phone number format validation"
+
+  # --------------------------------------------------------------------------
+  # STRING LENGTH CONSTRAINTS
+  # --------------------------------------------------------------------------
+  
+  # Maximum length validation
+  # - expectation_type: "expect_column_value_lengths_to_be_between"
+  #   kwargs:
+  #     column: "description"
+  #     min_value: 1
+  #     max_value: 4000
+  #   meta:
+  #     severity: "medium"
+  #     description: "Description length within database limits"
+
+  # --------------------------------------------------------------------------
+  # REFERENTIAL INTEGRITY (Cross-dataset checks)
+  # --------------------------------------------------------------------------
+  
+  # Note: For foreign key validation, consider using separate validation
+  # configs that load reference data and check against it
+  
+  # --------------------------------------------------------------------------
+  # CUSTOM BUSINESS RULES
+  # --------------------------------------------------------------------------
+  
+  # Add domain-specific validations here based on your business requirements
+  # Examples:
+  #   - Order total = sum of line items
+  #   - End date > start date
+  #   - Approval requires approver_id when status='approved'
+
+# ============================================================================
+# OUTPUT CONFIGURATION (Optional)
+# ============================================================================
+output:
+  # Where to save validation results
+  save_results: true
+  results_path: "Files/dq_results"
+  format: "json"  # Options: json, html, parquet
+  
+  # Include detailed expectations in output
+  include_details: true
+  
+  # Notification settings (requires external integration)
+  # notify_on_failure: true
+  # notification_email: "data-quality@yourcompany.com"
+
+# ============================================================================
+# METADATA
+# ============================================================================
+metadata:
+  owner: "Data Engineering Team"
+  created_date: "2026-01-19"
+  last_modified: "2026-01-19"
+  version: "1.0.0"
+  tags:
+    - "custom"
+    - "template"
+  # Add your domain/project-specific tags

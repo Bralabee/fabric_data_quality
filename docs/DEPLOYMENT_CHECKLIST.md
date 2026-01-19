@@ -225,5 +225,5 @@ _____________________________________________
 
 ---
 
-**Framework Version:** 1.1.0  
-**Last Updated:** 2025-11-03
+**Framework Version:** 1.2.0  
+**Last Updated:** 2026-01-19

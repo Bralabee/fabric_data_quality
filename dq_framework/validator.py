@@ -34,6 +34,7 @@ except ImportError:
     AbstractDataContext = Any  # Define for type hinting if GE not available
 
 from .config_loader import ConfigLoader
+from .constants import DEFAULT_VALIDATION_THRESHOLD
 
 logger = logging.getLogger(__name__)
 
@@ -270,10 +271,10 @@ class DataQualityValidator:
         
         # 1. Check global threshold (legacy support)
         if threshold is not None:
-            if threshold >= 100.0:
+            if threshold >= DEFAULT_VALIDATION_THRESHOLD:
                 if not validation_result.success:
                     is_success = False
-                    threshold_failures.append(f"Global threshold 100% failed (actual: {success_rate:.1f}%)")
+                    threshold_failures.append(f"Global threshold {DEFAULT_VALIDATION_THRESHOLD}% failed (actual: {success_rate:.1f}%)")
             elif success_rate < threshold:
                 is_success = False
                 threshold_failures.append(f"Global threshold {threshold}% failed (actual: {success_rate:.1f}%)")

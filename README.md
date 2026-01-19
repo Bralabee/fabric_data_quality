@@ -23,7 +23,7 @@ This standalone framework provides data quality validation capabilities that can
 ## 📁 Project Structure
 
 ```
-fabric_data_quality/
+2_DATA_QUALITY_LIBRARY/
 ├── README.md                          # This file
 ├── requirements.txt                   # Dependencies
 ├── setup.py                           # Installation script
@@ -197,14 +197,14 @@ See **[PROFILING_WORKFLOW.md](docs/PROFILING_WORKFLOW.md)** for complete guide.
 
 #### Option A: Install as editable package (Recommended for development)
 ```bash
-cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality
+cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY
 pip install -e .
 ```
 
 #### Option B: Direct import (Add to Python path)
 ```python
 import sys
-sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY')
 ```
 
 #### Option C: Install dependencies only
@@ -225,7 +225,7 @@ df = pd.read_parquet('data/my_data.parquet')
 
 # Create validator with config
 validator = DataQualityValidator(
-    config_path='/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality/config_templates/bronze_layer_template.yml'
+    config_path='/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY/config_templates/bronze_layer_template.yml'
 )
 
 # Validate
@@ -263,7 +263,7 @@ if not results['success']:
 ```python
 # In full_stack_hss/src/transform/transform.py
 import sys
-sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY')
 
 from dq_framework import DataQualityValidator
 
@@ -273,7 +273,7 @@ def transform_with_quality_checks():
     
     # Add DQ check
     validator = DataQualityValidator(
-        config_path='../../fabric_data_quality/examples/hss_incidents_example.yml'
+        config_path='../../2_DATA_QUALITY_LIBRARY/examples/hss_incidents_example.yml'
     )
     results = validator.validate(df)
     
@@ -290,13 +290,13 @@ def transform_with_quality_checks():
 ```python
 # In AIMS_LOCAL/src/your_script.py
 import sys
-sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY')
 
 from dq_framework import DataQualityValidator
 
 # Use AIMS-specific config
 validator = DataQualityValidator(
-    config_path='../../fabric_data_quality/examples/aims_data_example.yml'
+    config_path='../../2_DATA_QUALITY_LIBRARY/examples/aims_data_example.yml'
 )
 
 df_aims = pd.read_parquet('data/aims_data.parquet')
@@ -308,12 +308,12 @@ results = validator.validate(df_aims)
 ```python
 # In ACA_COMMERCIAL notebooks
 import sys
-sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality')
+sys.path.append('/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY')
 
 from dq_framework import DataQualityValidator
 
 validator = DataQualityValidator(
-    config_path='../../fabric_data_quality/examples/aca_commercial_example.yml'
+    config_path='../../2_DATA_QUALITY_LIBRARY/examples/aca_commercial_example.yml'
 )
 
 results = validator.validate(df_commercial)
@@ -419,6 +419,7 @@ pytest tests/
 
 ## 🔄 Version History
 
+- **v1.2.0** (2026-01-19) - Enhanced test coverage (~70%, 213+ tests), stability improvements
 - **v1.1.3** (2025-12-06) - Added configurable global thresholds and ABFSS support
 - **v1.1.0** (2025-10-28) - Added MS Fabric ETL integration guides
 - **v1.0.0** (2025-10-28) - Initial standalone framework with universal profiler
@@ -459,5 +460,5 @@ For questions or issues:
 ---
 
 **Framework Owner:** Data Engineering Team  
-**Last Updated:** October 2025  
+**Last Updated:** January 2026  
 **Status:** Production Ready

@@ -72,3 +72,46 @@ temp/
 *.tmp
 tests/output_parallel/
 tests/output_real_data/
+# DQ Results and Reports
+dq_results/
+validation_results/
+*.dq_report.html
+profiling_output/
+
+# Fabric-specific
+.fabric/
+.lakehouse/
+.notebookutils_cache/
+
+# Security and credentials
+.env
+.env.local
+*.pem
+*.key
+secrets.yml
+credentials.yml
+
+# Coverage reports (keep htmlcov for local review)
+coverage.xml
+.coverage.*
+*.gcov
+*.lcov
+
+# IDE workspace files
+*.code-workspace
+.project
+.pydevproject
+
+# mypy cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff cache
+.ruff_cache/
+
+# AI/ML artifacts (if any)
+*.pkl
+*.joblib
+models/
+checkpoints/

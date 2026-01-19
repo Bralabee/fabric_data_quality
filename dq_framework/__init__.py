@@ -6,11 +6,11 @@ A reusable data quality validation framework using Great Expectations.
 
 Usage:
     from dq_framework import DataQualityValidator, FabricDataQualityRunner
-    
+
     # Basic validation
     validator = DataQualityValidator(config_path='config.yml')
     results = validator.validate(df)
-    
+
     # Fabric integration
     runner = FabricDataQualityRunner(config_path='config.yml')
     results = runner.validate_delta_table('table_name')
@@ -35,7 +35,13 @@ from .data_profiler import DataProfiler
 from .batch_profiler import BatchProfiler
 from .loader import DataLoader
 from .ingestion import DataIngester
-from .utils import FileSystemHandler
+from .utils import (
+    FileSystemHandler,
+    FABRIC_AVAILABLE,
+    FABRIC_UTILS_AVAILABLE,
+    _is_fabric_runtime,
+    get_mssparkutils,
+)
 
 __all__ = [
     "DataQualityValidator",
@@ -46,4 +52,9 @@ __all__ = [
     "DataLoader",
     "DataIngester",
     "FileSystemHandler",
+    # Fabric detection utilities
+    "FABRIC_AVAILABLE",
+    "FABRIC_UTILS_AVAILABLE",
+    "_is_fabric_runtime",
+    "get_mssparkutils",
 ]

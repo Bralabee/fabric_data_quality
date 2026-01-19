@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional, Union, List
 import logging
 from .utils import FileSystemHandler
+from .constants import LARGE_FILE_SIZE_MB, DEFAULT_AUTO_SAMPLE_ROWS
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,9 @@ class DataLoader:
         if not is_abfss and sample_size is None:
             try:
                 file_size_mb = Path(path_str).stat().st_size / (1024 * 1024)
-                if file_size_mb > 500:
-                    logger.warning(f"Large file detected ({file_size_mb:.1f} MB). Auto-limiting to 100,000 rows.")
-                    sample_size = 100000
+                if file_size_mb > LARGE_FILE_SIZE_MB:
+                    logger.warning(f"Large file detected ({file_size_mb:.1f} MB). Auto-limiting to {DEFAULT_AUTO_SAMPLE_ROWS:,} rows.")
+                    sample_size = DEFAULT_AUTO_SAMPLE_ROWS
             except Exception:
                 pass
         

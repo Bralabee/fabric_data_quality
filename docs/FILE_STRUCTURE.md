@@ -1,7 +1,7 @@
 # Fabric Data Quality Framework - Complete File Structure
 
 ```
-fabric_data_quality/                           # Root directory
+2_DATA_QUALITY_LIBRARY/                        # Root directory
 │
 ├── 📄 README.md                              # Main documentation (285 lines)
 ├── 📄 PROJECT_SUMMARY.md                     # Complete project overview
@@ -45,7 +45,7 @@ fabric_data_quality/                           # Root directory
 - **Total Python Files**: 7 (4 core + 3 test files)
 - **Total Lines of Code**: ~1,100 lines
 - **Core Framework**: ~650 lines
-- **Test Coverage**: 3 test suites
+- **Test Coverage**: ~70% coverage, 213+ tests
 
 ### Configuration Files
 - **Templates**: 3 (bronze, silver, gold)
@@ -102,9 +102,7 @@ fabric_data_quality/                           # Root directory
 
 | Test File | Coverage | Test Count |
 |-----------|----------|------------|
-| `test_config_loader.py` | Config loading | ~10 tests |
-| `test_validator.py` | Validation engine | ~6 tests |
-| `test_fabric_connector.py` | Fabric integration | ~3 tests |
+| `test_*.py` | ~70% total coverage | 213+ tests |
 
 ## 🚀 Usage Flow
 

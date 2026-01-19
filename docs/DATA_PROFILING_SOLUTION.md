@@ -158,7 +158,7 @@ VALIDATION RESULTS:
 ### For CAUSEWAY Data (Current)
 ```bash
 conda activate fabric-dq
-cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality
+cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY
 
 # Run the complete workflow
 python examples/complete_workflow_example.py
@@ -298,7 +298,7 @@ expectations:
 conda activate fabric-dq
 
 # Run complete workflow (all 5 phases)
-cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality
+cd /home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY
 python examples/complete_workflow_example.py
 
 # Review the generated configs

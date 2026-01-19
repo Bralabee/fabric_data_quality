@@ -6,9 +6,9 @@ Fabric-specific integration for data quality validation.
 """
 
 import logging
+import warnings
 from typing import Dict, Optional, Any
 from datetime import datetime
-from pathlib import Path
 
 try:
     from pyspark.sql import SparkSession, DataFrame as SparkDataFrame
@@ -17,21 +17,24 @@ except ImportError:
     SPARK_AVAILABLE = False
     SparkDataFrame = Any
 
-def _is_fabric_runtime() -> bool:
-    """Best-effort check for Microsoft Fabric runtime without importing notebookutils."""
-    return Path("/lakehouse/default/Files").exists()
+# Import Fabric detection utilities from centralized location
+from .utils import (
+    _is_fabric_runtime,
+    FABRIC_AVAILABLE,
+    FABRIC_UTILS_AVAILABLE,
+    get_mssparkutils,
+)
 
-
-if _is_fabric_runtime():
-    try:
-        from notebookutils import mssparkutils
-        FABRIC_UTILS_AVAILABLE = True
-    except Exception:
-        FABRIC_UTILS_AVAILABLE = False
-else:
-    FABRIC_UTILS_AVAILABLE = False
+# Get mssparkutils reference (None if not available)
+mssparkutils = get_mssparkutils()
 
 from .validator import DataQualityValidator
+from .constants import (
+    FABRIC_CONFIG_MAX_BYTES,
+    FABRIC_LARGE_DATASET_THRESHOLD,
+    FABRIC_SAMPLE_FRACTION,
+    MAX_FAILURE_DISPLAY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ class FabricDataQualityRunner:
                     logger.info(f"Attempting to load config from Fabric path: {config_path}")
                     # Read file content using mssparkutils
                     # head reads the first N bytes. 1MB should be enough for config files.
-                    content = mssparkutils.fs.head(config_path, 1000000)
+                    content = mssparkutils.fs.head(config_path, FABRIC_CONFIG_MAX_BYTES)
                     import yaml
                     config_dict = yaml.safe_load(content)
                     logger.info("Successfully loaded config using mssparkutils")
@@ -133,8 +136,8 @@ class FabricDataQualityRunner:
             row_count = None
         
         # Sample if large dataset
-        if row_count and row_count > 100000 and sample_large_data:
-            sample_size = min(100000, int(row_count * 0.1))
+        if row_count and row_count > FABRIC_LARGE_DATASET_THRESHOLD and sample_large_data:
+            sample_size = min(FABRIC_LARGE_DATASET_THRESHOLD, int(row_count * FABRIC_SAMPLE_FRACTION))
             logger.info(f"Sampling {sample_size:,} rows for validation")
             spark_df = spark_df.limit(sample_size)
         
@@ -245,11 +248,14 @@ class FabricDataQualityRunner:
         action: str = "log"
     ) -> None:
         """
-        Handle validation failure.
+        Handle validation failure with configurable actions.
         
         Args:
-            results: Validation results dictionary
-            action: Action to take (log, halt, alert)
+            results: Validation results dictionary from validate_* methods
+            action: Action to take on failure:
+                - 'log': Log failure details (default, always executed)
+                - 'halt': Raise ValueError to stop pipeline execution
+                - 'alert': Send notification (placeholder - requires implementation)
         """
         if results['success']:
             logger.info("Validation passed. No failure handling needed.")
@@ -265,7 +271,7 @@ class FabricDataQualityRunner:
         
         if 'failed_expectations' in results:
             logger.error("\nFailed expectations:")
-            for fail in results['failed_expectations'][:10]:  # Show first 10
+            for fail in results['failed_expectations'][:MAX_FAILURE_DISPLAY]:  # Show first N
                 logger.error(f"  - {fail['expectation']} on column '{fail['column']}'")
         
         if action == "halt":

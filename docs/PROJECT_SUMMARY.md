@@ -5,8 +5,8 @@
 A reusable, configuration-driven data quality framework for Microsoft Fabric ETL processes, built on Great Expectations. Enables declarative data quality validation across bronze, silver, and gold data layers using YAML configuration files.
 
 **Created**: January 2025  
-**Status**: ✅ Complete and Ready for Use  
-**Location**: `/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality/`
+**Status**: ✅ Complete and Ready for Use (v1.2.0, ~70% coverage, 213+ tests)  
+**Location**: `/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY/`
 
 ## 📦 What's Included
 
@@ -123,7 +123,7 @@ Single framework used by all projects:
 1. **Import the framework:**
 ```python
 import sys
-sys.path.insert(0, '/Workspace/fabric_data_quality')
+sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
 from dq_framework import FabricDataQualityRunner
 ```
 
@@ -241,7 +241,7 @@ Validation Results
 ## 🎯 Next Steps
 
 ### For Immediate Use:
-1. Upload `fabric_data_quality` folder to Fabric workspace
+1. Upload `2_DATA_QUALITY_LIBRARY` folder to Fabric workspace
 2. Install dependencies: `%pip install great-expectations pyyaml pandas`
 3. Copy relevant example config (hss/aims/aca)
 4. Customize for your data

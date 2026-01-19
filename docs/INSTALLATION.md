@@ -16,7 +16,7 @@ This method installs the framework as an editable package, allowing you to modif
 
 ```bash
 # Navigate to the project directory
-cd /Workspace/fabric_data_quality
+cd /Workspace/2_DATA_QUALITY_LIBRARY
 
 # Install in editable mode with development dependencies
 pip install -e ".[dev]"
@@ -34,7 +34,7 @@ This method uses the framework directly without installation, suitable for Fabri
 ```python
 # Add to your notebook's first cell
 import sys
-sys.path.insert(0, '/Workspace/fabric_data_quality')
+sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
 
 from dq_framework import FabricDataQualityRunner, DataQualityValidator, ConfigLoader
 ```
@@ -49,7 +49,7 @@ from dq_framework import FabricDataQualityRunner, DataQualityValidator, ConfigLo
 Install as a standard Python package:
 
 ```bash
-cd /Workspace/fabric_data_quality
+cd /Workspace/2_DATA_QUALITY_LIBRARY
 pip install .
 ```
 
@@ -63,7 +63,7 @@ pip install .
 Install just the dependencies without the framework (if copying code directly):
 
 ```bash
-cd /Workspace/fabric_data_quality
+cd /Workspace/2_DATA_QUALITY_LIBRARY
 pip install -r requirements.txt
 ```
 
@@ -83,13 +83,13 @@ print("✅ Fabric Data Quality Framework installed successfully!")
 ### Fabric Notebook Environment
 
 1. **Upload to Workspace:**
-   - Upload the `fabric_data_quality` folder to your Fabric workspace
+   - Upload the `2_DATA_QUALITY_LIBRARY` folder to your Fabric workspace
    - Place it in a location accessible by your notebooks
 
 2. **Use Direct Import:**
    ```python
    import sys
-   sys.path.insert(0, '/Workspace/fabric_data_quality')
+   sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
    from dq_framework import FabricDataQualityRunner
    ```
 
@@ -105,7 +105,7 @@ print("✅ Fabric Data Quality Framework installed successfully!")
    ```bash
    cd /your/local/path
    git clone <repository-url>
-   cd fabric_data_quality
+   cd 2_DATA_QUALITY_LIBRARY
    ```
 
 2. **Create virtual environment:**
@@ -149,7 +149,7 @@ import sys
 print(sys.path)
 
 # Add the path if missing
-sys.path.insert(0, '/Workspace/fabric_data_quality')
+sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
 ```
 
 ### Issue: Great Expectations import error
@@ -182,14 +182,14 @@ Note: In Fabric, PySpark is pre-installed.
 
 ### For Editable Installation:
 ```bash
-cd /Workspace/fabric_data_quality
+cd /Workspace/2_DATA_QUALITY_LIBRARY
 git pull  # If using git
 # Changes are immediately available
 ```
 
 ### For Standard Installation:
 ```bash
-cd /Workspace/fabric_data_quality
+cd /Workspace/2_DATA_QUALITY_LIBRARY
 git pull  # If using git
 pip install --upgrade .
 ```

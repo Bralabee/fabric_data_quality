@@ -260,7 +260,7 @@ Files/
 1. Click on **dq_configs** folder
 2. Click **Upload** button
 3. Click **Upload files**
-4. Navigate to: `/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality/fabric_deployment_package/dq_configs/`
+4. Navigate to: `/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY/fabric_deployment_package/dq_configs/`
 5. Select all `*_validation.yml` files
 6. Click **Open**
 7. Wait for upload to complete
@@ -279,7 +279,7 @@ import os
 from notebookutils import mssparkutils
 
 # Local path to your configs
-local_config_path = "/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/fabric_data_quality/config/"
+local_config_path = "/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY/config/"
 
 # Fabric path
 fabric_path = "Files/dq_configs/"
@@ -1114,8 +1114,8 @@ Use this to verify your deployment:
 ---
 
 **Deployment Status:** ✅ Ready for Production Use  
-**Framework Version:** 1.1.0  
-**Last Updated:** 2025-11-03  
+**Framework Version:** 1.2.0  
+**Last Updated:** 2026-01-19  
 **Contact:** Data Engineering Team
 
 ---
