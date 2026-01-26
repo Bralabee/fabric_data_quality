@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric Data Quality Framework - Interactive Documentation</title>
+    <meta name="description"
+        content="Comprehensive interactive documentation for the Fabric Data Quality Framework - Enterprise-grade data validation for Microsoft Fabric">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Mermaid.js for interactive diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">📊</span>
+            <span class="brand-text">DQ Framework</span>
+            <span class="version-badge">v1.2.0</span>
+        </div>
+        <div class="nav-links">
+            <a href="#overview" class="nav-link active">Overview</a>
+            <a href="#architecture" class="nav-link">Architecture</a>
+            <a href="#how-it-works" class="nav-link">How It Works</a>
+            <a href="#quickstart" class="nav-link">Quick Start</a>
+            <a href="#platforms" class="nav-link">Platforms</a>
+            <a href="#api" class="nav-link">API Reference</a>
+            <a href="#ecosystem" class="nav-link">Ecosystem</a>
+        </div>
+        <div class="nav-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">🌙</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">Data Quality Framework</div>
+            <h1 class="hero-title">Fabric Data Quality<br><span class="gradient-text">Framework</span></h1>
+            <p class="hero-subtitle">A configuration-driven data quality library for Microsoft Fabric and Spark
+                environments. Built on Great Expectations with native Spark support for large-scale validation.</p>
+            <div class="hero-actions">
+                <a href="#quickstart" class="btn btn-primary">Quick Start Guide</a>
+                <a href="#api" class="btn btn-secondary">API Reference</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">300+</span>
+                    <span class="stat-label">Validation Rules</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">3</span>
+                    <span class="stat-label">Medallion Layers</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">Spark</span>
+                    <span class="stat-label">Native Support</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Overview Section -->
+        <section id="overview" class="section">
+            <div class="section-header">
+                <h2>Overview</h2>
+                <p>A reusable, YAML-driven data quality library for validating data across your data platform</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Declarative Configuration</h3>
+                    <p>Define validation rules in YAML format. Configurations are version-controllable and maintainable
+                        without code changes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Medallion Architecture Support</h3>
+                    <p>Purpose-built validation strategies for Bronze, Silver, and Gold layers with configurable
+                        strictness levels.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Spark-Native Validation</h3>
+                    <p>Validate large datasets directly on Spark clusters without memory-intensive toPandas()
+                        conversions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Automated Profiling</h3>
+                    <p>Generate validation configurations automatically from data patterns with intelligent type
+                        detection.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section id="architecture" class="section">
+            <div class="section-header">
+                <h2>Architecture Overview</h2>
+                <p>Understanding how the DQ Framework integrates into your data platform</p>
+            </div>
+
+            <div class="architecture-container">
+                <div class="arch-diagram">
+                    <svg viewBox="0 0 900 500" class="arch-svg">
+                        <!-- Background layers -->
+                        <defs>
+                            <linearGradient id="bronzeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#cd7f32;stop-opacity:0.2" />
+                                <stop offset="100%" style="stop-color:#cd7f32;stop-opacity:0.1" />
+                            </linearGradient>
+                            <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#c0c0c0;stop-opacity:0.2" />
+                                <stop offset="100%" style="stop-color:#c0c0c0;stop-opacity:0.1" />
+                            </linearGradient>
+                            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#ffd700;stop-opacity:0.2" />
+                                <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0.1" />
+                            </linearGradient>
+                            <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                            </linearGradient>
+                            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3" />
+                            </filter>
+                        </defs>
+
+                        <!-- Data Source -->
+                        <g class="arch-node" onclick="showArchDetail('source')">
+                            <rect x="30" y="200" width="100" height="80" rx="10" fill="url(#purpleGrad)"
+                                filter="url(#shadow)" />
+                            <text x="80" y="235" text-anchor="middle" fill="white" font-size="12"
+                                font-weight="600">Data</text>
+                            <text x="80" y="255" text-anchor="middle" fill="white" font-size="12"
+                                font-weight="600">Sources</text>
+                            <text x="80" y="272" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">CSV,
+                                Parquet, Delta</text>
+                        </g>
+
+                        <!-- Arrow 1 -->
+                        <path d="M 135 240 L 180 240" stroke="#6366f1" stroke-width="3" marker-end="url(#arrowhead)" />
+
+                        <!-- Bronze Layer -->
+                        <g class="arch-node" onclick="showArchDetail('bronze')">
+                            <rect x="190" y="140" width="140" height="200" rx="12" fill="url(#bronzeGrad)"
+                                stroke="#cd7f32" stroke-width="2" />
+                            <text x="260" y="165" text-anchor="middle" fill="#cd7f32" font-size="14"
+                                font-weight="700">🥉 BRONZE</text>
+                            <text x="260" y="185" text-anchor="middle" fill="var(--text-secondary)" font-size="10">Raw
+                                Ingestion</text>
+                            <rect x="205" y="200" width="110" height="50" rx="6" fill="var(--bg-card)"
+                                stroke="var(--border-color)" />
+                            <text x="260" y="222" text-anchor="middle" fill="var(--text-primary)" font-size="10"
+                                font-weight="500">DQ Validation</text>
+                            <text x="260" y="238" text-anchor="middle" fill="var(--text-muted)" font-size="9">Schema +
+                                Nulls</text>
+                            <rect x="205" y="260" width="110" height="30" rx="6" fill="rgba(16,185,129,0.2)"
+                                stroke="#10b981" />
+                            <text x="260" y="280" text-anchor="middle" fill="#10b981" font-size="10">Log failures</text>
+                        </g>
+
+                        <!-- Arrow 2 -->
+                        <path d="M 335 240 L 380 240" stroke="#c0c0c0" stroke-width="3" marker-end="url(#arrowhead2)" />
+
+                        <!-- Silver Layer -->
+                        <g class="arch-node" onclick="showArchDetail('silver')">
+                            <rect x="390" y="140" width="140" height="200" rx="12" fill="url(#silverGrad)"
+                                stroke="#a0a0a0" stroke-width="2" />
+                            <text x="460" y="165" text-anchor="middle" fill="#a0a0a0" font-size="14"
+                                font-weight="700">🥈 SILVER</text>
+                            <text x="460" y="185" text-anchor="middle" fill="var(--text-secondary)"
+                                font-size="10">Cleaned & Conformed</text>
+                            <rect x="405" y="200" width="110" height="50" rx="6" fill="var(--bg-card)"
+                                stroke="var(--border-color)" />
+                            <text x="460" y="222" text-anchor="middle" fill="var(--text-primary)" font-size="10"
+                                font-weight="500">DQ Validation</text>
+                            <text x="460" y="238" text-anchor="middle" fill="var(--text-muted)" font-size="9">Business
+                                Rules</text>
+                            <rect x="405" y="260" width="110" height="30" rx="6" fill="rgba(245,158,11,0.2)"
+                                stroke="#f59e0b" />
+                            <text x="460" y="280" text-anchor="middle" fill="#f59e0b" font-size="10">Alert on
+                                failure</text>
+                        </g>
+
+                        <!-- Arrow 3 -->
+                        <path d="M 535 240 L 580 240" stroke="#ffd700" stroke-width="3" marker-end="url(#arrowhead3)" />
+
+                        <!-- Gold Layer -->
+                        <g class="arch-node" onclick="showArchDetail('gold')">
+                            <rect x="590" y="140" width="140" height="200" rx="12" fill="url(#goldGrad)"
+                                stroke="#d4a600" stroke-width="2" />
+                            <text x="660" y="165" text-anchor="middle" fill="#d4a600" font-size="14"
+                                font-weight="700">🥇 GOLD</text>
+                            <text x="660" y="185" text-anchor="middle" fill="var(--text-secondary)"
+                                font-size="10">Business-Ready</text>
+                            <rect x="605" y="200" width="110" height="50" rx="6" fill="var(--bg-card)"
+                                stroke="var(--border-color)" />
+                            <text x="660" y="222" text-anchor="middle" fill="var(--text-primary)" font-size="10"
+                                font-weight="500">DQ Validation</text>
+                            <text x="660" y="238" text-anchor="middle" fill="var(--text-muted)" font-size="9">Zero
+                                Tolerance</text>
+                            <rect x="605" y="260" width="110" height="30" rx="6" fill="rgba(239,68,68,0.2)"
+                                stroke="#ef4444" />
+                            <text x="660" y="280" text-anchor="middle" fill="#ef4444" font-size="10">Halt
+                                pipeline</text>
+                        </g>
+
+                        <!-- Arrow 4 -->
+                        <path d="M 735 240 L 780 240" stroke="#10b981" stroke-width="3" marker-end="url(#arrowhead4)" />
+
+                        <!-- Analytics -->
+                        <g class="arch-node" onclick="showArchDetail('analytics')">
+                            <rect x="790" y="200" width="100" height="80" rx="10" fill="url(#purpleGrad)"
+                                filter="url(#shadow)" />
+                            <text x="840" y="235" text-anchor="middle" fill="white" font-size="12"
+                                font-weight="600">Analytics</text>
+                            <text x="840" y="255" text-anchor="middle" fill="white" font-size="12" font-weight="600">&
+                                Reports</text>
+                            <text x="840" y="272" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9">Power
+                                BI, etc.</text>
+                        </g>
+
+                        <!-- DQ Framework box at bottom -->
+                        <rect x="190" y="380" width="540" height="60" rx="10" fill="var(--bg-card)"
+                            stroke="var(--accent-primary)" stroke-width="2" stroke-dasharray="5,5" />
+                        <text x="460" y="405" text-anchor="middle" fill="var(--accent-primary)" font-size="12"
+                            font-weight="600">📊 DQ Framework</text>
+                        <text x="460" y="425" text-anchor="middle" fill="var(--text-muted)" font-size="10">YAML Configs
+                            • Great Expectations • Auto-Profiling • Spark-Native</text>
+
+                        <!-- Connector lines to DQ box -->
+                        <path d="M 260 340 L 260 380" stroke="var(--border-color)" stroke-width="1"
+                            stroke-dasharray="4,4" />
+                        <path d="M 460 340 L 460 380" stroke="var(--border-color)" stroke-width="1"
+                            stroke-dasharray="4,4" />
+                        <path d="M 660 340 L 660 380" stroke="var(--border-color)" stroke-width="1"
+                            stroke-dasharray="4,4" />
+
+                        <!-- Arrow markers -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                            </marker>
+                            <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#c0c0c0" />
+                            </marker>
+                            <marker id="arrowhead3" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#ffd700" />
+                            </marker>
+                            <marker id="arrowhead4" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div id="arch-detail" class="arch-detail-panel">
+                    <div class="arch-detail-content">
+                        <h4>Select a Component</h4>
+                        <p>Select any component in the diagram to view details about that stage of the data pipeline.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="section">
+            <div class="section-header">
+                <h2>Validation Process</h2>
+                <p>The framework validates data at each stage of the pipeline</p>
+            </div>
+
+            <div class="workflow-container">
+                <div class="workflow-step" data-step="1">
+                    <div class="workflow-icon">📊</div>
+                    <div class="workflow-content">
+                        <h3>1. Profile Your Data</h3>
+                        <p>The <code>DataProfiler</code> analyzes your data to understand patterns, types, and
+                            distributions.</p>
+                        <ul class="workflow-details">
+                            <li>Detects column types (ID, date, numeric, categorical, text)</li>
+                            <li>Calculates null percentages and uniqueness ratios</li>
+                            <li>Identifies common patterns and value ranges</li>
+                            <li>Generates a quality score for each column</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-connector">→</div>
+
+                <div class="workflow-step" data-step="2">
+                    <div class="workflow-icon">📝</div>
+                    <div class="workflow-content">
+                        <h3>2. Generate Expectations</h3>
+                        <p>Based on profiling, the framework auto-generates YAML validation rules.</p>
+                        <ul class="workflow-details">
+                            <li>Configurable null tolerance per column</li>
+                            <li>Uniqueness checks for ID columns</li>
+                            <li>Type-appropriate range and format checks</li>
+                            <li>Severity levels: critical, high, medium, low</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-connector">→</div>
+
+                <div class="workflow-step" data-step="3">
+                    <div class="workflow-icon">✅</div>
+                    <div class="workflow-content">
+                        <h3>3. Validate at Runtime</h3>
+                        <p>The <code>DataQualityValidator</code> runs expectations against your data.</p>
+                        <ul class="workflow-details">
+                            <li>Uses Great Expectations engine under the hood</li>
+                            <li>Spark-native mode for large datasets (no memory issues)</li>
+                            <li>Returns detailed pass/fail results with diagnostics</li>
+                            <li>Configurable actions: log, alert, or halt pipeline</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-connector">→</div>
+
+                <div class="workflow-step" data-step="4">
+                    <div class="workflow-icon">📈</div>
+                    <div class="workflow-content">
+                        <h3>4. Act on Results</h3>
+                        <p>Based on validation results, the framework takes appropriate action.</p>
+                        <ul class="workflow-details">
+                            <li><strong>Bronze:</strong> Log failures, continue processing</li>
+                            <li><strong>Silver:</strong> Send alerts, quarantine bad data</li>
+                            <li><strong>Gold:</strong> Halt pipeline, prevent bad data reaching reports</li>
+                            <li>Results saved to Lakehouse for trend analysis</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Strategies -->
+            <div class="strategies-container">
+                <h3 class="strategies-title">Validation Strategies by Dataset Size</h3>
+                <div class="strategy-cards">
+                    <div class="strategy-card">
+                        <div class="strategy-header small">
+                            <span class="strategy-size">&lt; 100K rows</span>
+                            <span class="strategy-label">Standard</span>
+                        </div>
+                        <div class="strategy-body">
+                            <p>Direct pandas validation</p>
+                            <code>validator.validate(df)</code>
+                        </div>
+                    </div>
+                    <div class="strategy-card">
+                        <div class="strategy-header medium">
+                            <span class="strategy-size">100K - 1M rows</span>
+                            <span class="strategy-label">Auto-Sample</span>
+                        </div>
+                        <div class="strategy-body">
+                            <p>Automatic sampling enabled</p>
+                            <code>sample_large_data=True</code>
+                        </div>
+                    </div>
+                    <div class="strategy-card">
+                        <div class="strategy-header large">
+                            <span class="strategy-size">1M - 10M rows</span>
+                            <span class="strategy-label">Chunked</span>
+                        </div>
+                        <div class="strategy-body">
+                            <p>Process in memory-safe chunks</p>
+                            <code>chunk_size=100000</code>
+                        </div>
+                    </div>
+                    <div class="strategy-card">
+                        <div class="strategy-header xlarge">
+                            <span class="strategy-size">&gt; 10M rows</span>
+                            <span class="strategy-label">Spark-Native</span>
+                        </div>
+                        <div class="strategy-body">
+                            <p>Validate directly on Spark</p>
+                            <code>use_spark_native=True</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start Section -->
+        <section id="quickstart" class="section">
+            <div class="section-header">
+                <h2>Quick Start</h2>
+                <p>Choose your environment and get up and running</p>
+            </div>
+
+            <!-- Environment Setup Tabs -->
+            <div class="setup-tabs">
+                <button class="setup-tab active" onclick="showSetup('local')">🖥️ Local Development</button>
+                <button class="setup-tab" onclick="showSetup('fabric')">☁️ Microsoft Fabric</button>
+            </div>
+
+            <div class="setup-content">
+                <!-- Local Development Setup -->
+                <div id="setup-local" class="setup-panel active">
+                    <div class="callout info">
+                        <div class="callout-icon">📦</div>
+                        <div class="callout-content">
+                            <strong>Reproducible Environment:</strong> This project uses a dedicated Conda virtual
+                            environment
+                            with all dependencies pre-configured. We recommend using this for consistent behavior.
+                        </div>
+                    </div>
+
+                    <div class="steps-container">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Clone the Repository</h3>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Terminal</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code>git clone https://github.com/hs2/data-quality-library.git
+cd data-quality-library</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Activate the Conda Environment</h3>
+                                <p>The project includes a reproducible Conda environment with all dependencies:</p>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Terminal</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code># Create environment from the project's environment.yml
+conda env create -f environment.yml
+
+# Activate the environment
+conda activate dq_framework
+
+# Verify installation
+python -c "from dq_framework import DataProfiler; print('✅ Ready!')"</code></pre>
+                                </div>
+                                <div class="callout warning">
+                                    <div class="callout-icon">⚠️</div>
+                                    <div class="callout-content">
+                                        <strong>Note:</strong> Using <code>pip install</code> directly is not
+                                        recommended
+                                        as it may result in dependency conflicts. Always use the Conda environment.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Profile Your Data & Generate Config</h3>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Python</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code>from dq_framework import DataProfiler
+import pandas as pd
+
+# Load your data
+df = pd.read_parquet("my_data.parquet")
+
+# Profile and generate validation config
+profiler = DataProfiler(df)
+config = profiler.generate_expectations(
+    validation_name="my_table_validation",
+    null_tolerance=5.0
+)
+
+# Save YAML config for reuse
+profiler.save_config(config, "configs/my_table.yml")</code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>Run Validation</h3>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Python</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code>from dq_framework import DataQualityValidator
+
+validator = DataQualityValidator("configs/my_table.yml")
+results = validator.validate(df)
+
+if results["success"]:
+    print(f"✅ Validation passed: {results['success_rate']:.1f}%")
+else:
+    print(f"❌ Failed: {results['failed_checks']} checks failed")</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Microsoft Fabric Setup -->
+                <div id="setup-fabric" class="setup-panel">
+                    <div class="callout info">
+                        <div class="callout-icon">☁️</div>
+                        <div class="callout-content">
+                            <strong>Workspace Environment:</strong> In Microsoft Fabric, the library must be added to a
+                            Workspace Environment and published before notebooks can use it. This ensures consistent
+                            library versions across your workspace.
+                        </div>
+                    </div>
+
+                    <div class="steps-container">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Create or Configure Workspace Environment</h3>
+                                <p>Navigate to your Fabric Workspace and set up an Environment:</p>
+                                <div class="fabric-step-detail">
+                                    <ol class="fabric-steps">
+                                        <li>Open your <strong>Fabric Workspace</strong></li>
+                                        <li>Go to <strong>Manage → Environments</strong></li>
+                                        <li>Click <strong>+ New Environment</strong> or select existing</li>
+                                        <li>Name it (e.g., <code>dq_environment</code>)</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Add the DQ Framework Library</h3>
+                                <p>Upload the library package to your environment:</p>
+                                <div class="fabric-step-detail">
+                                    <ol class="fabric-steps">
+                                        <li>In the Environment settings, go to <strong>Public libraries</strong></li>
+                                        <li>Add required PyPI packages:
+                                            <div class="code-block" style="margin-top: 0.5rem;">
+                                                <pre><code>great-expectations==0.18.*
+pyyaml>=6.0
+pandas>=2.0</code></pre>
+                                            </div>
+                                        </li>
+                                        <li>Go to <strong>Custom libraries</strong></li>
+                                        <li>Upload <code>dq_framework-1.2.0-py3-none-any.whl</code></li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Publish the Environment</h3>
+                                <div class="fabric-step-detail">
+                                    <ol class="fabric-steps">
+                                        <li>Click <strong>Publish</strong> to make the environment available</li>
+                                        <li>Wait for the environment to build (may take 2-5 minutes)</li>
+                                        <li>Verify status shows <span class="status-badge success">Published</span></li>
+                                    </ol>
+                                </div>
+                                <div class="callout warning">
+                                    <div class="callout-icon">⏱️</div>
+                                    <div class="callout-content">
+                                        <strong>Important:</strong> Environment changes require re-publishing.
+                                        Notebooks will not see library updates until the environment is re-published.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>Attach Environment to Notebook</h3>
+                                <div class="fabric-step-detail">
+                                    <ol class="fabric-steps">
+                                        <li>Open your Fabric Notebook</li>
+                                        <li>Click the <strong>Environment</strong> dropdown (top bar)</li>
+                                        <li>Select your <code>dq_environment</code></li>
+                                        <li>The notebook will restart with the new environment</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h3>Generate or Upload Configs</h3>
+                                <p>You can <strong>auto-generate</strong> validation configs directly in Fabric, or
+                                    upload pre-made configs:</p>
+
+                                <h4 style="margin-top: 1rem; font-size: 0.9rem; color: var(--accent-primary);">Option A:
+                                    Generate in Notebook (Recommended)</h4>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Fabric Notebook</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code>from dq_framework import DataProfiler
+
+# Load your table
+spark_df = spark.table("lakehouse.bronze.incidents")
+df = spark_df.limit(100000).toPandas()  # Sample for profiling
+
+# Auto-generate validation config
+profiler = DataProfiler(df)
+config = profiler.generate_expectations(
+    validation_name="bronze_incidents",
+    null_tolerance=10.0
+)
+
+# Save to Lakehouse Files
+profiler.save_config(config, "/lakehouse/default/Files/configs/bronze_incidents.yml")</code></pre>
+                                </div>
+
+                                <h4 style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">Option B:
+                                    Upload Pre-made Configs</h4>
+                                <p style="font-size: 0.85rem; color: var(--text-muted);">Or manually upload YAML files
+                                    to <code>Files/configs/</code> in your Lakehouse.</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <h3>Run Validation in Notebook</h3>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>Fabric Notebook</span>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <pre><code># Framework is available via the Workspace Environment
+from dq_framework.fabric_connector import FabricDataQualityRunner
+
+# Load Delta table from Lakehouse
+spark_df = spark.table("lakehouse.bronze.incidents")
+
+# Initialize runner with config from Lakehouse Files
+runner = FabricDataQualityRunner("Files/configs/bronze_incidents.yml")
+
+# Validate with Spark-native mode (recommended for large tables)
+results = runner.validate_spark_dataframe(
+    spark_df,
+    use_spark_native=True
+)
+
+# Results auto-saved to Files/dq_results/
+print(f"Validation: {'✅ Passed' if results['success'] else '❌ Failed'}")
+print(f"Success rate: {results['success_rate']:.1f}%")</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform Support Section -->
+        <section id="platforms" class="section">
+            <div class="section-header">
+                <h2>Platform Support</h2>
+                <p>Designed to work seamlessly across environments</p>
+            </div>
+
+            <div class="platform-tabs">
+                <button class="platform-tab active" onclick="showPlatform('fabric')">Microsoft Fabric</button>
+                <button class="platform-tab" onclick="showPlatform('local')">Local Development</button>
+                <button class="platform-tab" onclick="showPlatform('databricks')">Databricks</button>
+            </div>
+
+            <div class="platform-content">
+                <!-- Microsoft Fabric -->
+                <div id="platform-fabric" class="platform-panel active">
+                    <div class="platform-header">
+                        <div class="platform-icon">☁️</div>
+                        <div>
+                            <h3>Microsoft Fabric</h3>
+                            <p>Native integration with Lakehouse, Delta tables, and Spark</p>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Auto-sample large datasets (100K+ rows)</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Spark-native validation for multi-GB tables</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Results saved to Lakehouse automatically</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Memory warnings before toPandas() conversion</span>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Fabric Notebook</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code># In a Fabric Notebook
+from dq_framework.fabric_connector import FabricDataQualityRunner
+
+# Load Delta table
+spark_df = spark.table("lakehouse.bronze.incidents")
+
+# Validate with Spark-native mode (no memory overhead)
+runner = FabricDataQualityRunner("Files/configs/incidents.yml")
+results = runner.validate_spark_dataframe(
+    spark_df,
+    use_spark_native=True  # Validates directly on Spark
+)
+
+# Results auto-saved to Files/dq_results/
+print(f"Validation: {'✅ Passed' if results['success'] else '❌ Failed'}")</code></pre>
+                    </div>
+
+                    <div class="callout info">
+                        <div class="callout-icon">💡</div>
+                        <div class="callout-content">
+                            <strong>Memory Tip:</strong> For tables with 1M+ rows, always use
+                            <code>use_spark_native=True</code> to avoid executor OOM errors during toPandas()
+                            conversion.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Development -->
+                <div id="platform-local" class="platform-panel">
+                    <div class="platform-header">
+                        <div class="platform-icon">💻</div>
+                        <div>
+                            <h3>Local Development</h3>
+                            <p>Full functionality on your local machine</p>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Pandas DataFrame validation</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>CSV, Parquet, Excel, JSON support</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Auto-profiling for config generation</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Large file auto-sampling</span>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Python</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code>from dq_framework import DataProfiler, DataQualityValidator
+from dq_framework.loader import DataLoader
+
+# Load with auto-sampling for large files
+df = DataLoader.load_data("large_file.parquet", sample_size=100000)
+
+# Profile with type overrides (bypass auto-detection)
+profiler = DataProfiler(
+    df,
+    type_overrides={"customer_id": "id"},  # Force as ID type
+    strict_date_detection=True              # Reject numeric date-like IDs
+)
+
+# Generate with per-column null tolerances
+config = profiler.generate_expectations(
+    validation_name="customer_data",
+    null_tolerances={
+        "customer_id": 0.0,      # No nulls for primary key
+        "optional_notes": 20.0   # 20% nulls OK for optional field
+    }
+)
+
+profiler.save_config(config, "customer_validation.yml")</code></pre>
+                    </div>
+                </div>
+
+                <!-- Databricks -->
+                <div id="platform-databricks" class="platform-panel">
+                    <div class="platform-header">
+                        <div class="platform-icon">🧱</div>
+                        <div>
+                            <h3>Databricks</h3>
+                            <p>Compatible with Databricks Spark environment</p>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>PySpark DataFrame support</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Delta Lake integration</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Spark-native validation</span>
+                        </div>
+                        <div class="platform-feature">
+                            <span class="check">✓</span>
+                            <span>Chunked processing for very large tables</span>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>Databricks Notebook</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code># Install in Databricks cluster
+%pip install great-expectations pyyaml
+
+from dq_framework.fabric_connector import FabricDataQualityRunner
+
+# Load Delta table
+spark_df = spark.read.format("delta").load("/mnt/data/gold/customers")
+
+# Validate with chunked processing for very large tables
+runner = FabricDataQualityRunner("/dbfs/configs/customers.yml")
+results = runner.validate_spark_dataframe(
+    spark_df,
+    chunk_size=100000,           # Process in 100K chunks
+    warn_memory_threshold_mb=1000 # Warn if estimated > 1GB
+)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Reference Section -->
+        <section id="api" class="section">
+            <div class="section-header">
+                <h2>API Reference</h2>
+                <p>Core classes and methods</p>
+            </div>
+
+            <div class="api-grid">
+                <!-- DataProfiler -->
+                <div class="api-card">
+                    <div class="api-header">
+                        <span class="api-type">class</span>
+                        <h3>DataProfiler</h3>
+                    </div>
+                    <p class="api-description">Analyzes data to automatically generate validation expectations.</p>
+
+                    <div class="api-signature">
+                        <code>DataProfiler(df, sample_size=None, type_overrides=None, strict_date_detection=False)</code>
+                    </div>
+
+                    <div class="api-params">
+                        <h4>Parameters</h4>
+                        <table>
+                            <tr>
+                                <td><code>df</code></td>
+                                <td>DataFrame to profile</td>
+                            </tr>
+                            <tr>
+                                <td><code>sample_size</code></td>
+                                <td>Rows to sample (default: all)</td>
+                            </tr>
+                            <tr>
+                                <td><code>type_overrides</code></td>
+                                <td>Dict mapping columns to types</td>
+                            </tr>
+                            <tr>
+                                <td><code>strict_date_detection</code></td>
+                                <td>Reject numeric date-like IDs</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-methods">
+                        <h4>Key Methods</h4>
+                        <ul>
+                            <li><code>profile()</code> → Returns profiling statistics</li>
+                            <li><code>generate_expectations(...)</code> → Returns YAML config dict</li>
+                            <li><code>save_config(config, path)</code> → Saves to YAML file</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- DataQualityValidator -->
+                <div class="api-card">
+                    <div class="api-header">
+                        <span class="api-type">class</span>
+                        <h3>DataQualityValidator</h3>
+                    </div>
+                    <p class="api-description">Core validation engine using Great Expectations.</p>
+
+                    <div class="api-signature">
+                        <code>DataQualityValidator(config_path=None, config_dict=None)</code>
+                    </div>
+
+                    <div class="api-params">
+                        <h4>Parameters</h4>
+                        <table>
+                            <tr>
+                                <td><code>config_path</code></td>
+                                <td>Path to YAML config file</td>
+                            </tr>
+                            <tr>
+                                <td><code>config_dict</code></td>
+                                <td>Config as dictionary (alternative)</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="api-methods">
+                        <h4>Key Methods</h4>
+                        <ul>
+                            <li><code>validate(df, batch_name)</code> → Returns results dict</li>
+                            <li><code>get_expectation_list()</code> → Returns configured expectations</li>
+                            <li><code>get_config_summary()</code> → Returns config overview</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FabricDataQualityRunner -->
+                <div class="api-card full-width">
+                    <div class="api-header">
+                        <span class="api-type">class</span>
+                        <h3>FabricDataQualityRunner</h3>
+                    </div>
+                    <p class="api-description">MS Fabric-specific runner with Spark support and Lakehouse integration.
+                    </p>
+
+                    <div class="api-signature">
+                        <code>FabricDataQualityRunner(config_path, workspace_id=None, results_location="Files/dq_results")</code>
+                    </div>
+
+                    <div class="api-methods-grid">
+                        <div class="method-card">
+                            <h4>validate_spark_dataframe()</h4>
+                            <p>Validate Spark DataFrame with multiple strategies</p>
+                            <table>
+                                <tr>
+                                    <td><code>spark_df</code></td>
+                                    <td>Spark DataFrame</td>
+                                </tr>
+                                <tr>
+                                    <td><code>sample_large_data</code></td>
+                                    <td>Auto-sample >100K (default: True)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>use_spark_native</code></td>
+                                    <td>Use SparkDFDataset (no toPandas)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>chunk_size</code></td>
+                                    <td>Process in chunks</td>
+                                </tr>
+                                <tr>
+                                    <td><code>warn_memory_threshold_mb</code></td>
+                                    <td>Memory warning threshold</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="method-card">
+                            <h4>validate_delta_table()</h4>
+                            <p>Validate Delta table by name</p>
+                            <table>
+                                <tr>
+                                    <td><code>table_name</code></td>
+                                    <td>e.g., "bronze.incidents"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>batch_name</code></td>
+                                    <td>Optional batch identifier</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="method-card">
+                            <h4>validate_lakehouse_file()</h4>
+                            <p>Validate files in Lakehouse</p>
+                            <table>
+                                <tr>
+                                    <td><code>file_path</code></td>
+                                    <td>e.g., "Files/data/file.parquet"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>file_format</code></td>
+                                    <td>parquet, csv, json, delta</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="method-card">
+                            <h4>handle_failure()</h4>
+                            <p>Handle validation failures</p>
+                            <table>
+                                <tr>
+                                    <td><code>results</code></td>
+                                    <td>Results from validate_*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>action</code></td>
+                                    <td>"log", "halt", or "alert"</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section id="examples" class="section">
+            <div class="section-header">
+                <h2>Example Configurations</h2>
+                <p>Ready-to-use validation templates for common scenarios</p>
+            </div>
+
+            <div class="example-tabs">
+                <button class="example-tab active" onclick="showExample('bronze')">Bronze Layer</button>
+                <button class="example-tab" onclick="showExample('silver')">Silver Layer</button>
+                <button class="example-tab" onclick="showExample('gold')">Gold Layer</button>
+            </div>
+
+            <div class="example-content">
+                <div id="example-bronze" class="example-panel active">
+                    <div class="example-header">
+                        <h3>🥉 Bronze Layer: Raw Data Ingestion</h3>
+                        <p>Basic structure and schema validation. Log failures, don't halt.</p>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>bronze_validation.yml</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code>validation_name: bronze_incidents
+description: Raw incident data validation
+
+quality_thresholds:
+  critical: 100
+  high: 95
+  medium: 80
+  low: 50
+
+expectations:
+  # Table-level checks
+  - expectation_type: expect_table_row_count_to_be_between
+    kwargs:
+      min_value: 1
+      max_value: null
+    meta:
+      severity: critical
+      description: Table should not be empty
+
+  # Required columns exist
+  - expectation_type: expect_column_to_exist
+    kwargs:
+      column: incident_id
+    meta:
+      severity: critical
+      
+  - expectation_type: expect_column_to_exist
+    kwargs:
+      column: created_date
+    meta:
+      severity: critical
+
+  # Basic type validation
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: incident_id
+    meta:
+      severity: high
+      description: Primary key cannot be null</code></pre>
+                    </div>
+                </div>
+
+                <div id="example-silver" class="example-panel">
+                    <div class="example-header">
+                        <h3>🥈 Silver Layer: Cleaned Data</h3>
+                        <p>Business rules and data quality checks. Raise on critical failures.</p>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>silver_validation.yml</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code>validation_name: silver_incidents
+description: Cleaned incident data validation
+
+quality_thresholds:
+  critical: 100
+  high: 98
+  medium: 90
+  low: 70
+
+expectations:
+  # Uniqueness
+  - expectation_type: expect_column_values_to_be_unique
+    kwargs:
+      column: incident_id
+    meta:
+      severity: critical
+      description: Primary key must be unique
+
+  # Foreign key integrity
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: category_id
+    meta:
+      severity: high
+
+  # Valid category values
+  - expectation_type: expect_column_values_to_be_in_set
+    kwargs:
+      column: status
+      value_set: ["Open", "In Progress", "Resolved", "Closed"]
+    meta:
+      severity: medium
+
+  # Date range validation
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: priority
+      min_value: 1
+      max_value: 5
+    meta:
+      severity: medium</code></pre>
+                    </div>
+                </div>
+
+                <div id="example-gold" class="example-panel">
+                    <div class="example-header">
+                        <h3>🥇 Gold Layer: Business-Ready</h3>
+                        <p>Strict validation for analytics. Always halt on any failure.</p>
+                    </div>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>gold_validation.yml</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <pre><code>validation_name: gold_incident_metrics
+description: Business metrics validation
+
+quality_thresholds:
+  critical: 100
+  high: 100
+  medium: 100
+  low: 95
+
+expectations:
+  # Zero tolerance for nulls in dimensions
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: incident_id
+    meta:
+      severity: critical
+
+  - expectation_type: expect_column_values_to_not_be_null
+    kwargs:
+      column: category_name
+    meta:
+      severity: critical
+
+  # Metric integrity
+  - expectation_type: expect_column_values_to_be_between
+    kwargs:
+      column: resolution_hours
+      min_value: 0
+      max_value: 8760  # Max 1 year
+    meta:
+      severity: high
+      description: Resolution time must be positive and reasonable
+
+  # Aggregation accuracy
+  - expectation_type: expect_column_mean_to_be_between
+    kwargs:
+      column: resolution_hours
+      min_value: 0.5
+      max_value: 168  # 1 week average max
+    meta:
+      severity: medium
+      description: Average resolution should be under 1 week</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Related Projects Section -->
+        <section id="ecosystem" class="section">
+            <div class="section-header">
+                <h2>Ecosystem</h2>
+                <p>Part of the HS2 Microsoft Fabric Data Platform</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>AIMS Data Platform</h3>
+                    <p>The primary consumer of the DQ Framework. A comprehensive data ingestion platform with SFTP-based
+                        file ingestion, landing zone management, and medallion architecture.</p>
+                    <div style="margin-top: 1rem;">
+                        <a href="../../../1_AIMS_LOCAL_2026/webapp/index.html" class="btn btn-secondary"
+                            style="font-size: 0.85rem; padding: 0.5rem 1rem;">View AIMS Documentation →</a>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Great Expectations</h3>
+                    <p>The underlying validation engine. The DQ Framework wraps Great Expectations with YAML-driven
+                        configuration and Fabric-specific optimizations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">☁️</div>
+                    <h3>Microsoft Fabric</h3>
+                    <p>Target cloud platform. Native support for Lakehouse, Delta tables, Spark notebooks, and Workspace
+                        Environments.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Apache Spark</h3>
+                    <p>Spark-native validation mode for large-scale datasets without memory-intensive toPandas()
+                        conversions.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo">📊</span>
+                <span>Fabric Data Quality Framework v1.2.0</span>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/hs2/data-quality-library" target="_blank">GitHub</a>
+                <a href="#api">API Docs</a>
+                <a href="#examples">Examples</a>
+            </div>
+            <div class="footer-copyright">
+                © 2026 HS2 Data Engineering Team
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Mermaid with dark theme
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#2f81f7',
+                primaryTextColor: '#e6edf3',
+                primaryBorderColor: '#30363d',
+                lineColor: '#8b949e',
+                secondaryColor: '#21262d',
+                tertiaryColor: '#161b22'
+            },
+            securityLevel: 'loose',
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            }
+        });
+
+        // Diagram tab switching function
+        function showDiagram(diagramId) {
+            document.querySelectorAll('.diagram-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.querySelectorAll('.diagram-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            const targetPanel = document.getElementById('diagram-' + diagramId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
