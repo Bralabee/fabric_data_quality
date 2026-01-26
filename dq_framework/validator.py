@@ -190,22 +190,11 @@ class DataQualityValidator:
         Args:
             suite_name: Name of the expectation suite
         """
-        try:
-            # Try to get existing suite (GE 0.18.x API)
-            suite = self.context.get_expectation_suite(expectation_suite_name=suite_name)
-        except Exception:
-            # Create new suite if it doesn't exist
-            try:
-                suite = ExpectationSuite(expectation_suite_name=suite_name)
-                self.context.add_expectation_suite(expectation_suite=suite)
-            except AttributeError:
-                # For newer versions that might have different API
-                suite = self.context.suites.add(
-                    ExpectationSuite(expectation_suite_name=suite_name)
-                )
-        
         # Add expectations from config to the suite
         from great_expectations.core import ExpectationConfiguration
+        
+        # Create a new suite with expectations
+        suite = ExpectationSuite(expectation_suite_name=suite_name)
         
         for expectation_config in self.config.get('expectations', []):
             exp_config = ExpectationConfiguration(
@@ -215,11 +204,18 @@ class DataQualityValidator:
             )
             suite.add_expectation(expectation_configuration=exp_config)
         
-        # Save the suite back to context
+        # For GE 0.18.x ephemeral contexts, use add_or_update_expectation_suite
         try:
-            self.context.save_expectation_suite(expectation_suite=suite)
-        except Exception as e:
-            logger.warning(f"Could not save expectation suite: {e}")
+            self.context.add_or_update_expectation_suite(expectation_suite=suite)
+        except AttributeError:
+            # Fallback for older API
+            try:
+                self.context.add_expectation_suite(expectation_suite=suite)
+            except Exception:
+                try:
+                    self.context.suites.add(suite)
+                except Exception as e:
+                    logger.warning(f"Could not save expectation suite: {e}")
     
     def _format_results(
         self,

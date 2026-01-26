@@ -25,6 +25,8 @@ from .constants import (
     DEFAULT_NULL_TOLERANCE,
     ID_NULL_THRESHOLD_FOR_UNIQUENESS,
     DEFAULT_QUALITY_THRESHOLDS,
+    STRICT_DATE_DETECTION,
+    DATE_NON_NUMERIC_RATIO,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,18 +66,32 @@ class DataProfiler:
         >>> profiler.save_config(config, 'my_validation.yml')
     """
     
-    def __init__(self, df: pd.DataFrame, sample_size: Optional[int] = None):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        sample_size: Optional[int] = None,
+        type_overrides: Optional[Dict[str, str]] = None,
+        strict_date_detection: bool = STRICT_DATE_DETECTION
+    ):
         """
         Initialize profiler with a DataFrame.
         
         Args:
             df: DataFrame to profile
             sample_size: If provided, sample this many rows for analysis (for large datasets)
+            type_overrides: Optional dict mapping column names to types (e.g., {"record_id": "id"})
+                           Bypasses automatic type detection for specified columns.
+                           Valid types: 'id', 'date', 'code', 'numeric', 'monetary', 'percentage',
+                                       'categorical', 'text', 'string'
+            strict_date_detection: If True, reject values that look like numeric IDs even if
+                                  they parse as dates (e.g., "20210115" won't be auto-detected as date)
         """
         self.df = df if sample_size is None else df.sample(min(sample_size, len(df)))
         self.full_row_count = len(df)
         self.sampled = sample_size is not None and sample_size < len(df)
         self.profile_results = None
+        self.type_overrides = type_overrides or {}
+        self.strict_date_detection = strict_date_detection
         
     def profile(self) -> Dict[str, Any]:
         """
@@ -162,6 +178,10 @@ class DataProfiler:
     
     def _detect_column_type(self, series: pd.Series) -> str:
         """Detect the semantic type of a column."""
+        # Check for explicit type override first
+        if series.name in self.type_overrides:
+            return self.type_overrides[series.name]
+        
         sample = series.astype(str).head(TYPE_DETECTION_SAMPLE_SIZE)
         
         # Date patterns
@@ -198,15 +218,51 @@ class DataProfiler:
         return 'unknown'
     
     def _looks_like_date(self, sample: pd.Series) -> bool:
-        """Check if string column looks like dates."""
+        """Check if string column looks like dates.
+        
+        Enhanced with strict mode to reject patterns that look like numeric IDs.
+        """
         try:
+            # In strict mode, reject values that look like pure numeric IDs
+            if self.strict_date_detection and self._is_numeric_id_pattern(sample):
+                logger.debug(f"Strict date detection: rejected numeric ID pattern for {sample.name}")
+                return False
+            
             # Try to convert to datetime
             converted = pd.to_datetime(sample, errors='coerce')
             # Check if we have a significant number of valid dates
             valid_dates = converted.notna().sum()
-            return valid_dates / len(sample) > DATE_DETECTION_THRESHOLD  # >80% must be valid dates
+            return valid_dates / len(sample) > DATE_DETECTION_THRESHOLD  # > 80% must be valid dates
         except (ValueError, TypeError, OverflowError) as e:
             logger.debug(f"Date detection failed for sample: {e}")
+            return False
+    
+    def _is_numeric_id_pattern(self, sample: pd.Series) -> bool:
+        """Check if sample values look like numeric IDs rather than dates.
+        
+        Rejects patterns like "20210115" that could be either dates or IDs.
+        
+        Args:
+            sample: Series of string values to check
+            
+        Returns:
+            True if the values look like numeric IDs (should not be classified as dates)
+        """
+        try:
+            # Check for non-numeric character ratio
+            non_numeric_chars = sample.astype(str).str.replace(r'\d', '', regex=True)
+            avg_non_numeric_ratio = non_numeric_chars.str.len().mean() / sample.astype(str).str.len().mean()
+            
+            # If very few non-numeric characters, likely a numeric ID
+            if avg_non_numeric_ratio < DATE_NON_NUMERIC_RATIO:
+                # Additional check: if column name suggests ID, definitely reject
+                col_name_lower = str(sample.name).lower()
+                if any(hint in col_name_lower for hint in ['id', 'key', 'code', 'nr', 'num']):
+                    return True
+                # Even without ID hint, pure numeric strings are suspicious
+                return True
+            return False
+        except Exception:
             return False
     
     def _calculate_quality_score(self, columns: Dict[str, Any]) -> float:
@@ -240,6 +296,7 @@ class DataProfiler:
         include_completeness: bool = True,
         include_validity: bool = True,
         null_tolerance: float = 5.0,
+        null_tolerances: Optional[Dict[str, float]] = None,
         quality_thresholds: Optional[Dict[str, float]] = None,
     ) -> Dict[str, Any]:
         """
@@ -252,7 +309,10 @@ class DataProfiler:
             include_structural: Include structural checks (table shape, columns exist)
             include_completeness: Include null/completeness checks
             include_validity: Include type/range/pattern checks
-            null_tolerance: Percentage of nulls to tolerate before flagging (default 5%)
+            null_tolerance: Default percentage of nulls to tolerate (default 5%)
+            null_tolerances: Optional per-column null tolerance overrides.
+                            Example: {"foreign_key_col": 0.0, "optional_field": 20.0}
+                            Columns not specified use the default null_tolerance.
             quality_thresholds: Dictionary of success thresholds per severity level
         
         Returns:
@@ -260,6 +320,10 @@ class DataProfiler:
         """
         if self.profile_results is None:
             self.profile()
+        
+        # Store per-column null tolerances for use in helper methods
+        self._null_tolerances = null_tolerances or {}
+        self._default_null_tolerance = null_tolerance
             
         # Default thresholds if not provided
         if quality_thresholds is None:
@@ -286,9 +350,12 @@ class DataProfiler:
         
         # Column-level expectations
         for col, col_info in self.profile_results['columns'].items():
+            # Get per-column null tolerance or use default
+            col_null_tolerance = self._null_tolerances.get(col, null_tolerance)
+            
             if include_completeness:
                 expectations.extend(
-                    self._generate_completeness_expectations(col, col_info, null_tolerance, severity_threshold)
+                    self._generate_completeness_expectations(col, col_info, col_null_tolerance, severity_threshold)
                 )
             
             if include_validity:

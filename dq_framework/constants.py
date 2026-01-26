@@ -48,6 +48,14 @@ CATEGORICAL_UNIQUENESS_THRESHOLD = 0.05
 # Minimum valid date ratio to classify column as date type (> 80% valid)
 DATE_DETECTION_THRESHOLD = 0.8
 
+# Strict mode for date detection (reject numeric-looking values)
+# When True, values that look like numeric IDs will not be classified as dates
+STRICT_DATE_DETECTION = False
+
+# Minimum ratio of non-numeric characters required to consider as date
+# Used in strict mode to reject pure numeric strings (e.g., "20210115" could be ID or date)
+DATE_NON_NUMERIC_RATIO = 0.2
+
 # Average string length threshold to classify as text vs string (> 50 chars)
 TEXT_LENGTH_THRESHOLD = 50
 
