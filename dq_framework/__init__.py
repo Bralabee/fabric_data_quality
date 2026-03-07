@@ -2,7 +2,7 @@
 Fabric Data Quality Framework
 ==============================
 
-A reusable data quality validation framework using Great Expectations.
+A reusable data quality validation framework using Great Expectations 1.x.
 
 Usage:
     from dq_framework import DataQualityValidator, FabricDataQualityRunner
@@ -16,32 +16,28 @@ Usage:
     results = runner.validate_delta_table('table_name')
 """
 
-try:
-    from importlib.metadata import PackageNotFoundError, version
-except ImportError:  # pragma: no cover
-    from importlib_metadata import PackageNotFoundError, version  # type: ignore
-
+from importlib.metadata import PackageNotFoundError, version
 
 try:
     __version__ = version("fabric-data-quality")
 except PackageNotFoundError:
-    __version__ = "0.0.0"
+    __version__ = "2.0.0"
 __author__ = "HS2 Data Engineering Team"
 
-from .validator import DataQualityValidator
-from .fabric_connector import FabricDataQualityRunner
+from .batch_profiler import BatchProfiler
 from .config_loader import ConfigLoader
 from .data_profiler import DataProfiler
-from .batch_profiler import BatchProfiler
-from .loader import DataLoader
+from .fabric_connector import FabricDataQualityRunner
 from .ingestion import DataIngester
+from .loader import DataLoader
 from .utils import (
-    FileSystemHandler,
     FABRIC_AVAILABLE,
     FABRIC_UTILS_AVAILABLE,
+    FileSystemHandler,
     _is_fabric_runtime,
     get_mssparkutils,
 )
+from .validator import DataQualityValidator
 
 __all__ = [
     "DataQualityValidator",

@@ -1,8 +1,8 @@
-# Conda Environment for Fabric Data Quality Framework
+# Conda Environment for Fabric Data Quality Framework v2.0
 # =======================================================
-# 
+#
 # This environment provides all dependencies needed for the data quality
-# framework including Great Expectations, pandas, and testing tools.
+# framework including Great Expectations 1.x, pandas, and testing tools.
 #
 # Usage:
 #   conda env create -f environment.yml
@@ -19,59 +19,35 @@ channels:
 
 dependencies:
   # Python version
-  - python=3.10
+  - python>=3.10,<3.14
 
   # Core dependencies
-  - pandas>=1.5.0
+  - pandas>=2.0.0
   - numpy>=1.24.0
   - pyyaml>=6.0
-  
-  # Great Expectations and its dependencies
-  - great-expectations>=0.18.0
-  - sqlalchemy>=1.4.0
-  - jsonschema>=4.0.0
-  - marshmallow>=3.0.0
-  - ruamel.yaml>=0.17.0
-  - click>=8.0.0
-  - pydantic>=1.10.0
-  
-  # Data processing (optional but recommended)
-  - openpyxl>=3.0.0  # For Excel file support
-  - xlrd>=2.0.0      # For reading older Excel files
-  
+
+  # Data processing
+  - openpyxl>=3.0.0
+  - xlrd>=2.0.0
+
   # Development and testing tools
-  - pytest>=7.4.0
-  - pytest-cov>=4.1.0
-  - pytest-mock>=3.11.0
-  - black>=23.0.0           # Code formatter
-  - flake8>=6.0.0           # Linter
-  - mypy>=1.0.0             # Type checker
-  - isort>=5.12.0           # Import sorter
-  - pylint>=2.17.0          # Code analyzer
-  
-  # Documentation
-  - sphinx>=6.0.0
-  - sphinx_rtd_theme>=1.2.0
-  
+  - pytest>=9.0.0
+  - pytest-cov>=7.0.0
+  - pytest-mock>=3.15.0
+  - mypy>=1.19.0
+
   # Jupyter (for interactive development)
   - jupyter>=1.0.0
   - ipykernel>=6.0.0
-  - ipywidgets>=8.0.0
-  
+
   # Version control helpers
-  - pre-commit>=3.0.0
-  
-  # Code quality
-  - bandit>=1.7.0           # Security linter
-  - safety>=2.0.0           # Dependency security checker
-  
-  # Performance profiling (optional)
-  - memory_profiler>=0.60.0
-  - line_profiler>=4.0.0
-  
-  # PIP packages (not available in conda)
+  - pre-commit>=4.0.0
+
+  # PIP packages
   - pip>=23.0.0
   - pip:
-      # Any pip-only packages go here
-      - pyarrow>=12.0.0      # For Parquet support
-      - types-pyyaml>=6.0.0  # Type stubs for mypy
+      - great-expectations>=1.0.0,<2.0.0
+      - pyarrow>=14.0.0
+      - sqlalchemy>=2.0.0
+      - ruff>=0.15.0
+      - types-pyyaml>=6.0.0

@@ -1,9 +1,9 @@
 # ==================================================================================
-# Requirements for Fabric Data Quality Framework
+# Requirements for Fabric Data Quality Framework v2.0
 # ==================================================================================
-# 
+#
 # This file defines all Python dependencies for the data quality framework.
-# 
+#
 # Installation:
 #   pip install -r requirements.txt
 #
@@ -15,46 +15,40 @@
 # Core dependencies
 # ==================================================================================
 
-# Great Expectations - Data quality validation framework
-great-expectations>=0.18.0,<1.0.0
+# Great Expectations 1.x - Data quality validation framework
+great-expectations>=1.0.0,<2.0.0
 
 # YAML parsing
-pyyaml>=6.0,<7.0
+pyyaml>=6.0
 
 # Data manipulation
-pandas>=1.5.0,<3.0.0
-numpy>=1.24.0,<2.0.0
+pandas>=2.0.0
+numpy>=1.24.0
 
-# Parquet file support (for MS Fabric)
-pyarrow>=12.0.0,<15.0.0
+# Parquet file support
+pyarrow>=14.0.0
 
 # Optional: PySpark (usually provided by Fabric environment)
 # Uncomment if running locally
 # pyspark>=3.3.0,<4.0.0
 
 # ==================================================================================
-# Supporting libraries (required by Great Expectations)
+# Supporting libraries
 # ==================================================================================
 
-sqlalchemy>=1.4.0,<3.0.0
-jsonschema>=4.0.0,<5.0.0
-marshmallow>=3.0.0,<4.0.0
-ruamel.yaml>=0.17.0,<1.0.0
-click>=8.0.0,<9.0.0
-pydantic>=1.10.0,<3.0.0
+sqlalchemy>=2.0.0
 
 # ==================================================================================
 # Optional: File format support
 # ==================================================================================
 
 # Excel file support
-openpyxl>=3.0.0,<4.0.0
-xlrd>=2.0.0,<3.0.0
+openpyxl>=3.0.0
+xlrd>=2.0.0
 
 # ==================================================================================
-# Pinned versions for stability (based on testing)
+# Pinned versions for stability
 # ==================================================================================
 
-# These versions have been tested and work well together
 typing-extensions>=4.5.0
 python-dateutil>=2.8.0
