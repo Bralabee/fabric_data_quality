@@ -64,11 +64,11 @@ Plans:
   2. Aggregated chunk results report correct counts (no inflation from counting across all chunks)
   3. DataIngester has no unused engine parameter; check_data.py is removed or relocated
   4. __init__.py __all__ contains only public API symbols (no _is_fabric_runtime)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Fix chunked Spark validation (row_number) and aggregation (per-expectation averages)
+- [ ] 03-02-PLAN.md -- Remove DataIngester.engine, delete check_data.py, fix __all__ exports
 
 ### Phase 4: Test Coverage
 **Goal**: Every module meets the 60% coverage minimum and threshold behavior is documented with characterization tests
