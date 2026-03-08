@@ -120,3 +120,13 @@ FABRIC_SAMPLE_FRACTION = 0.1
 
 # Maximum number of failed expectations to display in failure handling
 MAX_FAILURE_DISPLAY = 10
+
+# =============================================================================
+# STORAGE DEFAULTS
+# =============================================================================
+
+# Default directory for local validation results storage
+DEFAULT_RESULTS_DIR = "dq_results"
+
+# Default Lakehouse path for Fabric validation results storage
+DEFAULT_FABRIC_RESULTS_DIR = "Files/dq_results"

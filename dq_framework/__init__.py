@@ -37,6 +37,7 @@ from .utils import (
     _is_fabric_runtime,
     get_mssparkutils,
 )
+from .storage import JSONFileStore, LakehouseStore, ResultStore, get_store
 from .validator import DataQualityValidator
 
 __all__ = [
@@ -52,4 +53,9 @@ __all__ = [
     "FABRIC_AVAILABLE",
     "FABRIC_UTILS_AVAILABLE",
     "get_mssparkutils",
+    # Storage abstraction
+    "ResultStore",
+    "JSONFileStore",
+    "LakehouseStore",
+    "get_store",
 ]
