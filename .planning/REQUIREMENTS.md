@@ -62,7 +62,7 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 ### Storage Foundation
 
 - [x] **STOR-01**: Create ResultStore abstraction with JSONFileStore (local) and LakehouseStore (Fabric) backends
-- [ ] **STOR-02**: Refactor existing _save_results_to_lakehouse into ResultStore backend
+- [x] **STOR-02**: Refactor existing _save_results_to_lakehouse into ResultStore backend
 - [x] **STOR-03**: Support both local (SQLite/JSON) and Fabric (Parquet/Lakehouse) storage modes
 
 ### Integration
@@ -146,7 +146,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | HIST-05 | Phase 9 | Pending |
 | HIST-06 | Phase 9 | Pending |
 | STOR-01 | Phase 5 | Complete |
-| STOR-02 | Phase 5 | Pending |
+| STOR-02 | Phase 5 | Complete |
 | STOR-03 | Phase 5 | Complete |
 | INTG-01 | Phase 10 | Pending |
 | INTG-02 | Phase 10 | Pending |
