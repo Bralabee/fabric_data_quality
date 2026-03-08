@@ -75,6 +75,8 @@ def mock_mssparkutils():
     utils.fs.put.return_value = None
     utils.fs.ls.return_value = []
     utils.fs.mkdirs.return_value = True
+    utils.fs.rm.return_value = None
+    utils.fs.exists.return_value = True
     return utils
 
 
