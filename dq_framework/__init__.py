@@ -51,6 +51,5 @@ __all__ = [
     # Fabric detection utilities
     "FABRIC_AVAILABLE",
     "FABRIC_UTILS_AVAILABLE",
-    "_is_fabric_runtime",
     "get_mssparkutils",
 ]
