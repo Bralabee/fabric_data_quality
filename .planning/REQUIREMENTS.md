@@ -111,55 +111,55 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PKG-01 | — | Pending |
-| PKG-02 | — | Pending |
-| PKG-03 | — | Pending |
-| PKG-04 | — | Pending |
-| PKG-05 | — | Pending |
-| PKG-06 | — | Pending |
-| BUG-01 | — | Pending |
-| BUG-02 | — | Pending |
-| BUG-03 | — | Pending |
-| BUG-04 | — | Pending |
-| BUG-05 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
-| ALRT-01 | — | Pending |
-| ALRT-02 | — | Pending |
-| ALRT-03 | — | Pending |
-| ALRT-04 | — | Pending |
-| ALRT-05 | — | Pending |
-| ALRT-06 | — | Pending |
-| ALRT-07 | — | Pending |
-| SCHM-01 | — | Pending |
-| SCHM-02 | — | Pending |
-| SCHM-03 | — | Pending |
-| SCHM-04 | — | Pending |
-| SCHM-05 | — | Pending |
-| SCHM-06 | — | Pending |
-| HIST-01 | — | Pending |
-| HIST-02 | — | Pending |
-| HIST-03 | — | Pending |
-| HIST-04 | — | Pending |
-| HIST-05 | — | Pending |
-| HIST-06 | — | Pending |
-| STOR-01 | — | Pending |
-| STOR-02 | — | Pending |
-| STOR-03 | — | Pending |
-| INTG-01 | — | Pending |
-| INTG-02 | — | Pending |
-| INTG-03 | — | Pending |
-| INTG-04 | — | Pending |
-| INTG-05 | — | Pending |
-| INTG-06 | — | Pending |
+| PKG-01 | Phase 1 | Pending |
+| PKG-02 | Phase 1 | Pending |
+| PKG-03 | Phase 1 | Pending |
+| PKG-04 | Phase 2 | Pending |
+| PKG-05 | Phase 2 | Pending |
+| PKG-06 | Phase 2 | Pending |
+| BUG-01 | Phase 3 | Pending |
+| BUG-02 | Phase 3 | Pending |
+| BUG-03 | Phase 3 | Pending |
+| BUG-04 | Phase 3 | Pending |
+| BUG-05 | Phase 3 | Pending |
+| TEST-01 | Phase 4 | Pending |
+| TEST-02 | Phase 4 | Pending |
+| TEST-03 | Phase 4 | Pending |
+| TEST-04 | Phase 4 | Pending |
+| ALRT-01 | Phase 7 | Pending |
+| ALRT-02 | Phase 7 | Pending |
+| ALRT-03 | Phase 6 | Pending |
+| ALRT-04 | Phase 7 | Pending |
+| ALRT-05 | Phase 6 | Pending |
+| ALRT-06 | Phase 6 | Pending |
+| ALRT-07 | Phase 6 | Pending |
+| SCHM-01 | Phase 8 | Pending |
+| SCHM-02 | Phase 8 | Pending |
+| SCHM-03 | Phase 8 | Pending |
+| SCHM-04 | Phase 8 | Pending |
+| SCHM-05 | Phase 8 | Pending |
+| SCHM-06 | Phase 8 | Pending |
+| HIST-01 | Phase 9 | Pending |
+| HIST-02 | Phase 9 | Pending |
+| HIST-03 | Phase 9 | Pending |
+| HIST-04 | Phase 9 | Pending |
+| HIST-05 | Phase 9 | Pending |
+| HIST-06 | Phase 9 | Pending |
+| STOR-01 | Phase 5 | Pending |
+| STOR-02 | Phase 5 | Pending |
+| STOR-03 | Phase 5 | Pending |
+| INTG-01 | Phase 10 | Pending |
+| INTG-02 | Phase 10 | Pending |
+| INTG-03 | Phase 10 | Pending |
+| INTG-04 | Phase 10 | Pending |
+| INTG-05 | Phase 10 | Pending |
+| INTG-06 | Phase 10 | Pending |
 
 **Coverage:**
 - v2 requirements: 42 total
-- Mapped to phases: 0
-- Unmapped: 42
+- Mapped to phases: 42
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-08*
-*Last updated: 2026-03-08 after initial definition*
+*Last updated: 2026-03-08 after roadmap creation*
