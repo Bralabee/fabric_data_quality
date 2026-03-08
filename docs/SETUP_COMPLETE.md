@@ -29,7 +29,7 @@ Your Fabric Data Quality Framework is fully installed and operational!
    - `Makefile` - 20+ automation commands
    - `.pre-commit-config.yaml` - Git hooks for code quality
    - `environment.yml` - Reproducible conda environment
-   - `requirements.txt` & `requirements-dev.txt` - Pip dependencies
+   - `requirements.txt` - Pip dependencies (core); dev deps via `pip install -e ".[dev]"`
 
 ## 🚀 Quick Start (3 Commands)
 

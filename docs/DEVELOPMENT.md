@@ -47,16 +47,15 @@ make dev-setup      # Install dev dependencies and pre-commit hooks
 # Or manually
 conda env create -f environment.yml
 conda activate fabric-dq
-pip install -r requirements-dev.txt
-pip install -e .
+pip install -e ".[dev]"
 pre-commit install
 ```
 
 ## Environment Details
 
 ### Python Version
-- **Minimum**: Python 3.8
-- **Recommended**: Python 3.10
+- **Minimum**: Python 3.10
+- **Recommended**: Python 3.12
 - **Maximum tested**: Python 3.11
 
 ### Core Dependencies

@@ -41,7 +41,6 @@ install: ## Install package in development mode
 install-dev: ## Install package with development dependencies
 	@echo "$(BLUE)Installing package with development dependencies...$(NC)"
 	pip install -e ".[dev]"
-	pip install -r requirements-dev.txt
 
 install-conda: ## Create conda environment from environment.yml
 	@echo "$(BLUE)Creating conda environment...$(NC)"
@@ -79,26 +78,22 @@ test-integration: ## Run integration tests only
 
 lint: ## Run all linters
 	@echo "$(BLUE)Running linters...$(NC)"
-	@echo "$(YELLOW)Running flake8...$(NC)"
-	flake8 dq_framework/ tests/ --max-line-length=100 --extend-ignore=E203,W503
-	@echo "$(YELLOW)Running pylint...$(NC)"
-	pylint dq_framework/ --max-line-length=100 || true
+	@echo "$(YELLOW)Running ruff check...$(NC)"
+	ruff check .
 	@echo "$(YELLOW)Running mypy...$(NC)"
 	mypy dq_framework/ --ignore-missing-imports || true
 	@echo "$(GREEN)Linting complete!$(NC)"
 
-format: ## Format code with black and isort
+format: ## Format code with ruff
 	@echo "$(BLUE)Formatting code...$(NC)"
-	@echo "$(YELLOW)Running isort...$(NC)"
-	isort dq_framework/ tests/ examples/ --profile=black --line-length=100
-	@echo "$(YELLOW)Running black...$(NC)"
-	black dq_framework/ tests/ examples/ --line-length=100
+	ruff format .
+	ruff check --fix .
 	@echo "$(GREEN)Formatting complete!$(NC)"
 
 format-check: ## Check code formatting without making changes
 	@echo "$(BLUE)Checking code formatting...$(NC)"
-	black dq_framework/ tests/ examples/ --check --line-length=100
-	isort dq_framework/ tests/ examples/ --check-only --profile=black --line-length=100
+	ruff format --check .
+	ruff check .
 
 security: ## Run security checks
 	@echo "$(BLUE)Running security checks...$(NC)"

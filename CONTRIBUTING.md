@@ -57,13 +57,7 @@ conda activate fabric-dq
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements-dev.txt
-```
-
-### 3. Install in Development Mode
-
-```bash
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ### 4. Verify Setup
