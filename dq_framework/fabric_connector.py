@@ -237,20 +237,26 @@ class FabricDataQualityRunner:
         )
 
         all_results = []
-        offset = 0
 
-        # Add monotonically increasing id for offset-based chunking
-        from pyspark.sql.functions import monotonically_increasing_id
+        # row_number() produces consecutive 1-based integers.
+        # orderBy(lit(1)) preserves existing row order.
+        # Non-deterministic across runs is acceptable — chunking is a
+        # memory optimization, not a row-assignment guarantee.
+        from pyspark.sql.functions import lit, row_number
+        from pyspark.sql.window import Window
 
+        window = Window.orderBy(lit(1))
         spark_df_with_id = spark_df.withColumn(
-            "__chunk_id__", monotonically_increasing_id()
+            "__chunk_row_num__", row_number().over(window)
         )
 
         for chunk_idx in range(num_chunks):
+            lower = chunk_idx * chunk_size + 1
+            upper = (chunk_idx + 1) * chunk_size
             chunk_df = spark_df_with_id.filter(
-                (spark_df_with_id["__chunk_id__"] >= offset)
-                & (spark_df_with_id["__chunk_id__"] < offset + chunk_size)
-            ).drop("__chunk_id__")
+                (spark_df_with_id["__chunk_row_num__"] >= lower)
+                & (spark_df_with_id["__chunk_row_num__"] <= upper)
+            ).drop("__chunk_row_num__")
 
             try:
                 pdf_chunk = chunk_df.toPandas()
@@ -273,8 +279,6 @@ class FabricDataQualityRunner:
                     }
                 )
 
-            offset += chunk_size
-
         # Aggregate results
         aggregated = self._aggregate_chunk_results(all_results, batch_name)
 
@@ -289,39 +293,101 @@ class FabricDataQualityRunner:
         chunk_results: list[dict[str, Any]],
         batch_name: Optional[str],
     ) -> dict[str, Any]:
-        """Aggregate validation results from multiple chunks."""
-        total_evaluated = sum(
-            r.get("evaluated_checks", 0) for r in chunk_results
-        )
-        total_passed = sum(
-            r.get("successful_checks", r.get("passed_checks", 0))
-            for r in chunk_results
-        )
-        total_failed = sum(r.get("failed_checks", 0) for r in chunk_results)
+        """Aggregate validation results from multiple chunks.
 
-        all_failures = []
-        for r in chunk_results:
-            all_failures.extend(r.get("failed_expectations", []))
+        Uses per-expectation averaging: all chunks run the same suite so
+        evaluated_checks equals the per-chunk count (not the sum).
+        success_rate is the mean across chunks.
+        """
+        from .constants import DEFAULT_VALIDATION_THRESHOLD
 
-        success_rate = (
-            (total_passed / total_evaluated * 100) if total_evaluated > 0 else 0.0
+        valid_results = [r for r in chunk_results if "error" not in r]
+        error_results = [r for r in chunk_results if "error" in r]
+
+        if not valid_results:
+            return {
+                "success": False,
+                "batch_name": batch_name
+                or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "suite_name": "unknown",
+                "timestamp": datetime.now().isoformat(),
+                "evaluated_checks": 0,
+                "successful_checks": 0,
+                "failed_checks": 0,
+                "success_rate": 0.0,
+                "failed_expectations": [],
+                "chunked_processing": True,
+                "num_chunks": len(chunk_results),
+                "chunk_errors": [r.get("error") for r in error_results],
+            }
+
+        # All chunks run the same expectation suite
+        evaluated_checks = valid_results[0].get("evaluated_checks", 0)
+        threshold = valid_results[0].get(
+            "threshold", DEFAULT_VALIDATION_THRESHOLD
         )
+
+        # Mean success_rate across chunks
+        avg_success_rate = sum(
+            r.get("success_rate", 0.0) for r in valid_results
+        ) / len(valid_results)
+
+        # Derive failed_checks from average rate
+        avg_successful = round(evaluated_checks * avg_success_rate / 100.0)
+        avg_failed = evaluated_checks - avg_successful
+
+        # Deduplicate failed_expectations by (expectation_type, column)
+        seen = set()
+        deduped_failures = []
+        for r in valid_results:
+            for fail in r.get("failed_expectations", []):
+                key = (fail.get("expectation", ""), fail.get("column", ""))
+                if key not in seen:
+                    seen.add(key)
+                    deduped_failures.append(fail)
+
+        # Per-chunk breakdown
+        chunks_detail = []
+        for idx, r in enumerate(chunk_results):
+            if "error" in r:
+                chunks_detail.append(
+                    {
+                        "chunk_index": idx,
+                        "success": False,
+                        "error": r["error"],
+                    }
+                )
+            else:
+                chunks_detail.append(
+                    {
+                        "chunk_index": idx,
+                        "success": r.get("success", False),
+                        "success_rate": r.get("success_rate", 0.0),
+                        "evaluated_checks": r.get("evaluated_checks", 0),
+                        "failed_checks": r.get("failed_checks", 0),
+                        "failed_expectations": r.get(
+                            "failed_expectations", []
+                        ),
+                    }
+                )
 
         return {
-            "success": total_failed == 0,
+            "success": avg_success_rate >= threshold,
             "batch_name": batch_name
             or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "suite_name": chunk_results[0].get("suite_name", "unknown")
-            if chunk_results
-            else "unknown",
+            "suite_name": valid_results[0].get("suite_name", "unknown"),
             "timestamp": datetime.now().isoformat(),
-            "evaluated_checks": total_evaluated,
-            "successful_checks": total_passed,
-            "failed_checks": total_failed,
-            "success_rate": success_rate,
-            "failed_expectations": all_failures[:10],
+            "evaluated_checks": evaluated_checks,
+            "successful_checks": avg_successful,
+            "failed_checks": avg_failed,
+            "success_rate": avg_success_rate,
+            "failed_expectations": deduped_failures[:MAX_FAILURE_DISPLAY],
             "chunked_processing": True,
             "num_chunks": len(chunk_results),
+            "chunks": chunks_detail,
+            "chunk_errors": [r.get("error") for r in error_results]
+            if error_results
+            else None,
         }
 
     def validate_delta_table(
