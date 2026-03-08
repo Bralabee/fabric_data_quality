@@ -65,6 +65,7 @@ local_config.yml
 *.json
 !config_templates/*.json
 !examples/*.json
+!.planning/*.json
 
 # Temporary files
 tmp/
