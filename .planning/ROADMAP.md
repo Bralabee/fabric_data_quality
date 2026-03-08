@@ -96,11 +96,11 @@ Plans:
   2. JSONFileStore backend works for local development (files in a configurable directory)
   3. LakehouseStore backend replaces inline _save_results_to_lakehouse code
   4. Storage backend is selected automatically based on runtime detection (local vs Fabric)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- Create ResultStore ABC with JSONFileStore and LakehouseStore backends plus tests
+- [ ] 05-02-PLAN.md -- Refactor FabricDataQualityRunner to use ResultStore and update public API
 
 ### Phase 6: Alert Infrastructure
 **Goal**: A shared alert formatting and delivery framework exists with failure handling and YAML configuration
