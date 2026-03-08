@@ -49,11 +49,11 @@ Plans:
   2. CI uses ruff for linting and formatting (no flake8, black, or isort references remain)
   3. requirements-dev.txt is removed; all dev dependencies are in pyproject.toml [dev] extras
   4. pre-commit hooks run ruff lint and ruff format
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Rewrite CI workflow for ruff/3.10-3.13 and delete requirements-dev.txt
+- [ ] 02-02-PLAN.md -- Replace legacy pre-commit hooks with ruff
 
 ### Phase 3: Bug Fixes
 **Goal**: All known validation, ingestion, and public API bugs are resolved
