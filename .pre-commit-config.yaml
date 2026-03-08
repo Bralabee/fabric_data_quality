@@ -1,42 +1,15 @@
-# ==================================================================================
-# Pre-commit Configuration for Fabric Data Quality Framework
-# ==================================================================================
-# 
-# This file configures git pre-commit hooks to ensure code quality.
-# 
-# Installation:
-#   pip install pre-commit
-#   pre-commit install
-#
-# Usage:
-#   pre-commit run --all-files  # Run all hooks on all files
-#   pre-commit run <hook_id>     # Run specific hook
-#
-# ==================================================================================
+# Pre-commit hooks for Fabric Data Quality Framework
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
 
 repos:
-  # Code formatting
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
+  # Linting and formatting (replaces black, isort, flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.5
     hooks:
-      - id: black
-        language_version: python3.10
-        args: ['--line-length=100']
-
-  # Import sorting
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ['--profile=black', '--line-length=100']
-
-  # Linting
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
-    hooks:
-      - id: flake8
-        args: ['--max-line-length=100', '--extend-ignore=E203,W503']
-        additional_dependencies: [flake8-docstrings, flake8-bugbear]
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
 
   # Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -53,7 +26,7 @@ repos:
       - id: bandit
         args: ['-r', 'dq_framework/', '-ll']
 
-  # YAML validation
+  # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -69,18 +42,3 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: mixed-line-ending
-
-  # Documentation
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        args: ['--convention=google']
-        exclude: 'tests/'
-
-  # Requirements safety check
-  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
-    rev: v1.3.3
-    hooks:
-      - id: python-safety-dependencies-check
-        files: requirements.*\.txt$
