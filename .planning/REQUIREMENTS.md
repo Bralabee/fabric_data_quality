@@ -12,8 +12,8 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 - [x] **PKG-01**: Remove legacy setup.py entirely (pyproject.toml v2.0.0 is canonical)
 - [x] **PKG-02**: Remove committed build artifacts (build/, dist/, htmlcov/, .coverage, pipeline.log, egg-info)
 - [x] **PKG-03**: Update .gitignore to prevent re-committing build artifacts
-- [ ] **PKG-04**: Align CI matrix with pyproject.toml (Python 3.10-3.13, ruff instead of flake8/black/isort)
-- [ ] **PKG-05**: Unify dev tooling on pyproject.toml [dev] extras (remove requirements-dev.txt conflicts)
+- [x] **PKG-04**: Align CI matrix with pyproject.toml (Python 3.10-3.13, ruff instead of flake8/black/isort)
+- [x] **PKG-05**: Unify dev tooling on pyproject.toml [dev] extras (remove requirements-dev.txt conflicts)
 - [x] **PKG-06**: Update pre-commit config to use ruff instead of flake8/black/isort
 
 ### Bug Fixes
@@ -114,8 +114,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | PKG-01 | Phase 1 | Complete |
 | PKG-02 | Phase 1 | Complete |
 | PKG-03 | Phase 1 | Complete |
-| PKG-04 | Phase 2 | Pending |
-| PKG-05 | Phase 2 | Pending |
+| PKG-04 | Phase 2 | Complete |
+| PKG-05 | Phase 2 | Complete |
 | PKG-06 | Phase 2 | Complete |
 | BUG-01 | Phase 3 | Pending |
 | BUG-02 | Phase 3 | Pending |
