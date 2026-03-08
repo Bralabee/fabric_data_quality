@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 
 | Phase | Name | Status | Plans |
 |-------|------|--------|-------|
-| 1 | Repo Cleanup | In progress | 1/2 |
+| 1 | Repo Cleanup | Complete | 2/2 |
 | 2 | CI and Tooling | Not started | 0/2 |
 | 3 | Bug Fixes | Not started | 0/2 |
 | 4 | Test Coverage | Not started | 0/3 |
@@ -24,16 +24,16 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** 0/10 phases complete (0%)
+**Progress:** 1/10 phases complete (10%)
 
 ## Active Phase
 
 **Phase 1: Repo Cleanup**
 - Goal: The repository has a single, authoritative packaging configuration with no legacy files or committed artifacts
 - Requirements: PKG-01, PKG-02, PKG-03
-- Status: In progress
-- Current Plan: 01-02 complete, 01-01 pending
-- Plans: 1/2 complete
+- Status: Complete
+- Current Plan: All plans complete (01-01, 01-02)
+- Plans: 2/2 complete
 
 ## Key Decisions
 
@@ -46,6 +46,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | deepdiff for schema | 8 | Purpose-built for object comparison, avoids custom diff logic |
 | SQLite for local history | 9 | Stdlib, zero new deps; SQLAlchemy already available via GX |
 | Add *.whl/*.tar.gz to .gitignore | 1 | dist/ alone does not cover wheel/sdist files outside that directory |
+| Add [tool.setuptools.packages.find] to pyproject.toml | 1 | Flat-layout repos need explicit package include to avoid multi-package discovery error |
 
 ## Environment
 
@@ -54,4 +55,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-08 after completing 01-02-PLAN.md*
+*Last updated: 2026-03-08 after completing 01-01-PLAN.md (Phase 1 complete)*
