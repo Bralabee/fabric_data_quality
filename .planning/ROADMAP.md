@@ -84,7 +84,7 @@ Plans:
 
 Plans:
 - [ ] 04-01-PLAN.md -- Build Spark/Fabric mock fixtures and raise fabric_connector.py coverage to 60%+
-- [ ] 04-02-PLAN.md -- Rewrite loader.py and batch_profiler.py tests to pytest style and raise coverage to 60%+
+- [x] 04-02-PLAN.md -- Rewrite loader.py and batch_profiler.py tests to pytest style and raise coverage to 60%+
 - [ ] 04-03-PLAN.md -- Add characterization tests for severity-based threshold logic
 
 ### Phase 5: Storage Abstraction
@@ -195,7 +195,7 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 1. Repo Cleanup | 1/2 | In progress | - |
 | 2. CI and Tooling | 0/2 | Complete    | 2026-03-08 |
 | 3. Bug Fixes | 2/2 | Complete    | 2026-03-08 |
-| 4. Test Coverage | 0/3 | Not started | - |
+| 4. Test Coverage | 1/3 | In progress | - |
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 0/2 | Not started | - |
 | 7. Alert Channels | 0/2 | Not started | - |

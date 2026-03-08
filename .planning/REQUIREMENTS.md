@@ -27,8 +27,8 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 ### Test Coverage
 
 - [ ] **TEST-01**: Raise fabric_connector.py test coverage from 18% to 60%+ with Spark/Fabric mock fixtures
-- [ ] **TEST-02**: Raise loader.py test coverage from 51% to 60%+ covering all file formats and PyArrow path
-- [ ] **TEST-03**: Raise batch_profiler.py test coverage from 51% to 60%+ covering parallel processing
+- [x] **TEST-02**: Raise loader.py test coverage from 51% to 60%+ covering all file formats and PyArrow path
+- [x] **TEST-03**: Raise batch_profiler.py test coverage from 51% to 60%+ covering parallel processing
 - [ ] **TEST-04**: Add characterization tests for severity-based threshold logic (document current behavior before modifications)
 
 ### Alerting
@@ -123,8 +123,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | BUG-04 | Phase 3 | Pending |
 | BUG-05 | Phase 3 | Pending |
 | TEST-01 | Phase 4 | Pending |
-| TEST-02 | Phase 4 | Pending |
-| TEST-03 | Phase 4 | Pending |
+| TEST-02 | Phase 4 | Complete |
+| TEST-03 | Phase 4 | Complete |
 | TEST-04 | Phase 4 | Pending |
 | ALRT-01 | Phase 7 | Pending |
 | ALRT-02 | Phase 7 | Pending |

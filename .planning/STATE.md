@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-08T22:15:19.483Z"
+last_updated: "2026-03-08T22:36:57.864Z"
 progress:
   total_phases: 10
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 20
+  total_plans: 9
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 2 — CI and Tooling
+**Current focus:** Phase 4 — Test Coverage
 
 ## Current Milestone
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 1 | Repo Cleanup | Complete | 2/2 |
 | 2 | CI and Tooling | Complete | 2/2 |
 | 3 | Bug Fixes | Not started | 0/2 |
-| 4 | Test Coverage | Not started | 0/3 |
+| 4 | Test Coverage | In progress | 1/3 |
 | 5 | Storage Abstraction | Not started | 0/2 |
 | 6 | Alert Infrastructure | Not started | 0/2 |
 | 7 | Alert Channels | Not started | 0/2 |
@@ -38,16 +38,16 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** 2/10 phases complete (20%)
+**Progress:** [█████████░] 89%
 
 ## Active Phase
 
-**Phase 2: CI and Tooling**
-- Goal: Unified linting/formatting via ruff, pre-commit hooks migrated
-- Requirements: PKG-04, PKG-05, PKG-06
-- Status: Complete
-- Current Plan: All plans complete (02-01, 02-02)
-- Plans: 2/2 complete
+**Phase 4: Test Coverage**
+- Goal: Every module meets the 60% coverage minimum and threshold behavior is documented with characterization tests
+- Requirements: TEST-01, TEST-02, TEST-03, TEST-04
+- Status: In progress
+- Current Plan: 04-01 complete, next is 04-02
+- Plans: 1/3 complete
 
 ## Key Decisions
 
@@ -64,6 +64,9 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Remove safety pre-commit hook entirely | 2 | Safety has gone freemium; hook references requirements*.txt which may not exist |
 | Replace flake8/black/isort with ruff in CI and Makefile | 2 | Ruff already configured in pyproject.toml; single tool replaces three |
 | Delete requirements-dev.txt | 2 | Conflicting version pins with pyproject.toml; single source of truth via [dev] extras |
+| Mock pa.Table via module attribute swap | 4 | pyarrow C extension types are immutable; mocker.patch cannot set attributes |
+| Mock ProcessPoolExecutor in batch tests | 4 | Avoid spawning real processes; deterministic fast tests |
+| Inject SparkSession mock via module attribute | 4 | SparkSession not importable without PySpark; @patch fails |
 
 ## Environment
 
@@ -72,4 +75,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-08 after completing 02-01-PLAN.md (Phase 2 complete)*
+*Last updated: 2026-03-08 after completing 04-01-PLAN.md (fabric_connector test coverage)*
