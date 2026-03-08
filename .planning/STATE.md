@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-08T20:11:05.975Z"
+last_updated: "2026-03-08T21:09:30.656Z"
 progress:
   total_phases: 10
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 10
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 1 — Repo Cleanup
+**Current focus:** Phase 2 — CI and Tooling
 
 ## Current Milestone
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Phase | Name | Status | Plans |
 |-------|------|--------|-------|
 | 1 | Repo Cleanup | Complete | 2/2 |
-| 2 | CI and Tooling | Not started | 0/2 |
+| 2 | CI and Tooling | In progress | 1/2 |
 | 3 | Bug Fixes | Not started | 0/2 |
 | 4 | Test Coverage | Not started | 0/3 |
 | 5 | Storage Abstraction | Not started | 0/2 |
@@ -38,16 +38,16 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** 1/10 phases complete (10%)
+**Progress:** [████████░░] 75%
 
 ## Active Phase
 
-**Phase 1: Repo Cleanup**
-- Goal: The repository has a single, authoritative packaging configuration with no legacy files or committed artifacts
-- Requirements: PKG-01, PKG-02, PKG-03
-- Status: Complete
-- Current Plan: All plans complete (01-01, 01-02)
-- Plans: 2/2 complete
+**Phase 2: CI and Tooling**
+- Goal: Unified linting/formatting via ruff, pre-commit hooks migrated
+- Requirements: PKG-04, PKG-05, PKG-06
+- Status: In progress
+- Current Plan: 02-02 complete, 02-01 pending
+- Plans: 1/2 complete
 
 ## Key Decisions
 
@@ -61,6 +61,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | SQLite for local history | 9 | Stdlib, zero new deps; SQLAlchemy already available via GX |
 | Add *.whl/*.tar.gz to .gitignore | 1 | dist/ alone does not cover wheel/sdist files outside that directory |
 | Add [tool.setuptools.packages.find] to pyproject.toml | 1 | Flat-layout repos need explicit package include to avoid multi-package discovery error |
+| Remove safety pre-commit hook entirely | 2 | Safety has gone freemium; hook references requirements*.txt which may not exist |
 
 ## Environment
 
@@ -69,4 +70,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-08 after completing 01-01-PLAN.md (Phase 1 complete)*
+*Last updated: 2026-03-08 after completing 02-02-PLAN.md*
