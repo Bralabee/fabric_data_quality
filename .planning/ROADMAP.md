@@ -13,7 +13,7 @@ This roadmap takes the dq_framework from a working-but-rough validation library 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore
-- [ ] **Phase 2: CI and Tooling** - Align CI matrix and dev tooling on ruff/pyproject.toml
+- [x] **Phase 2: CI and Tooling** - Align CI matrix and dev tooling on ruff/pyproject.toml (completed 2026-03-08)
 - [ ] **Phase 3: Bug Fixes** - Fix all known bugs in validation, ingestion, and public API
 - [ ] **Phase 4: Test Coverage** - Raise module coverage to 60%+ and add characterization tests
 - [ ] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends
@@ -193,7 +193,7 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Repo Cleanup | 1/2 | In progress | - |
-| 2. CI and Tooling | 0/2 | Not started | - |
+| 2. CI and Tooling | 0/2 | Complete    | 2026-03-08 |
 | 3. Bug Fixes | 0/2 | Not started | - |
 | 4. Test Coverage | 0/3 | Not started | - |
 | 5. Storage Abstraction | 0/2 | Not started | - |
