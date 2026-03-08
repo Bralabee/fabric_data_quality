@@ -1,0 +1,165 @@
+# Requirements: dq_framework Health Audit & Production Hardening
+
+**Defined:** 2026-03-08
+**Core Value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
+
+## v2 Requirements
+
+Requirements for production hardening milestone. Each maps to roadmap phases.
+
+### Packaging
+
+- [ ] **PKG-01**: Remove legacy setup.py entirely (pyproject.toml v2.0.0 is canonical)
+- [ ] **PKG-02**: Remove committed build artifacts (build/, dist/, htmlcov/, .coverage, pipeline.log, egg-info)
+- [ ] **PKG-03**: Update .gitignore to prevent re-committing build artifacts
+- [ ] **PKG-04**: Align CI matrix with pyproject.toml (Python 3.10-3.13, ruff instead of flake8/black/isort)
+- [ ] **PKG-05**: Unify dev tooling on pyproject.toml [dev] extras (remove requirements-dev.txt conflicts)
+- [ ] **PKG-06**: Update pre-commit config to use ruff instead of flake8/black/isort
+
+### Bug Fixes
+
+- [ ] **BUG-01**: Fix chunked Spark validation bug (monotonically_increasing_id misuse causes missed/inconsistent rows)
+- [ ] **BUG-02**: Fix aggregated chunk results miscounting (inflated statistics from counting expectations across all chunks)
+- [ ] **BUG-03**: Remove unused DataIngester.engine parameter (dead code misleading users)
+- [ ] **BUG-04**: Remove or relocate stale check_data.py script with hardcoded paths
+- [ ] **BUG-05**: Fix _is_fabric_runtime private function exposed in __init__.py __all__
+
+### Test Coverage
+
+- [ ] **TEST-01**: Raise fabric_connector.py test coverage from 18% to 60%+ with Spark/Fabric mock fixtures
+- [ ] **TEST-02**: Raise loader.py test coverage from 51% to 60%+ covering all file formats and PyArrow path
+- [ ] **TEST-03**: Raise batch_profiler.py test coverage from 51% to 60%+ covering parallel processing
+- [ ] **TEST-04**: Add characterization tests for severity-based threshold logic (document current behavior before modifications)
+
+### Alerting
+
+- [ ] **ALRT-01**: Implement Microsoft Teams webhook alerting using Power Automate Workflows with Adaptive Card format
+- [ ] **ALRT-02**: Implement email (SMTP) alerting with HTML-formatted messages including summary tables and failed expectations
+- [ ] **ALRT-03**: Implement alert message formatting layer shared by Teams and email channels (jinja2 templates)
+- [ ] **ALRT-04**: Implement severity-based alert routing (critical alerts immediately, low-severity batched/suppressed)
+- [ ] **ALRT-05**: Add YAML-driven alert configuration (alerts: section in existing config YAML)
+- [ ] **ALRT-06**: Fix existing _send_alert return value handling (caller ignores failures — implement failure policies)
+- [ ] **ALRT-07**: Implement alert retry with circuit breaker (stop retrying after N consecutive failures)
+
+### Schema Evolution
+
+- [ ] **SCHM-01**: Implement schema baseline storage (persist column names, types, nullability as JSON snapshots)
+- [ ] **SCHM-02**: Implement schema change detection (compare current schema vs stored baseline using deepdiff)
+- [ ] **SCHM-03**: Classify schema changes as breaking (removal, type change) vs non-breaking (addition, nullability change)
+- [ ] **SCHM-04**: Implement schema evolution history (track diffs over time with timestamps)
+- [ ] **SCHM-05**: Auto-generate schema baseline from DataProfiler.profile() output
+- [ ] **SCHM-06**: Wire schema change detection into alerting system (breaking changes trigger critical alerts)
+
+### Validation History
+
+- [ ] **HIST-01**: Implement structured result storage replacing scattered JSON files (Parquet in Fabric, SQLite locally)
+- [ ] **HIST-02**: Define validation result record schema (timestamp, suite_name, success, success_rate, severity_stats, duration)
+- [ ] **HIST-03**: Implement trend query API: get_trend(dataset, days) returning pandas DataFrames
+- [ ] **HIST-04**: Implement failure history query: get_failure_history(dataset) returning failed expectations over time
+- [ ] **HIST-05**: Implement period comparison: compare_periods(dataset, period_a, period_b)
+- [ ] **HIST-06**: Implement configurable retention policy (retention_days with automatic cleanup)
+
+### Storage Foundation
+
+- [ ] **STOR-01**: Create ResultStore abstraction with JSONFileStore (local) and LakehouseStore (Fabric) backends
+- [ ] **STOR-02**: Refactor existing _save_results_to_lakehouse into ResultStore backend
+- [ ] **STOR-03**: Support both local (SQLite/JSON) and Fabric (Parquet/Lakehouse) storage modes
+
+### Integration
+
+- [ ] **INTG-01**: Wire all new components into FabricDataQualityRunner pipeline (schema check -> validate -> record history -> alert)
+- [ ] **INTG-02**: Update ConfigLoader to validate new YAML config sections (alerting, history, schema_tracking)
+- [ ] **INTG-03**: Update constants.py with new default values for alerting, history, and schema tracking
+- [ ] **INTG-04**: Update __init__.py exports with new public classes (AlertManager, SchemaTracker, ValidationHistory)
+- [ ] **INTG-05**: Align dq_framework with AIMS Data Platform dependency expectations
+- [ ] **INTG-06**: End-to-end integration tests covering full pipeline with all new components
+
+## v3 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Enhanced Alerting
+
+- **ALRT-V3-01**: Slack integration (if org adopts Slack alongside Teams)
+- **ALRT-V3-02**: Generic webhook support for custom integrations
+- **ALRT-V3-03**: Daily digest emails summarizing all validation results
+
+### Advanced Analytics
+
+- **ANAL-V3-01**: Dashboard UI for validation trends (Power BI integration or standalone)
+- **ANAL-V3-02**: Anomaly detection on validation metrics (auto-detect quality degradation)
+- **ANAL-V3-03**: Cross-dataset correlation analysis
+
+### Platform
+
+- **PLAT-V3-01**: Native Spark validation (without pandas conversion) when GX supports it
+- **PLAT-V3-02**: Real-time streaming validation support
+- **PLAT-V3-03**: GX 2.x migration when stable
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Dashboard UI | Expose structured data for Power BI/Jupyter instead; building a UI is a separate product |
+| Generic webhook alerting | Teams and email cover org needs; extensible architecture allows future additions |
+| Slack integration | Microsoft-shop org uses Teams; YAGNI |
+| Real-time streaming validation | Fundamentally different architecture from batch; GX 1.x is batch-oriented |
+| Automatic schema migration/repair | Detection and alerting only; human decision required for config updates |
+| GX Cloud integration | Self-hosted operation is the value proposition; SaaS dependency conflicts with it |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PKG-01 | — | Pending |
+| PKG-02 | — | Pending |
+| PKG-03 | — | Pending |
+| PKG-04 | — | Pending |
+| PKG-05 | — | Pending |
+| PKG-06 | — | Pending |
+| BUG-01 | — | Pending |
+| BUG-02 | — | Pending |
+| BUG-03 | — | Pending |
+| BUG-04 | — | Pending |
+| BUG-05 | — | Pending |
+| TEST-01 | — | Pending |
+| TEST-02 | — | Pending |
+| TEST-03 | — | Pending |
+| TEST-04 | — | Pending |
+| ALRT-01 | — | Pending |
+| ALRT-02 | — | Pending |
+| ALRT-03 | — | Pending |
+| ALRT-04 | — | Pending |
+| ALRT-05 | — | Pending |
+| ALRT-06 | — | Pending |
+| ALRT-07 | — | Pending |
+| SCHM-01 | — | Pending |
+| SCHM-02 | — | Pending |
+| SCHM-03 | — | Pending |
+| SCHM-04 | — | Pending |
+| SCHM-05 | — | Pending |
+| SCHM-06 | — | Pending |
+| HIST-01 | — | Pending |
+| HIST-02 | — | Pending |
+| HIST-03 | — | Pending |
+| HIST-04 | — | Pending |
+| HIST-05 | — | Pending |
+| HIST-06 | — | Pending |
+| STOR-01 | — | Pending |
+| STOR-02 | — | Pending |
+| STOR-03 | — | Pending |
+| INTG-01 | — | Pending |
+| INTG-02 | — | Pending |
+| INTG-03 | — | Pending |
+| INTG-04 | — | Pending |
+| INTG-05 | — | Pending |
+| INTG-06 | — | Pending |
+
+**Coverage:**
+- v2 requirements: 42 total
+- Mapped to phases: 0
+- Unmapped: 42
+
+---
+*Requirements defined: 2026-03-08*
+*Last updated: 2026-03-08 after initial definition*
