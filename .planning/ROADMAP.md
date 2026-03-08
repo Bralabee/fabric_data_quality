@@ -80,12 +80,12 @@ Plans:
   3. batch_profiler.py test coverage is 60% or higher (up from 51%)
   4. Characterization tests exist that document current severity-based threshold behavior and pass
   5. Reusable Spark/Fabric mock fixtures exist for use in later integration testing phases
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md -- Build Spark/Fabric mock fixtures and raise fabric_connector.py coverage to 60%+
+- [ ] 04-02-PLAN.md -- Rewrite loader.py and batch_profiler.py tests to pytest style and raise coverage to 60%+
+- [ ] 04-03-PLAN.md -- Add characterization tests for severity-based threshold logic
 
 ### Phase 5: Storage Abstraction
 **Goal**: A unified storage interface supports both local and Fabric backends for result persistence
