@@ -649,31 +649,116 @@ class TestHandleFailure:
             mock_alert.assert_called_once_with(failed_result)
 
 
-class TestSaveResultsToLakehouse:
-    """Group 6: _save_results_to_lakehouse."""
+class TestResultStoreIntegration:
+    """Group 6: ResultStore integration in FabricDataQualityRunner."""
 
-    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", True)
-    @patch("dq_framework.fabric_connector.mssparkutils")
-    def test_save_results_fabric_available(
-        self, mock_msutils, fabric_runner, sample_validation_result
-    ):
-        """When Fabric is available, results should be written via mssparkutils.fs.put."""
-        fabric_runner._save_results_to_lakehouse(sample_validation_result)
+    def test_runner_has_store_attribute(self, fabric_runner):
+        """FabricDataQualityRunner.__init__ should create a _store attribute."""
+        assert hasattr(fabric_runner, "_store"), (
+            "FabricDataQualityRunner must have a _store attribute"
+        )
 
-        mock_msutils.fs.put.assert_called_once()
-        call_args = mock_msutils.fs.put.call_args
-        # First positional arg is the file path, second is JSON string
-        written_json = call_args[0][1]
-        parsed = json.loads(written_json)
-        assert parsed["suite_name"] == "test_suite"
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_spark_calls_store_write(self, fabric_runner, mock_spark_df):
+        """validate_spark_dataframe should call self._store.write()."""
+        mock_spark_df.count.return_value = 50
 
-    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
-    def test_save_results_fabric_not_available(
-        self, fabric_runner, sample_validation_result
-    ):
-        """When Fabric is not available, should log warning and not crash."""
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "store_test",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+        fabric_runner._store = MagicMock()
+
+        fabric_runner.validate_spark_dataframe(mock_spark_df, batch_name="store_test")
+
+        fabric_runner._store.write.assert_called_once()
+        call_args = fabric_runner._store.write.call_args
+        assert call_args[0][1] == expected_result
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_spark_chunked_calls_store_write(self, fabric_runner):
+        """_validate_spark_chunked should call self._store.write()."""
+        import sys
+
+        # Build a mock Spark DF that supports the withColumn/filter/drop/toPandas chain
+        mock_spark_df = MagicMock(name="SparkDataFrame")
+        mock_spark_df.columns = ["id", "name", "age"]
+        df_with_id = MagicMock(name="df_with_id")
+        mock_spark_df.withColumn.return_value = df_with_id
+
+        col_mock = MagicMock()
+        col_mock.__ge__ = MagicMock(return_value=MagicMock())
+        col_mock.__le__ = MagicMock(return_value=MagicMock())
+        df_with_id.__getitem__ = MagicMock(return_value=col_mock)
+
+        filtered_df = MagicMock()
+        df_with_id.filter.return_value = filtered_df
+        dropped_df = MagicMock()
+        filtered_df.drop.return_value = dropped_df
+        dropped_df.toPandas.return_value = pd.DataFrame({"a": [1]})
+
+        chunk_result = {
+            "success": True,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "success_rate": 100.0,
+            "suite_name": "test_validation",
+            "batch_name": "chunked_store__chunk_1",
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+            "threshold": DEFAULT_VALIDATION_THRESHOLD,
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=chunk_result)
+        fabric_runner._store = MagicMock()
+
+        pyspark_mocks = {
+            "pyspark.sql.functions": MagicMock(),
+            "pyspark.sql.window": MagicMock(),
+        }
+
+        with patch.dict(sys.modules, pyspark_mocks):
+            fabric_runner._validate_spark_chunked(mock_spark_df, "chunked_store", 5, 5)
+
+        fabric_runner._store.write.assert_called_once()
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_store_write_failure_does_not_crash(self, fabric_runner, mock_spark_df):
+        """Storage failure in write() should be caught and logged, not crash validation."""
+        mock_spark_df.count.return_value = 50
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "fail_store",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+        fabric_runner._store = MagicMock()
+        fabric_runner._store.write.side_effect = OSError("Disk full")
+
         # Should not raise
-        fabric_runner._save_results_to_lakehouse(sample_validation_result)
+        result = fabric_runner.validate_spark_dataframe(mock_spark_df, batch_name="fail_store")
+        assert result["success"] is True
+
+    def test_save_results_to_lakehouse_removed(self, fabric_runner):
+        """_save_results_to_lakehouse method should no longer exist."""
+        assert not hasattr(fabric_runner, "_save_results_to_lakehouse"), (
+            "_save_results_to_lakehouse should be removed from FabricDataQualityRunner"
+        )
 
 
 class TestQuickValidate:

@@ -34,6 +34,7 @@ from .constants import (
     FABRIC_SAMPLE_FRACTION,
     MAX_FAILURE_DISPLAY,
 )
+from .storage import get_store, make_result_key
 from .validator import DataQualityValidator
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ class FabricDataQualityRunner:
         self.config_path = config_path
         self.workspace_id = workspace_id
         self.results_location = results_location
+        self._store = get_store(results_dir=results_location)
 
         # Try to load config using Fabric utils if available (supports abfss)
         config_dict = None
@@ -202,9 +204,12 @@ class FabricDataQualityRunner:
             or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         )
 
-        # Store results if in Fabric
-        if FABRIC_UTILS_AVAILABLE:
-            self._save_results_to_lakehouse(results)
+        # Persist results via pluggable store
+        try:
+            key = make_result_key(results.get("batch_name", "unknown"))
+            self._store.write(key, results)
+        except Exception as e:
+            logger.error(f"Failed to save results: {e}")
 
         return results
 
@@ -282,9 +287,12 @@ class FabricDataQualityRunner:
         # Aggregate results
         aggregated = self._aggregate_chunk_results(all_results, batch_name)
 
-        # Store results if in Fabric
-        if FABRIC_UTILS_AVAILABLE:
-            self._save_results_to_lakehouse(aggregated)
+        # Persist results via pluggable store
+        try:
+            key = make_result_key(aggregated.get("batch_name", "unknown"))
+            self._store.write(key, aggregated)
+        except Exception as e:
+            logger.error(f"Failed to save results: {e}")
 
         return aggregated
 
@@ -572,35 +580,6 @@ class FabricDataQualityRunner:
                     return False
 
         return False
-
-    def _save_results_to_lakehouse(self, results: dict[str, Any]) -> None:
-        """Save validation results to Lakehouse."""
-        if not FABRIC_UTILS_AVAILABLE:
-            logger.warning(
-                "Fabric utilities not available. Cannot save results to Lakehouse."
-            )
-            return
-
-        import json
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_file = (
-            f"{self.results_location}/"
-            f"validation_{results['batch_name']}_{timestamp}.json"
-        )
-
-        # Remove non-serializable validation_result before saving
-        serializable_results = {
-            k: v for k, v in results.items() if k != "validation_result"
-        }
-
-        try:
-            results_json = json.dumps(serializable_results, indent=2, default=str)
-            mssparkutils.fs.put(results_file, results_json, overwrite=True)
-            logger.info(f"Results saved to: {results_file}")
-        except Exception as e:
-            logger.error(f"Failed to save results to Lakehouse: {e}")
-
 
 def quick_validate(
     df,
