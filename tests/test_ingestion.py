@@ -2,7 +2,7 @@
 Comprehensive tests for dq_framework/ingestion.py
 
 Tests cover:
-- DataIngester class initialization with different engines
+- DataIngester class initialization
 - ingest_file() for local environment
 - ingest_file() with is_fabric=True (mock dependencies)
 - Error handling for invalid files
@@ -23,36 +23,11 @@ from dq_framework.ingestion import DataIngester
 
 class TestDataIngesterInitialization:
     """Tests for DataIngester initialization."""
-    
-    def test_init_default_engine(self):
-        """Test DataIngester initializes with default fastparquet engine."""
+
+    def test_init_no_parameters(self):
+        """Test DataIngester initializes with no parameters."""
         ingester = DataIngester()
-        
-        assert ingester.engine == "fastparquet"
-        
-    def test_init_fastparquet_engine(self):
-        """Test DataIngester initializes with fastparquet engine explicitly."""
-        ingester = DataIngester(engine="fastparquet")
-        
-        assert ingester.engine == "fastparquet"
-        
-    def test_init_pyarrow_engine(self):
-        """Test DataIngester initializes with pyarrow engine."""
-        ingester = DataIngester(engine="pyarrow")
-        
-        assert ingester.engine == "pyarrow"
-        
-    def test_init_custom_engine(self):
-        """Test DataIngester accepts custom engine strings."""
-        ingester = DataIngester(engine="custom_engine")
-        
-        assert ingester.engine == "custom_engine"
-        
-    def test_init_empty_engine(self):
-        """Test DataIngester with empty engine string."""
-        ingester = DataIngester(engine="")
-        
-        assert ingester.engine == ""
+        assert isinstance(ingester, DataIngester)
 
 
 class TestDataIngesterIngestFileLocal:
@@ -473,41 +448,6 @@ class TestDataIngesterParquetIntegration:
         # Verify content is identical
         result_df = pd.read_parquet(target_file)
         pd.testing.assert_frame_equal(test_df, result_df)
-
-
-class TestDataIngesterWithDifferentEngines:
-    """Test DataIngester behavior with different engine settings."""
-    
-    def test_ingest_with_pyarrow_engine_local(self, tmp_path):
-        """Test local ingestion with pyarrow engine setting."""
-        ingester = DataIngester(engine="pyarrow")
-        
-        # Create source file
-        source_file = tmp_path / "source.csv"
-        source_file.write_text("data")
-        
-        target_file = tmp_path / "target" / "dest.csv"
-        
-        # Engine doesn't affect local copy operation
-        result = ingester.ingest_file(source_file, target_file, is_fabric=False)
-        
-        assert result is True
-        assert ingester.engine == "pyarrow"
-        
-    def test_ingest_with_fastparquet_engine_local(self, tmp_path):
-        """Test local ingestion with fastparquet engine setting."""
-        ingester = DataIngester(engine="fastparquet")
-        
-        # Create source file
-        source_file = tmp_path / "source.csv"
-        source_file.write_text("data")
-        
-        target_file = tmp_path / "target" / "dest.csv"
-        
-        result = ingester.ingest_file(source_file, target_file, is_fabric=False)
-        
-        assert result is True
-        assert ingester.engine == "fastparquet"
 
 
 class TestDataIngesterModuleLevel:

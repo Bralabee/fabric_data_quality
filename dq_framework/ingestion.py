@@ -8,22 +8,10 @@ import shutil
 logger = logging.getLogger(__name__)
 
 class DataIngester:
-    """Handles data ingestion operations.
-    
-    Attributes:
-        engine: The parquet engine to use for reading/writing operations.
-                Supported values: 'fastparquet', 'pyarrow'. Defaults to 'fastparquet'.
-                Note: Currently used for future parquet read/write optimizations.
-    """
-    
-    def __init__(self, engine: str = "fastparquet"):
-        """Initialize DataIngester.
-        
-        Args:
-            engine: The parquet engine to use. Options: 'fastparquet', 'pyarrow'.
-                   Reserved for future use in optimized parquet operations.
-        """
-        self.engine = engine
+    """Handles data ingestion operations."""
+
+    def __init__(self):
+        """Initialize DataIngester."""
 
     def ingest_file(self, source_path: Path, target_path: Path, is_fabric: bool = False) -> bool:
         """
