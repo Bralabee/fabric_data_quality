@@ -298,9 +298,11 @@ class TestMakeResultKey:
         """make_result_key produces 'validation_{safe_name}_{timestamp}' format."""
         key = make_result_key("my_batch")
         assert key.startswith("validation_my_batch_")
-        # Check timestamp portion is 15 chars (YYYYMMDD_HHMMSS)
-        timestamp_part = key.split("_", 2)[-1]
+        # Timestamp is last 15 chars: YYYYMMDD_HHMMSS
+        timestamp_part = key[-15:]
         assert len(timestamp_part) == 15
+        # Verify it looks like a timestamp (digits_digits)
+        assert timestamp_part[8] == "_"
 
     def test_sanitizes_special_characters(self):
         """make_result_key replaces non-alphanumeric chars with underscore."""
