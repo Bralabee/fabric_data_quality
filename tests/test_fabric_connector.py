@@ -4,12 +4,20 @@ Note: Some tests require a Fabric environment with Spark.
 Unit tests for chunked validation and aggregation use mocks.
 """
 
+import json
+
+import pandas as pd
 import pytest
+import yaml
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from dq_framework.fabric_connector import FabricDataQualityRunner
-from dq_framework.constants import DEFAULT_VALIDATION_THRESHOLD, MAX_FAILURE_DISPLAY
+from dq_framework.fabric_connector import FabricDataQualityRunner, quick_validate
+from dq_framework.constants import (
+    DEFAULT_VALIDATION_THRESHOLD,
+    FABRIC_LARGE_DATASET_THRESHOLD,
+    MAX_FAILURE_DISPLAY,
+)
 
 
 class TestFabricDataQualityRunner:
@@ -350,6 +358,385 @@ class TestAllExports:
         assert "_is_fabric_runtime" not in dq_framework.__all__, (
             "_is_fabric_runtime should not be in __all__"
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — New unit-test groups for fabric_connector.py coverage
+# ---------------------------------------------------------------------------
+
+
+class TestInitPaths:
+    """Group 1: __init__ paths."""
+
+    def test_init_loads_config_from_local_path(self, fabric_runner):
+        """Verify validator is initialized from a YAML file on local filesystem."""
+        assert fabric_runner is not None
+        assert fabric_runner.config is not None
+        assert fabric_runner.config["validation_name"] == "test_validation"
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", True)
+    @patch("dq_framework.fabric_connector.mssparkutils")
+    def test_init_loads_config_from_fabric_path(self, mock_msutils, tmp_path):
+        """When FABRIC_UTILS_AVAILABLE is True and path starts with 'Files/',
+        config should be loaded via mssparkutils.fs.head."""
+        config = {
+            "validation_name": "fabric_loaded",
+            "expectations": [
+                {
+                    "expectation_type": "expect_table_row_count_to_be_between",
+                    "kwargs": {"min_value": 1},
+                }
+            ],
+        }
+        mock_msutils.fs.head.return_value = yaml.dump(config)
+
+        runner = FabricDataQualityRunner("Files/dq_configs/my_table.yml")
+        assert runner.config["validation_name"] == "fabric_loaded"
+        mock_msutils.fs.head.assert_called_once()
+
+    def test_config_property_returns_validator_config(self, fabric_runner):
+        """runner.config should return the validator's config dict."""
+        cfg = fabric_runner.config
+        assert isinstance(cfg, dict)
+        assert "validation_name" in cfg
+
+
+class TestValidateSparkDataframe:
+    """Group 2: validate_spark_dataframe."""
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_spark_small_dataset(self, fabric_runner, mock_spark_df):
+        """Small dataset (count < threshold) should call toPandas and return result."""
+        mock_spark_df.count.return_value = 50
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "test_batch",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+
+        result = fabric_runner.validate_spark_dataframe(mock_spark_df, batch_name="test_batch")
+
+        mock_spark_df.toPandas.assert_called_once()
+        assert result["success"] is True
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_spark_large_dataset_with_sampling(self, fabric_runner, mock_spark_df):
+        """Large dataset (count > threshold) should trigger limit-based sampling."""
+        mock_spark_df.count.return_value = 200_000
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "large_batch",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+
+        result = fabric_runner.validate_spark_dataframe(
+            mock_spark_df, batch_name="large_batch"
+        )
+
+        # limit() should be called for sampling (not sample())
+        mock_spark_df.limit.assert_called_once()
+        assert result["success"] is True
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", False)
+    def test_validate_spark_not_available(self, fabric_runner, mock_spark_df):
+        """When SPARK_AVAILABLE is False, should raise ImportError."""
+        with pytest.raises(ImportError, match="PySpark not available"):
+            fabric_runner.validate_spark_dataframe(mock_spark_df)
+
+
+class TestValidateDeltaTable:
+    """Group 3: validate_delta_table."""
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_delta_table_reads_table(self, fabric_runner, mock_spark_df):
+        """validate_delta_table should read the table via SparkSession.table()."""
+        import dq_framework.fabric_connector as fc_mod
+
+        mock_session = MagicMock()
+        mock_session.table.return_value = mock_spark_df
+        mock_spark_cls = MagicMock()
+        mock_spark_cls.builder.getOrCreate.return_value = mock_session
+        mock_spark_df.count.return_value = 50
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "my_table",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+
+        original = getattr(fc_mod, "SparkSession", None)
+        try:
+            fc_mod.SparkSession = mock_spark_cls
+            result = fabric_runner.validate_delta_table("my_table")
+        finally:
+            if original is None:
+                delattr(fc_mod, "SparkSession")
+            else:
+                fc_mod.SparkSession = original
+
+        mock_session.table.assert_called_once_with("my_table")
+        assert result["success"] is True
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", False)
+    def test_validate_delta_table_spark_not_available(self, fabric_runner):
+        """When SPARK_AVAILABLE is False, should raise ImportError."""
+        with pytest.raises(ImportError, match="PySpark not available"):
+            fabric_runner.validate_delta_table("some_table")
+
+
+class TestValidateLakehouseFile:
+    """Group 4: validate_lakehouse_file."""
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_lakehouse_file_csv(self, fabric_runner, mock_spark_df):
+        """CSV file should be loaded via spark.read.csv."""
+        import dq_framework.fabric_connector as fc_mod
+
+        mock_session = MagicMock()
+        mock_session.read.csv.return_value = mock_spark_df
+        mock_spark_cls = MagicMock()
+        mock_spark_cls.builder.getOrCreate.return_value = mock_session
+        mock_spark_df.count.return_value = 50
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "csv_test",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+
+        original = getattr(fc_mod, "SparkSession", None)
+        try:
+            fc_mod.SparkSession = mock_spark_cls
+            result = fabric_runner.validate_lakehouse_file(
+                "Files/data/test.csv", file_format="csv", batch_name="csv_test"
+            )
+        finally:
+            if original is None:
+                delattr(fc_mod, "SparkSession")
+            else:
+                fc_mod.SparkSession = original
+
+        mock_session.read.csv.assert_called_once()
+        assert result["success"] is True
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_lakehouse_file_parquet(self, fabric_runner, mock_spark_df):
+        """Parquet file should be loaded via spark.read.parquet."""
+        import dq_framework.fabric_connector as fc_mod
+
+        mock_session = MagicMock()
+        mock_session.read.parquet.return_value = mock_spark_df
+        mock_spark_cls = MagicMock()
+        mock_spark_cls.builder.getOrCreate.return_value = mock_session
+        mock_spark_df.count.return_value = 50
+
+        expected_result = {
+            "success": True,
+            "suite_name": "test_validation",
+            "batch_name": "parquet_test",
+            "success_rate": 100.0,
+            "evaluated_checks": 1,
+            "successful_checks": 1,
+            "failed_checks": 0,
+            "timestamp": datetime.now().isoformat(),
+            "failed_expectations": [],
+        }
+        fabric_runner.validator.validate = MagicMock(return_value=expected_result)
+
+        original = getattr(fc_mod, "SparkSession", None)
+        try:
+            fc_mod.SparkSession = mock_spark_cls
+            result = fabric_runner.validate_lakehouse_file(
+                "Files/data/test.parquet", file_format="parquet", batch_name="parquet_test"
+            )
+        finally:
+            if original is None:
+                delattr(fc_mod, "SparkSession")
+            else:
+                fc_mod.SparkSession = original
+
+        mock_session.read.parquet.assert_called_once()
+        assert result["success"] is True
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_validate_lakehouse_file_unsupported(self, fabric_runner):
+        """Unsupported file format should raise ValueError."""
+        import dq_framework.fabric_connector as fc_mod
+
+        mock_session = MagicMock()
+        mock_spark_cls = MagicMock()
+        mock_spark_cls.builder.getOrCreate.return_value = mock_session
+
+        original = getattr(fc_mod, "SparkSession", None)
+        try:
+            fc_mod.SparkSession = mock_spark_cls
+            with pytest.raises(ValueError, match="Unsupported file format"):
+                fabric_runner.validate_lakehouse_file(
+                    "Files/data/test.xlsx", file_format="xlsx"
+                )
+        finally:
+            if original is None:
+                delattr(fc_mod, "SparkSession")
+            else:
+                fc_mod.SparkSession = original
+
+
+class TestHandleFailure:
+    """Group 5: handle_failure."""
+
+    def test_handle_failure_success_noop(self, fabric_runner, sample_validation_result):
+        """Successful results with action='log' should not raise."""
+        # sample_validation_result has success=True
+        fabric_runner.handle_failure(sample_validation_result, action="log")
+        # No exception means pass
+
+    def test_handle_failure_halt_raises(self, fabric_runner, sample_validation_result):
+        """Failed results with action='halt' should raise ValueError."""
+        failed_result = dict(sample_validation_result)
+        failed_result["success"] = False
+        failed_result["failed_checks"] = 2
+        failed_result["success_rate"] = 60.0
+
+        with pytest.raises(ValueError, match="Data quality validation failed"):
+            fabric_runner.handle_failure(failed_result, action="halt")
+
+    def test_handle_failure_alert_calls_send_alert(
+        self, fabric_runner, sample_validation_result
+    ):
+        """Failed results with action='alert' should call _send_alert."""
+        failed_result = dict(sample_validation_result)
+        failed_result["success"] = False
+        failed_result["failed_checks"] = 1
+        failed_result["success_rate"] = 80.0
+
+        with patch.object(fabric_runner, "_send_alert") as mock_alert:
+            fabric_runner.handle_failure(failed_result, action="alert")
+            mock_alert.assert_called_once_with(failed_result)
+
+
+class TestSaveResultsToLakehouse:
+    """Group 6: _save_results_to_lakehouse."""
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", True)
+    @patch("dq_framework.fabric_connector.mssparkutils")
+    def test_save_results_fabric_available(
+        self, mock_msutils, fabric_runner, sample_validation_result
+    ):
+        """When Fabric is available, results should be written via mssparkutils.fs.put."""
+        fabric_runner._save_results_to_lakehouse(sample_validation_result)
+
+        mock_msutils.fs.put.assert_called_once()
+        call_args = mock_msutils.fs.put.call_args
+        # First positional arg is the file path, second is JSON string
+        written_json = call_args[0][1]
+        parsed = json.loads(written_json)
+        assert parsed["suite_name"] == "test_suite"
+
+    @patch("dq_framework.fabric_connector.FABRIC_UTILS_AVAILABLE", False)
+    def test_save_results_fabric_not_available(
+        self, fabric_runner, sample_validation_result
+    ):
+        """When Fabric is not available, should log warning and not crash."""
+        # Should not raise
+        fabric_runner._save_results_to_lakehouse(sample_validation_result)
+
+
+class TestQuickValidate:
+    """Group 7: quick_validate (module-level function)."""
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", False)
+    def test_quick_validate_pandas_df(self, tmp_path):
+        """quick_validate with a pandas DataFrame should use DataQualityValidator."""
+        config = {
+            "validation_name": "quick_test",
+            "expectations": [
+                {
+                    "expectation_type": "expect_table_row_count_to_be_between",
+                    "kwargs": {"min_value": 1},
+                }
+            ],
+        }
+        config_file = tmp_path / "quick_config.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+
+        df = pd.DataFrame({"id": [1, 2, 3], "name": ["a", "b", "c"]})
+
+        with patch(
+            "dq_framework.fabric_connector.DataQualityValidator"
+        ) as MockValidator:
+            mock_instance = MockValidator.return_value
+            mock_instance.validate.return_value = {
+                "success": True,
+                "failed_checks": 0,
+            }
+            result = quick_validate(df, str(config_file))
+            assert result is True
+            mock_instance.validate.assert_called_once()
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", False)
+    def test_quick_validate_halt_on_failure(self, tmp_path):
+        """quick_validate with halt_on_failure=True and failed result should raise."""
+        config = {
+            "validation_name": "quick_halt",
+            "expectations": [
+                {
+                    "expectation_type": "expect_table_row_count_to_be_between",
+                    "kwargs": {"min_value": 1},
+                }
+            ],
+        }
+        config_file = tmp_path / "quick_halt_config.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+
+        df = pd.DataFrame({"id": [1]})
+
+        with patch(
+            "dq_framework.fabric_connector.DataQualityValidator"
+        ) as MockValidator:
+            mock_instance = MockValidator.return_value
+            mock_instance.validate.return_value = {
+                "success": False,
+                "failed_checks": 3,
+            }
+            with pytest.raises(ValueError, match="Data quality validation failed"):
+                quick_validate(df, str(config_file), halt_on_failure=True)
 
 
 if __name__ == "__main__":
