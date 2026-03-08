@@ -34,11 +34,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. No build artifacts (build/, dist/, htmlcov/, .coverage, pipeline.log, egg-info) exist in the repository
   3. .gitignore prevents re-committing all known artifact patterns
   4. `pip install -e .` succeeds using only pyproject.toml
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Remove setup.py and update documentation references
+- [ ] 01-02-PLAN.md -- Clean build artifacts and verify .gitignore coverage
 
 ### Phase 2: CI and Tooling
 **Goal**: All development tooling uses a single source of truth (pyproject.toml) and CI runs the correct Python versions with ruff
