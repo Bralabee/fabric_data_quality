@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore
 - [x] **Phase 2: CI and Tooling** - Align CI matrix and dev tooling on ruff/pyproject.toml (completed 2026-03-08)
-- [ ] **Phase 3: Bug Fixes** - Fix all known bugs in validation, ingestion, and public API
+- [x] **Phase 3: Bug Fixes** - Fix all known bugs in validation, ingestion, and public API (completed 2026-03-08)
 - [ ] **Phase 4: Test Coverage** - Raise module coverage to 60%+ and add characterization tests
 - [ ] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends
 - [ ] **Phase 6: Alert Infrastructure** - Build alert formatting, config, failure handling, and retry
@@ -67,8 +67,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Fix chunked Spark validation (row_number) and aggregation (per-expectation averages)
-- [ ] 03-02-PLAN.md -- Remove DataIngester.engine, delete check_data.py, fix __all__ exports
+- [x] 03-01-PLAN.md -- Fix chunked Spark validation (row_number) and aggregation (per-expectation averages)
+- [x] 03-02-PLAN.md -- Remove DataIngester.engine, delete check_data.py, fix __all__ exports
 
 ### Phase 4: Test Coverage
 **Goal**: Every module meets the 60% coverage minimum and threshold behavior is documented with characterization tests
@@ -194,7 +194,7 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 |-------|----------------|--------|-----------|
 | 1. Repo Cleanup | 1/2 | In progress | - |
 | 2. CI and Tooling | 0/2 | Complete    | 2026-03-08 |
-| 3. Bug Fixes | 0/2 | Not started | - |
+| 3. Bug Fixes | 2/2 | Complete    | 2026-03-08 |
 | 4. Test Coverage | 0/3 | Not started | - |
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 0/2 | Not started | - |
