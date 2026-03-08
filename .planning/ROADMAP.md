@@ -111,11 +111,11 @@ Plans:
   2. YAML config supports an alerts: section with channel configuration and routing rules
   3. Alert delivery failures are handled with explicit policies (warn/raise/fallback), not silently ignored
   4. Circuit breaker stops retrying after N consecutive failures and recovers after a cooldown period
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- Create alerting subpackage with Jinja2 formatter, alert config parsing, and default templates
+- [ ] 06-02-PLAN.md -- Implement circuit breaker state machine and AlertDispatcher with failure policies
 
 ### Phase 7: Alert Channels
 **Goal**: Validation results trigger alerts via Teams and email with severity-based routing
