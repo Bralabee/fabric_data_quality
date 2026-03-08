@@ -41,7 +41,6 @@ A reusable, configuration-driven data quality framework for Microsoft Fabric ETL
 - **README.md** - Main project documentation with quick start
 - **QUICK_REFERENCE.md** - One-page cheat sheet for common operations
 - **requirements.txt** - Python dependencies
-- **setup.py** - Package installation configuration
 
 ## 🚀 Key Features
 

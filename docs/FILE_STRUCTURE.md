@@ -7,7 +7,6 @@
 ├── 📄 PROJECT_SUMMARY.md                     # Complete project overview
 ├── 📄 QUICK_REFERENCE.md                     # One-page cheat sheet
 ├── 📄 requirements.txt                       # Python dependencies
-├── 📄 setup.py                               # Package installation config
 ├── 📄 .gitignore                            # Git ignore patterns
 │
 ├── 📁 dq_framework/                          # Core framework code

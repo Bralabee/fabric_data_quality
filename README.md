@@ -26,7 +26,6 @@ This standalone framework provides data quality validation capabilities that can
 2_DATA_QUALITY_LIBRARY/
 ├── README.md                          # This file
 ├── requirements.txt                   # Dependencies
-├── setup.py                           # Installation script
 │
 ├── dq_framework/                      # Core framework package
 │   ├── __init__.py                   # Package exports

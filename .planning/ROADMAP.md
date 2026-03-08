@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [ ] 01-01-PLAN.md -- Remove setup.py and update documentation references
-- [ ] 01-02-PLAN.md -- Clean build artifacts and verify .gitignore coverage
+- [x] 01-02-PLAN.md -- Clean build artifacts and verify .gitignore coverage
 
 ### Phase 2: CI and Tooling
 **Goal**: All development tooling uses a single source of truth (pyproject.toml) and CI runs the correct Python versions with ruff
@@ -192,7 +192,7 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Repo Cleanup | 0/2 | Not started | - |
+| 1. Repo Cleanup | 1/2 | In progress | - |
 | 2. CI and Tooling | 0/2 | Not started | - |
 | 3. Bug Fixes | 0/2 | Not started | - |
 | 4. Test Coverage | 0/3 | Not started | - |

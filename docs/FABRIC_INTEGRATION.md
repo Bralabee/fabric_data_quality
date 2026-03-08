@@ -21,9 +21,9 @@ This method installs the framework as a proper Python library in your Fabric Env
 
 1.  **Build the Library (Locally)**:
     ```bash
-    python setup.py bdist_wheel
+    python -m build --wheel
     ```
-    This generates a file like `dist/fabric_data_quality-1.0.0-py3-none-any.whl`.
+    This generates a file like `dist/fabric_data_quality-2.0.0-py3-none-any.whl`.
 
 2.  **Upload to Fabric Environment**:
     *   In Fabric, go to **Workspaces** -> Select your workspace.

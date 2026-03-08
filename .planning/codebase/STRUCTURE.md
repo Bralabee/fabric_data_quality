@@ -61,7 +61,6 @@
 ├── dist/                       # Distribution packages (generated)
 ├── htmlcov/                    # Coverage reports (generated)
 ├── pyproject.toml              # Package config, tool settings
-├── setup.py                    # Legacy setup (for editable installs)
 ├── requirements.txt            # Production dependencies
 ├── requirements-dev.txt        # Development dependencies
 ├── environment.yml             # Conda environment definition
@@ -202,7 +201,7 @@
 
 **`build/`:**
 - Purpose: Python build artifacts (contains stale copy of dq_framework)
-- Generated: Yes (by `python -m build` or `setup.py`)
+- Generated: Yes (by `python -m build`)
 - Committed: Should not be committed
 
 **`dist/`:**

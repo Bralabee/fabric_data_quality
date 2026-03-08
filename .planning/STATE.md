@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 
 | Phase | Name | Status | Plans |
 |-------|------|--------|-------|
-| 1 | Repo Cleanup | Not started | 0/2 |
+| 1 | Repo Cleanup | In progress | 1/2 |
 | 2 | CI and Tooling | Not started | 0/2 |
 | 3 | Bug Fixes | Not started | 0/2 |
 | 4 | Test Coverage | Not started | 0/3 |
@@ -31,8 +31,9 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 **Phase 1: Repo Cleanup**
 - Goal: The repository has a single, authoritative packaging configuration with no legacy files or committed artifacts
 - Requirements: PKG-01, PKG-02, PKG-03
-- Status: Not started
-- Plans: Not yet created — run `/gsd:plan-phase 1`
+- Status: In progress
+- Current Plan: 01-02 complete, 01-01 pending
+- Plans: 1/2 complete
 
 ## Key Decisions
 
@@ -44,6 +45,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | httpx over requests | 7 | Modern async-capable client for webhook delivery |
 | deepdiff for schema | 8 | Purpose-built for object comparison, avoids custom diff logic |
 | SQLite for local history | 9 | Stdlib, zero new deps; SQLAlchemy already available via GX |
+| Add *.whl/*.tar.gz to .gitignore | 1 | dist/ alone does not cover wheel/sdist files outside that directory |
 
 ## Environment
 
@@ -52,4 +54,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-08 after project initialization*
+*Last updated: 2026-03-08 after completing 01-02-PLAN.md*

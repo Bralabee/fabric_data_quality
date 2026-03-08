@@ -80,7 +80,6 @@
 
 **Build:**
 - `pyproject.toml` - Primary project configuration (PEP 518), tool configs for ruff, pytest, coverage, mypy
-- `setup.py` - Legacy setup script (version 1.2.0, outdated relative to pyproject.toml 2.0.0)
 - `environment.yml` - Conda environment definition
 - `Makefile` - Developer workflow commands (install, test, lint, format, build, docs, security, CI)
 - `.pre-commit-config.yaml` - Git hook configuration (black, isort, flake8, mypy, bandit, pydocstyle, pre-commit-hooks)
