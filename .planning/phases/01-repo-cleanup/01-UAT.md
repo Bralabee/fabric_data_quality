@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 01-repo-cleanup
 source: [01-01-SUMMARY.md, 01-02-SUMMARY.md]
 started: 2026-03-08T20:30:00Z
@@ -49,7 +49,10 @@ skipped: 0
   reason: "User reported: make commands are not working"
   severity: major
   test: 1
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "make lint and make format-check fail due to pre-existing code formatting issues (26+ files not conforming to black/flake8). Unrelated to setup.py removal — Makefile already uses PEP 517 commands with zero setup.py references. make install, make test, make build all pass."
+  artifacts:
+    - path: "Makefile"
+      issue: "No issues — already modernized, no setup.py references"
+  missing:
+    - "Run make format to auto-fix 26 files with black+isort (resolves lint and format-check failures)"
+  debug_session: ".planning/debug/make-commands-broken.md"
