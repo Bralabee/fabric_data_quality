@@ -118,3 +118,10 @@ dmypy.json
 *.joblib
 models/
 checkpoints/
+
+# Insync / OneDrive sync files
+*.insyncdl
+.~D*
+
+# Planning (GSD local state)
+.planning/
