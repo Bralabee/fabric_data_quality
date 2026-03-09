@@ -1,11 +1,8 @@
 """Tests for dq_framework.batch_profiler -- pytest style, no unittest.TestCase."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from dq_framework.batch_profiler import BatchProfiler
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -36,8 +33,8 @@ def _mock_profiler_pipeline(mocker):
 
 # ===== process_single_file =================================================
 
-class TestProcessSingleFile:
 
+class TestProcessSingleFile:
     def test_process_single_file_success(self, mocker):
         """Existing behaviour: successful profiling returns status=success."""
         mock_load, mock_profiler, _ = _mock_profiler_pipeline(mocker)
@@ -67,12 +64,10 @@ class TestProcessSingleFile:
 
     def test_process_single_file_with_thresholds(self, mocker):
         """Thresholds dict is forwarded to generate_expectations via gen_kwargs."""
-        mock_load, mock_profiler, _ = _mock_profiler_pipeline(mocker)
+        _mock_load, mock_profiler, _ = _mock_profiler_pipeline(mocker)
 
         thresholds = {"critical_threshold": 95}
-        BatchProfiler.process_single_file(
-            "test.parquet", "output_dir", thresholds=thresholds
-        )
+        BatchProfiler.process_single_file("test.parquet", "output_dir", thresholds=thresholds)
 
         call_kwargs = mock_profiler.generate_expectations.call_args[1]
         assert call_kwargs["critical_threshold"] == 95
@@ -80,8 +75,8 @@ class TestProcessSingleFile:
 
 # ===== run_parallel_profiling ==============================================
 
-class TestRunParallelProfiling:
 
+class TestRunParallelProfiling:
     def test_run_parallel_profiling_success(self, mocker):
         """Two supported files found -- returns two results."""
         mock_fs = mocker.patch(f"{_BP}.FileSystemHandler")
@@ -91,9 +86,19 @@ class TestRunParallelProfiling:
 
         # Mock ProcessPoolExecutor to avoid spawning processes
         mock_future_a = MagicMock()
-        mock_future_a.result.return_value = {"status": "success", "file": "a.parquet", "rows": 10, "expectations": 3}
+        mock_future_a.result.return_value = {
+            "status": "success",
+            "file": "a.parquet",
+            "rows": 10,
+            "expectations": 3,
+        }
         mock_future_b = MagicMock()
-        mock_future_b.result.return_value = {"status": "success", "file": "b.csv", "rows": 20, "expectations": 5}
+        mock_future_b.result.return_value = {
+            "status": "success",
+            "file": "b.csv",
+            "rows": 20,
+            "expectations": 5,
+        }
 
         mock_executor = MagicMock()
         mock_executor.__enter__ = MagicMock(return_value=mock_executor)
@@ -138,7 +143,12 @@ class TestRunParallelProfiling:
         mock_fs.get_suffix.side_effect = lambda p: "." + p.rsplit(".", 1)[-1]
 
         mock_future = MagicMock()
-        mock_future.result.return_value = {"status": "success", "file": "x", "rows": 1, "expectations": 1}
+        mock_future.result.return_value = {
+            "status": "success",
+            "file": "x",
+            "rows": 1,
+            "expectations": 1,
+        }
 
         mock_executor = MagicMock()
         mock_executor.__enter__ = MagicMock(return_value=mock_executor)
@@ -151,7 +161,7 @@ class TestRunParallelProfiling:
             return_value=iter([mock_future, mock_future]),
         )
 
-        results = BatchProfiler.run_parallel_profiling("input_dir", "output_dir")
+        BatchProfiler.run_parallel_profiling("input_dir", "output_dir")
 
         # Only 2 files submitted (a.parquet, c.csv), not b.txt
         assert mock_executor.submit.call_count == 2

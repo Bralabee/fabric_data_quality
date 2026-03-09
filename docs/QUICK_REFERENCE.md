@@ -292,17 +292,17 @@ python scripts/profile_data.py data_folder/ --output config_dir/ --workers 4
 
 ```
 2_DATA_QUALITY_LIBRARY/
-├── dq_framework/          # Core code
-├── config_templates/      # Bronze/Silver/Gold templates
-├── examples/              # Project-specific examples
-│   ├── hss_incidents_example.yml
-│   ├── aims_data_example.yml
-│   └── aca_commercial_example.yml
-├── tests/                 # Unit tests
-└── docs/                  # Documentation
-    ├── INSTALLATION.md
-    ├── CONFIGURATION_GUIDE.md
-    └── FABRIC_INTEGRATION.md
++-- dq_framework/          # Core code
++-- config_templates/      # Bronze/Silver/Gold templates
++-- examples/              # Project-specific examples
+|   +-- hss_incidents_example.yml
+|   +-- aims_data_example.yml
+|   +-- aca_commercial_example.yml
++-- tests/                 # Unit tests
++-- docs/                  # Documentation
+    +-- INSTALLATION.md
+    +-- CONFIGURATION_GUIDE.md
+    +-- FABRIC_INTEGRATION.md
 ```
 
 ## Help & Resources

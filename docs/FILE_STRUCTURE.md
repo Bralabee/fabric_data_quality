@@ -2,39 +2,39 @@
 
 ```
 2_DATA_QUALITY_LIBRARY/                        # Root directory
-│
-├── 📄 README.md                              # Main documentation (285 lines)
-├── 📄 PROJECT_SUMMARY.md                     # Complete project overview
-├── 📄 QUICK_REFERENCE.md                     # One-page cheat sheet
-├── 📄 requirements.txt                       # Python dependencies
-├── 📄 .gitignore                            # Git ignore patterns
-│
-├── 📁 dq_framework/                          # Core framework code
-│   ├── __init__.py                          # Package initialization
-│   ├── config_loader.py                     # YAML config loader (159 lines)
-│   ├── validator.py                         # Validation engine (232 lines)
-│   └── fabric_connector.py                  # Fabric/Spark integration (256 lines)
-│
-├── 📁 config_templates/                      # Reusable YAML templates
-│   ├── bronze_layer_template.yml           # Bronze layer validation
-│   ├── silver_layer_template.yml           # Silver layer validation
-│   └── gold_layer_template.yml             # Gold layer validation
-│
-├── 📁 examples/                              # Project-specific examples
-│   ├── hss_incidents_example.yml           # full_stack_hss project config
-│   ├── aims_data_example.yml               # AIMS_LOCAL project config
-│   ├── aca_commercial_example.yml          # ACA_COMMERCIAL project config
-│   └── usage_examples.py                    # 8 Python usage examples (360+ lines)
-│
-├── 📁 tests/                                 # Unit and integration tests
-│   ├── test_config_loader.py               # Config loading tests
-│   ├── test_validator.py                   # Validation engine tests
-│   └── test_fabric_connector.py            # Fabric integration tests
-│
-└── 📁 docs/                                  # Detailed documentation
-    ├── INSTALLATION.md                      # Installation guide
-    ├── CONFIGURATION_GUIDE.md               # Complete config reference
-    └── FABRIC_INTEGRATION.md                # Fabric integration patterns
+|
++-- README.md                                  # Main documentation (285 lines)
++-- PROJECT_SUMMARY.md                         # Complete project overview
++-- QUICK_REFERENCE.md                         # One-page cheat sheet
++-- requirements.txt                           # Python dependencies
++-- .gitignore                                 # Git ignore patterns
+|
++-- dq_framework/                              # Core framework code
+|   +-- __init__.py                            # Package initialization
+|   +-- config_loader.py                       # YAML config loader (159 lines)
+|   +-- validator.py                           # Validation engine (232 lines)
+|   +-- fabric_connector.py                    # Fabric/Spark integration (256 lines)
+|
++-- config_templates/                          # Reusable YAML templates
+|   +-- bronze_layer_template.yml              # Bronze layer validation
+|   +-- silver_layer_template.yml              # Silver layer validation
+|   +-- gold_layer_template.yml                # Gold layer validation
+|
++-- examples/                                  # Project-specific examples
+|   +-- hss_incidents_example.yml              # full_stack_hss project config
+|   +-- aims_data_example.yml                  # AIMS_LOCAL project config
+|   +-- aca_commercial_example.yml             # ACA_COMMERCIAL project config
+|   +-- usage_examples.py                      # 8 Python usage examples (360+ lines)
+|
++-- tests/                                     # Unit and integration tests
+|   +-- test_config_loader.py                  # Config loading tests
+|   +-- test_validator.py                      # Validation engine tests
+|   +-- test_fabric_connector.py               # Fabric integration tests
+|
++-- docs/                                      # Detailed documentation
+    +-- INSTALLATION.md                        # Installation guide
+    +-- CONFIGURATION_GUIDE.md                 # Complete config reference
+    +-- FABRIC_INTEGRATION.md                  # Fabric integration patterns
 
 ```
 
@@ -107,27 +107,27 @@
 
 ```
 1. Install Framework
-   └─> Upload to Fabric workspace
-   └─> Install dependencies
+   +-> Upload to Fabric workspace
+   +-> Install dependencies
 
 2. Choose/Create Config
-   └─> Use template (bronze/silver/gold)
-   └─> Or copy project example (hss/aims/aca)
-   └─> Customize for your data
+   +-> Use template (bronze/silver/gold)
+   +-> Or copy project example (hss/aims/aca)
+   +-> Customize for your data
 
 3. Import in Notebook
-   └─> Add to sys.path
-   └─> Import FabricDataQualityRunner
+   +-> Add to sys.path
+   +-> Import FabricDataQualityRunner
 
 4. Run Validation
-   └─> Load your data
-   └─> Call validate_spark_dataframe()
-   └─> Check results
+   +-> Load your data
+   +-> Call validate_spark_dataframe()
+   +-> Check results
 
 5. Handle Results
-   └─> Log failures
-   └─> Raise errors if critical
-   └─> Continue pipeline if passed
+   +-> Log failures
+   +-> Raise errors if critical
+   +-> Continue pipeline if passed
 ```
 
 ## 📈 Validation Capabilities

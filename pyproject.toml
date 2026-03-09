@@ -96,7 +96,14 @@ select = [
 ]
 ignore = [
     "E501",  # line too long (handled by formatter)
+    "E402",  # module-level import order (intentional in fabric_connector, utils)
+    "RUF001", # ambiguous unicode (intentional test data with Cyrillic/Arabic)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"dq_framework/__init__.py" = ["F401", "RUF022"]  # re-exports and grouped __all__
+"dq_framework/validator.py" = ["SIM102"]  # nested if more readable for threshold logic
+"tests/*" = ["N806", "F841", "SIM117", "RUF059"]  # test naming/style conventions
 
 [tool.ruff.lint.isort]
 known-first-party = ["dq_framework"]

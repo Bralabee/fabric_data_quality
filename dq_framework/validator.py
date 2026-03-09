@@ -9,7 +9,7 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 try:
     import pandas as pd
@@ -50,8 +50,8 @@ class DataQualityValidator:
 
     def __init__(
         self,
-        config_path: Optional[str] = None,
-        config_dict: Optional[dict[str, Any]] = None,
+        config_path: str | None = None,
+        config_dict: dict[str, Any] | None = None,
     ):
         """
         Initialize validator.
@@ -62,14 +62,11 @@ class DataQualityValidator:
         """
         if not GX_AVAILABLE:
             raise ImportError(
-                "Great Expectations not installed. "
-                "Install with: pip install great-expectations"
+                "Great Expectations not installed. Install with: pip install great-expectations"
             )
 
         if pd is None:
-            raise ImportError(
-                "Pandas not installed. " "Install with: pip install pandas"
-            )
+            raise ImportError("Pandas not installed. Install with: pip install pandas")
 
         # Load configuration
         if config_path:
@@ -88,9 +85,9 @@ class DataQualityValidator:
     def validate(
         self,
         df: "pd.DataFrame",
-        batch_name: Optional[str] = None,
-        suite_name: Optional[str] = None,
-        threshold: Optional[float] = None,
+        batch_name: str | None = None,
+        suite_name: str | None = None,
+        threshold: float | None = None,
     ) -> dict[str, Any]:
         """
         Validate a DataFrame against configured expectations.
@@ -133,9 +130,7 @@ class DataQualityValidator:
         data_asset = data_source.add_dataframe_asset(
             name=self.config.get("data_asset_name", f"asset_{uid}")
         )
-        batch_definition = data_asset.add_batch_definition_whole_dataframe(
-            f"batch_{uid}"
-        )
+        batch_definition = data_asset.add_batch_definition_whole_dataframe(f"batch_{uid}")
 
         # Build expectation suite from config
         suite = self._build_expectation_suite(context, suite_name, uid)
@@ -159,18 +154,14 @@ class DataQualityValidator:
         validation_result = next(iter(checkpoint_result.run_results.values()))
 
         # Format results
-        summary = self._format_results(
-            validation_result, batch_name, suite_name, threshold
-        )
+        summary = self._format_results(validation_result, batch_name, suite_name, threshold)
 
         # Include the validation result for detailed access
         summary["validation_result"] = validation_result
 
         return summary
 
-    def _build_expectation_suite(
-        self, context, suite_name: str, uid: str
-    ) -> "gx.ExpectationSuite":
+    def _build_expectation_suite(self, context, suite_name: str, uid: str) -> "gx.ExpectationSuite":
         """Build a GX ExpectationSuite from configured expectations.
 
         Args:
@@ -189,8 +180,8 @@ class DataQualityValidator:
             meta = expectation_config.get("meta", {})
 
             try:
-                ExpClass = get_expectation_impl(exp_type)
-                expectation = ExpClass(**kwargs, meta=meta)
+                exp_class = get_expectation_impl(exp_type)
+                expectation = exp_class(**kwargs, meta=meta)
                 suite.add_expectation(expectation)
             except Exception as e:
                 logger.warning(f"Could not create expectation '{exp_type}': {e}")
@@ -203,7 +194,7 @@ class DataQualityValidator:
         validation_result,
         batch_name: str,
         suite_name: str,
-        threshold: Optional[float] = None,
+        threshold: float | None = None,
     ) -> dict[str, Any]:
         """Format validation results into summary dictionary."""
 
@@ -258,8 +249,7 @@ class DataQualityValidator:
             elif success_rate < threshold:
                 is_success = False
                 threshold_failures.append(
-                    f"Global threshold {threshold}% failed "
-                    f"(actual: {success_rate:.1f}%)"
+                    f"Global threshold {threshold}% failed (actual: {success_rate:.1f}%)"
                 )
         elif not quality_thresholds:
             # Fallback: if no thresholds defined at all, enforce 100% success
@@ -298,9 +288,7 @@ class DataQualityValidator:
             "statistics": {
                 "evaluated_expectations": evaluated,
                 "successful_expectations": successful,
-                "unsuccessful_expectations": stats.get(
-                    "unsuccessful_expectations", 0
-                ),
+                "unsuccessful_expectations": stats.get("unsuccessful_expectations", 0),
                 "success_percent": success_rate,
             },
         }
@@ -325,9 +313,7 @@ class DataQualityValidator:
 
         # Log summary
         if summary["success"]:
-            logger.info(
-                f"Validation PASSED: {summary['success_rate']:.1f}% success rate"
-            )
+            logger.info(f"Validation PASSED: {summary['success_rate']:.1f}% success rate")
         else:
             logger.error(
                 f"Validation FAILED: {summary['failed_checks']} checks failed. "
@@ -357,7 +343,6 @@ class DataQualityValidator:
             "suite_name": self.config.get("suite_name", "default_suite"),
             "expectation_count": len(self.config.get("expectations", [])),
             "expectations": [
-                exp["expectation_type"]
-                for exp in self.config.get("expectations", [])
+                exp["expectation_type"] for exp in self.config.get("expectations", [])
             ],
         }

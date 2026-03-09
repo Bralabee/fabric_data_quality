@@ -254,14 +254,14 @@ else:
 
 ```
 Pipeline: end_to_end_etl
-├── Activity 1: bronze_ingestion (Notebook)
-│   └── Validates with bronze_layer_template.yml
-├── Activity 2: silver_transformation (Notebook)
-│   └── Validates with silver_layer_template.yml
-│   └── Depends on: bronze_ingestion (success)
-└── Activity 3: gold_aggregation (Notebook)
-    └── Validates with gold_layer_template.yml
-    └── Depends on: silver_transformation (success)
++-- Activity 1: bronze_ingestion (Notebook)
+|   +-- Validates with bronze_layer_template.yml
++-- Activity 2: silver_transformation (Notebook)
+|   +-- Validates with silver_layer_template.yml
+|   +-- Depends on: bronze_ingestion (success)
++-- Activity 3: gold_aggregation (Notebook)
+    +-- Validates with gold_layer_template.yml
+    +-- Depends on: silver_transformation (success)
 ```
 
 ### Pipeline Notebook Template

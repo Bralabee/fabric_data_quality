@@ -1,12 +1,11 @@
 """Tests for dq_framework.loader -- pytest style, no unittest.TestCase."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
 
 from dq_framework.loader import DataLoader
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -25,6 +24,7 @@ def _stub_fs(mocker, *, exists=True, is_abfss=False, suffix=".csv"):
 
 
 # ===== CSV tests ==========================================================
+
 
 class TestLoadCSV:
     """CSV loading via DataLoader.load_data."""
@@ -66,8 +66,8 @@ class TestLoadCSV:
 
 # ===== Parquet tests =======================================================
 
-class TestLoadParquet:
 
+class TestLoadParquet:
     def test_load_parquet_simple(self, mocker):
         """Existing behaviour: parquet without pyarrow falls back to pandas."""
         _stub_fs(mocker, suffix=".parquet")
@@ -98,6 +98,7 @@ class TestLoadParquet:
         mock_pa.Table.from_batches.return_value = mock_table
         mocker.patch.dict("sys.modules", {"pyarrow": mock_pa})
         import dq_framework.loader as _loader_mod
+
         orig_pa = _loader_mod.pa
         _loader_mod.pa = mock_pa
         try:
@@ -141,8 +142,8 @@ class TestLoadParquet:
 
 # ===== Excel test ==========================================================
 
-class TestLoadExcel:
 
+class TestLoadExcel:
     def test_load_excel(self, mocker):
         _stub_fs(mocker, suffix=".xlsx")
         mock_read = mocker.patch(
@@ -157,8 +158,8 @@ class TestLoadExcel:
 
 # ===== JSON test ===========================================================
 
-class TestLoadJSON:
 
+class TestLoadJSON:
     def test_load_json(self, mocker):
         _stub_fs(mocker, suffix=".json")
         mock_read = mocker.patch(
@@ -173,8 +174,8 @@ class TestLoadJSON:
 
 # ===== Error tests =========================================================
 
-class TestLoadErrors:
 
+class TestLoadErrors:
     def test_load_unsupported_format(self, mocker):
         _stub_fs(mocker, suffix=".xyz")
 
@@ -190,8 +191,8 @@ class TestLoadErrors:
 
 # ===== Large-file auto-sample ==============================================
 
-class TestLargeFileAutoSample:
 
+class TestLargeFileAutoSample:
     def test_large_file_auto_sample(self, mocker):
         """Existing behaviour: files >500 MB trigger auto-sample to 100k rows."""
         _stub_fs(mocker, suffix=".csv")

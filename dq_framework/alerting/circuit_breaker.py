@@ -52,9 +52,7 @@ class CircuitBreaker:
         cooldown_seconds: Seconds to wait before allowing a test request.
     """
 
-    def __init__(
-        self, failure_threshold: int = 5, cooldown_seconds: float = 300.0
-    ) -> None:
+    def __init__(self, failure_threshold: int = 5, cooldown_seconds: float = 300.0) -> None:
         self._failure_threshold = failure_threshold
         self._cooldown_seconds = cooldown_seconds
         self._failure_count: int = 0

@@ -22,14 +22,14 @@ from .dispatcher import AlertChannel, AlertDispatcher
 from .formatter import AlertFormatter
 
 __all__ = [
-    "AlertFormatter",
-    "AlertConfig",
-    "ChannelConfig",
-    "CircuitBreakerConfig",
-    "FailurePolicy",
-    "AlertDeliveryError",
-    "CircuitBreaker",
-    "CircuitState",
     "AlertChannel",
+    "AlertConfig",
+    "AlertDeliveryError",
     "AlertDispatcher",
+    "AlertFormatter",
+    "ChannelConfig",
+    "CircuitBreaker",
+    "CircuitBreakerConfig",
+    "CircuitState",
+    "FailurePolicy",
 ]

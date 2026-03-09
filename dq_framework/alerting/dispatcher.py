@@ -88,9 +88,7 @@ class AlertDispatcher:
             cooldown_seconds=self._config.circuit_breaker.cooldown_seconds,
         )
 
-    def dispatch(
-        self, results: dict, severity: str = "medium"
-    ) -> dict[str, bool]:
+    def dispatch(self, results: dict, severity: str = "medium") -> dict[str, bool]:
         """Dispatch alert to all enabled channels.
 
         Args:
@@ -137,9 +135,7 @@ class AlertDispatcher:
 
             # Check circuit breaker
             if not breaker.allow_request():
-                logger.warning(
-                    "Circuit breaker OPEN for channel '%s', skipping", name
-                )
+                logger.warning("Circuit breaker OPEN for channel '%s', skipping", name)
                 continue
 
             # Attempt delivery
@@ -172,9 +168,7 @@ class AlertDispatcher:
                 channel_name,
             )
         elif policy == FailurePolicy.RAISE:
-            raise AlertDeliveryError(
-                f"Channel '{channel_name}' delivery failed"
-            )
+            raise AlertDeliveryError(f"Channel '{channel_name}' delivery failed")
         elif policy == FailurePolicy.FALLBACK:
             logger.info(
                 "Alert delivery failed for channel '%s', trying next channel (policy: fallback)",

@@ -29,10 +29,10 @@ QUALITY_THRESHOLD_LOW = 50.0
 
 # Default quality thresholds dictionary
 DEFAULT_QUALITY_THRESHOLDS = {
-    'critical': QUALITY_THRESHOLD_CRITICAL,
-    'high': QUALITY_THRESHOLD_HIGH,
-    'medium': QUALITY_THRESHOLD_MEDIUM,
-    'low': QUALITY_THRESHOLD_LOW
+    "critical": QUALITY_THRESHOLD_CRITICAL,
+    "high": QUALITY_THRESHOLD_HIGH,
+    "medium": QUALITY_THRESHOLD_MEDIUM,
+    "low": QUALITY_THRESHOLD_LOW,
 }
 
 # =============================================================================

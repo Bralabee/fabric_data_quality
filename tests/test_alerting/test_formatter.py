@@ -96,7 +96,7 @@ class TestAlertFormatter:
 
             formatter = AlertFormatter(template_dir=tmpdir)
             output = formatter.render("custom.txt.j2", sample_results)
-            assert "Custom: financial_validation - 75.0%" == output
+            assert output == "Custom: financial_validation - 75.0%"
 
     def test_failed_expectations_with_severity_and_column(self, sample_results):
         """render summary.txt.j2 includes failed expectations with severity and column."""

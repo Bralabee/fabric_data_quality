@@ -72,9 +72,7 @@ class TestAlertDispatcher:
         assert result == {}
 
     def test_dispatch_calls_formatter_render(self, mocker):
-        config = _make_config(
-            channels=[ChannelConfig(type="test", enabled=True)]
-        )
+        config = _make_config(channels=[ChannelConfig(type="test", enabled=True)])
         formatter = AlertFormatter()
         spy = mocker.patch.object(formatter, "render", return_value="rendered msg")
         disp = AlertDispatcher(config, formatter)
@@ -86,9 +84,7 @@ class TestAlertDispatcher:
         assert call_args[0][0] == "summary.txt.j2"  # default template
 
     def test_successful_send_records_success_and_returns_true(self):
-        config = _make_config(
-            channels=[ChannelConfig(type="test", enabled=True)]
-        )
+        config = _make_config(channels=[ChannelConfig(type="test", enabled=True)])
         formatter = AlertFormatter()
         disp = AlertDispatcher(config, formatter)
         ch = MockChannel(succeed=True)
@@ -195,9 +191,7 @@ class TestAlertDispatcher:
         assert len(ch.calls) == 1
 
     def test_disabled_channel_is_skipped(self):
-        config = _make_config(
-            channels=[ChannelConfig(type="test", enabled=False)]
-        )
+        config = _make_config(channels=[ChannelConfig(type="test", enabled=False)])
         formatter = AlertFormatter()
         disp = AlertDispatcher(config, formatter)
         ch = MockChannel(succeed=True)

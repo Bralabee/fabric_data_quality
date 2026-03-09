@@ -9,7 +9,7 @@ import concurrent.futures
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .data_profiler import DataProfiler
 from .loader import DataLoader
@@ -27,9 +27,9 @@ class BatchProfiler:
     def process_single_file(
         file_path: str,
         output_dir: str,
-        sample_size: Optional[int] = None,
-        thresholds: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        sample_size: int | None = None,
+        thresholds: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Profiles a single file and saves the configuration.
         """
@@ -47,7 +47,7 @@ class BatchProfiler:
             # Generate Expectations
             gen_kwargs = {
                 "validation_name": f"validation_{file_path_obj.stem}",
-                "severity_threshold": "medium"
+                "severity_threshold": "medium",
             }
             if thresholds:
                 gen_kwargs.update(thresholds)
@@ -65,16 +65,12 @@ class BatchProfiler:
                 "status": "success",
                 "file": file_name,
                 "rows": len(df),
-                "expectations": len(config['expectations']),
-                "output": str(output_path)
+                "expectations": len(config["expectations"]),
+                "output": str(output_path),
             }
 
         except Exception as e:
-            return {
-                "status": "error",
-                "file": str(file_path),
-                "error": str(e)
-            }
+            return {"status": "error", "file": str(file_path), "error": str(e)}
 
     @classmethod
     def run_parallel_profiling(
@@ -82,9 +78,9 @@ class BatchProfiler:
         input_dir: str,
         output_dir: str,
         workers: int = 1,
-        sample_size: Optional[int] = None,
-        thresholds: Optional[Dict[str, Any]] = None
-    ) -> List[Dict[str, Any]]:
+        sample_size: int | None = None,
+        thresholds: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Runs profiling in parallel for all supported files in the directory.
         """
@@ -94,19 +90,14 @@ class BatchProfiler:
 
         # Find all files
         all_files = FileSystemHandler.list_files(input_dir)
-        supported_extensions = {'.parquet', '.csv', '.json', '.xlsx', '.xls'}
-        files = [
-            f for f in all_files
-            if FileSystemHandler.get_suffix(f) in supported_extensions
-        ]
+        supported_extensions = {".parquet", ".csv", ".json", ".xlsx", ".xls"}
+        files = [f for f in all_files if FileSystemHandler.get_suffix(f) in supported_extensions]
 
         if not files:
             logger.warning(f"No supported files found in {input_dir}")
             return []
 
-        logger.info(
-            f"Found {len(files)} files. Starting processing with {workers} workers..."
-        )
+        logger.info(f"Found {len(files)} files. Starting processing with {workers} workers...")
 
         start_time = time.time()
         results = []
@@ -115,9 +106,7 @@ class BatchProfiler:
         with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
             # Submit tasks
             future_to_file = {
-                executor.submit(
-                    cls.process_single_file, f, output_dir, sample_size, thresholds
-                ): f
+                executor.submit(cls.process_single_file, f, output_dir, sample_size, thresholds): f
                 for f in files
             }
 
@@ -126,10 +115,9 @@ class BatchProfiler:
                 result = future.result()
                 results.append(result)
 
-                if result['status'] == 'success':
+                if result["status"] == "success":
                     logger.info(
-                        f"{result['file']}: {result['rows']} rows -> "
-                        f"{result['expectations']} rules"
+                        f"{result['file']}: {result['rows']} rows -> {result['expectations']} rules"
                     )
                 else:
                     logger.error(f"{result['file']}: Failed - {result['error']}")

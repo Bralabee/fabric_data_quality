@@ -4,73 +4,69 @@ Note: Some tests require a Fabric environment with Spark.
 Unit tests for chunked validation and aggregation use mocks.
 """
 
-import json
+from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 import yaml
-from datetime import datetime
-from unittest.mock import MagicMock, patch
 
-from dq_framework.fabric_connector import FabricDataQualityRunner, quick_validate
 from dq_framework.constants import (
     DEFAULT_VALIDATION_THRESHOLD,
-    FABRIC_LARGE_DATASET_THRESHOLD,
-    MAX_FAILURE_DISPLAY,
 )
+from dq_framework.fabric_connector import FabricDataQualityRunner, quick_validate
 
 
 class TestFabricDataQualityRunner:
     """Test suite for FabricDataQualityRunner"""
-    
+
     @pytest.fixture
     def sample_config_path(self, tmp_path):
         """Create a temporary config file"""
         import yaml
-        
+
         config = {
             "validation_name": "test_validation",
             "expectations": [
                 {
                     "expectation_type": "expect_table_row_count_to_be_between",
-                    "kwargs": {"min_value": 1}
+                    "kwargs": {"min_value": 1},
                 }
-            ]
+            ],
         }
-        
+
         config_file = tmp_path / "test_config.yml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config, f)
-        
+
         return str(config_file)
-    
+
     @pytest.mark.fabric
     def test_validate_spark_dataframe(self, sample_config_path):
         """Test validation of Spark DataFrame (requires Fabric)"""
-        from dq_framework import FabricDataQualityRunner
         from pyspark.sql import SparkSession
-        
+
+        from dq_framework import FabricDataQualityRunner
+
         # Initialize Spark (in Fabric, spark is pre-initialized)
         spark = SparkSession.builder.getOrCreate()
-        
+
         # Create test DataFrame
-        df = spark.createDataFrame([
-            (1, "Alice", 25),
-            (2, "Bob", 30),
-            (3, "Charlie", 35)
-        ], ["id", "name", "age"])
-        
+        df = spark.createDataFrame(
+            [(1, "Alice", 25), (2, "Bob", 30), (3, "Charlie", 35)], ["id", "name", "age"]
+        )
+
         # Validate
         runner = FabricDataQualityRunner(sample_config_path)
         results = runner.validate_spark_dataframe(df)
-        
+
         assert results["success"] is True
         assert results["statistics"]["evaluated_expectations"] > 0
-    
+
     def test_runner_initialization(self, sample_config_path):
         """Test runner initialization"""
         from dq_framework import FabricDataQualityRunner
-        
+
         runner = FabricDataQualityRunner(sample_config_path)
         assert runner is not None
         assert runner.config is not None
@@ -139,7 +135,7 @@ class TestChunkedValidation:
         1-based integer and no rows are skipped by chunk filters."""
         import sys
 
-        mock_spark_df, df_with_id = self._make_spark_df_mock()
+        mock_spark_df, _df_with_id = self._make_spark_df_mock()
         runner.validator.validate = MagicMock(
             return_value={
                 "success": True,
@@ -156,7 +152,7 @@ class TestChunkedValidation:
         )
 
         with patch.dict(sys.modules, self._pyspark_mock_modules()):
-            result = runner._validate_spark_chunked(mock_spark_df, "test", 5, 5)
+            runner._validate_spark_chunked(mock_spark_df, "test", 5, 5)
 
         # Check that withColumn was called with "__chunk_row_num__" (row_number)
         # and NOT "__chunk_id__" (the old monotonically_increasing_id column)
@@ -191,7 +187,7 @@ class TestChunkedValidation:
         chunk_size = 5
         total_rows = 12  # 3 chunks: 1-5, 6-10, 11-12
         with patch.dict(sys.modules, self._pyspark_mock_modules()):
-            result = runner._validate_spark_chunked(mock_spark_df, "test", chunk_size, total_rows)
+            runner._validate_spark_chunked(mock_spark_df, "test", chunk_size, total_rows)
 
         # 3 chunks should have been processed
         assert df_with_id.filter.call_count == 3, (
@@ -276,8 +272,12 @@ class TestAggregateChunkResults:
         """success should be True when average success_rate >= threshold."""
         # All 100% -> avg 100% >= DEFAULT_VALIDATION_THRESHOLD (100%)
         chunks = [
-            self._make_chunk_result(evaluated=5, successful=5, failed=0, success_rate=100.0, success=True),
-            self._make_chunk_result(evaluated=5, successful=5, failed=0, success_rate=100.0, success=True),
+            self._make_chunk_result(
+                evaluated=5, successful=5, failed=0, success_rate=100.0, success=True
+            ),
+            self._make_chunk_result(
+                evaluated=5, successful=5, failed=0, success_rate=100.0, success=True
+            ),
         ]
         result = runner._aggregate_chunk_results(chunks, "test_batch")
         assert result["success"] is True
@@ -295,8 +295,12 @@ class TestAggregateChunkResults:
     def test_chunks_key_with_per_chunk_breakdown(self, runner):
         """Aggregated result must include a 'chunks' key with per-chunk detail."""
         chunks = [
-            self._make_chunk_result(evaluated=5, successful=5, failed=0, success_rate=100.0, success=True),
-            self._make_chunk_result(evaluated=5, successful=4, failed=1, success_rate=80.0, success=False),
+            self._make_chunk_result(
+                evaluated=5, successful=5, failed=0, success_rate=100.0, success=True
+            ),
+            self._make_chunk_result(
+                evaluated=5, successful=4, failed=1, success_rate=80.0, success=False
+            ),
         ]
         result = runner._aggregate_chunk_results(chunks, "test_batch")
 
@@ -311,10 +315,19 @@ class TestAggregateChunkResults:
     def test_handle_failure_compatible_keys(self, runner):
         """Result dict must have failed_checks, evaluated_checks, success_rate for handle_failure."""
         chunks = [
-            self._make_chunk_result(evaluated=5, successful=5, failed=0, success_rate=100.0, success=True),
+            self._make_chunk_result(
+                evaluated=5, successful=5, failed=0, success_rate=100.0, success=True
+            ),
         ]
         result = runner._aggregate_chunk_results(chunks, "test_batch")
-        for key in ["failed_checks", "evaluated_checks", "success_rate", "success", "suite_name", "batch_name"]:
+        for key in [
+            "failed_checks",
+            "evaluated_checks",
+            "success_rate",
+            "success",
+            "suite_name",
+            "batch_name",
+        ]:
             assert key in result, f"Result missing key '{key}' required by handle_failure"
 
     def test_failed_expectations_deduplicated(self, runner):
@@ -447,9 +460,7 @@ class TestValidateSparkDataframe:
         }
         fabric_runner.validator.validate = MagicMock(return_value=expected_result)
 
-        result = fabric_runner.validate_spark_dataframe(
-            mock_spark_df, batch_name="large_batch"
-        )
+        result = fabric_runner.validate_spark_dataframe(mock_spark_df, batch_name="large_batch")
 
         # limit() should be called for sampling (not sample())
         mock_spark_df.limit.assert_called_once()
@@ -606,9 +617,7 @@ class TestValidateLakehouseFile:
         try:
             fc_mod.SparkSession = mock_spark_cls
             with pytest.raises(ValueError, match="Unsupported file format"):
-                fabric_runner.validate_lakehouse_file(
-                    "Files/data/test.xlsx", file_format="xlsx"
-                )
+                fabric_runner.validate_lakehouse_file("Files/data/test.xlsx", file_format="xlsx")
         finally:
             if original is None:
                 delattr(fc_mod, "SparkSession")
@@ -635,9 +644,7 @@ class TestHandleFailure:
         with pytest.raises(ValueError, match="Data quality validation failed"):
             fabric_runner.handle_failure(failed_result, action="halt")
 
-    def test_handle_failure_alert_calls_send_alert(
-        self, fabric_runner, sample_validation_result
-    ):
+    def test_handle_failure_alert_calls_send_alert(self, fabric_runner, sample_validation_result):
         """Failed results with action='alert' should call _send_alert."""
         failed_result = dict(sample_validation_result)
         failed_result["success"] = False
@@ -782,9 +789,7 @@ class TestQuickValidate:
 
         df = pd.DataFrame({"id": [1, 2, 3], "name": ["a", "b", "c"]})
 
-        with patch(
-            "dq_framework.fabric_connector.DataQualityValidator"
-        ) as MockValidator:
+        with patch("dq_framework.fabric_connector.DataQualityValidator") as MockValidator:
             mock_instance = MockValidator.return_value
             mock_instance.validate.return_value = {
                 "success": True,
@@ -812,9 +817,7 @@ class TestQuickValidate:
 
         df = pd.DataFrame({"id": [1]})
 
-        with patch(
-            "dq_framework.fabric_connector.DataQualityValidator"
-        ) as MockValidator:
+        with patch("dq_framework.fabric_connector.DataQualityValidator") as MockValidator:
             mock_instance = MockValidator.return_value
             mock_instance.validate.return_value = {
                 "success": False,

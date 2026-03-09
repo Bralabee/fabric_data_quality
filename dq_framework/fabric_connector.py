@@ -7,10 +7,11 @@ Fabric-specific integration for data quality validation.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 try:
-    from pyspark.sql import DataFrame as SparkDataFrame, SparkSession
+    from pyspark.sql import DataFrame as SparkDataFrame
+    from pyspark.sql import SparkSession
 
     SPARK_AVAILABLE = True
 except ImportError:
@@ -19,9 +20,7 @@ except ImportError:
 
 # Import Fabric detection utilities from centralized location
 from .utils import (
-    FABRIC_AVAILABLE,
     FABRIC_UTILS_AVAILABLE,
-    _is_fabric_runtime,
     get_mssparkutils,
 )
 
@@ -63,8 +62,8 @@ class FabricDataQualityRunner:
     def __init__(
         self,
         config_path: str,
-        workspace_id: Optional[str] = None,
-        results_location: Optional[str] = "Files/dq_results",
+        workspace_id: str | None = None,
+        results_location: str | None = "Files/dq_results",
     ):
         """
         Initialize Fabric DQ Runner.
@@ -88,12 +87,8 @@ class FabricDataQualityRunner:
                     or config_path.startswith("Files/")
                     or config_path.startswith("https://")
                 ):
-                    logger.info(
-                        f"Attempting to load config from Fabric path: {config_path}"
-                    )
-                    content = mssparkutils.fs.head(
-                        config_path, FABRIC_CONFIG_MAX_BYTES
-                    )
+                    logger.info(f"Attempting to load config from Fabric path: {config_path}")
+                    content = mssparkutils.fs.head(config_path, FABRIC_CONFIG_MAX_BYTES)
                     import yaml
 
                     config_dict = yaml.safe_load(content)
@@ -110,9 +105,7 @@ class FabricDataQualityRunner:
         else:
             self.validator = DataQualityValidator(config_path=config_path)
 
-        logger.info(
-            f"FabricDataQualityRunner initialized for workspace: {workspace_id}"
-        )
+        logger.info(f"FabricDataQualityRunner initialized for workspace: {workspace_id}")
 
     @property
     def config(self) -> dict[str, Any]:
@@ -122,10 +115,10 @@ class FabricDataQualityRunner:
     def validate_spark_dataframe(
         self,
         spark_df: SparkDataFrame,
-        batch_name: Optional[str] = None,
+        batch_name: str | None = None,
         sample_large_data: bool = True,
         warn_memory_threshold_mb: int = 500,
-        chunk_size: Optional[int] = None,
+        chunk_size: int | None = None,
     ) -> dict[str, Any]:
         """
         Validate a Spark DataFrame by converting to pandas.
@@ -143,9 +136,7 @@ class FabricDataQualityRunner:
             Validation results dictionary
         """
         if not SPARK_AVAILABLE:
-            raise ImportError(
-                "PySpark not available. Install or run in Fabric environment."
-            )
+            raise ImportError("PySpark not available. Install or run in Fabric environment.")
 
         logger.info("Validating Spark DataFrame...")
 
@@ -173,16 +164,10 @@ class FabricDataQualityRunner:
         # Chunked processing mode
         if chunk_size and row_count and row_count > chunk_size:
             logger.info(f"Using chunked processing: {chunk_size:,} rows per chunk")
-            return self._validate_spark_chunked(
-                spark_df, batch_name, chunk_size, row_count
-            )
+            return self._validate_spark_chunked(spark_df, batch_name, chunk_size, row_count)
 
         # Sample if large dataset
-        if (
-            row_count
-            and row_count > FABRIC_LARGE_DATASET_THRESHOLD
-            and sample_large_data
-        ):
+        if row_count and row_count > FABRIC_LARGE_DATASET_THRESHOLD and sample_large_data:
             sample_size = min(
                 FABRIC_LARGE_DATASET_THRESHOLD,
                 int(row_count * FABRIC_SAMPLE_FRACTION),
@@ -200,8 +185,7 @@ class FabricDataQualityRunner:
         # Run validation
         results = self.validator.validate(
             df=pdf,
-            batch_name=batch_name
-            or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            batch_name=batch_name or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         )
 
         # Persist results via pluggable store
@@ -216,7 +200,7 @@ class FabricDataQualityRunner:
     def _validate_spark_chunked(
         self,
         spark_df: SparkDataFrame,
-        batch_name: Optional[str],
+        batch_name: str | None,
         chunk_size: int,
         total_rows: int,
     ) -> dict[str, Any]:
@@ -237,9 +221,7 @@ class FabricDataQualityRunner:
         from math import ceil
 
         num_chunks = ceil(total_rows / chunk_size)
-        logger.info(
-            f"Processing {num_chunks} chunks of {chunk_size:,} rows each"
-        )
+        logger.info(f"Processing {num_chunks} chunks of {chunk_size:,} rows each")
 
         all_results = []
 
@@ -251,9 +233,7 @@ class FabricDataQualityRunner:
         from pyspark.sql.window import Window
 
         window = Window.orderBy(lit(1))
-        spark_df_with_id = spark_df.withColumn(
-            "__chunk_row_num__", row_number().over(window)
-        )
+        spark_df_with_id = spark_df.withColumn("__chunk_row_num__", row_number().over(window))
 
         for chunk_idx in range(num_chunks):
             lower = chunk_idx * chunk_size + 1
@@ -299,7 +279,7 @@ class FabricDataQualityRunner:
     def _aggregate_chunk_results(
         self,
         chunk_results: list[dict[str, Any]],
-        batch_name: Optional[str],
+        batch_name: str | None,
     ) -> dict[str, Any]:
         """Aggregate validation results from multiple chunks.
 
@@ -315,8 +295,7 @@ class FabricDataQualityRunner:
         if not valid_results:
             return {
                 "success": False,
-                "batch_name": batch_name
-                or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "batch_name": batch_name or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                 "suite_name": "unknown",
                 "timestamp": datetime.now().isoformat(),
                 "evaluated_checks": 0,
@@ -331,14 +310,12 @@ class FabricDataQualityRunner:
 
         # All chunks run the same expectation suite
         evaluated_checks = valid_results[0].get("evaluated_checks", 0)
-        threshold = valid_results[0].get(
-            "threshold", DEFAULT_VALIDATION_THRESHOLD
-        )
+        threshold = valid_results[0].get("threshold", DEFAULT_VALIDATION_THRESHOLD)
 
         # Mean success_rate across chunks
-        avg_success_rate = sum(
-            r.get("success_rate", 0.0) for r in valid_results
-        ) / len(valid_results)
+        avg_success_rate = sum(r.get("success_rate", 0.0) for r in valid_results) / len(
+            valid_results
+        )
 
         # Derive failed_checks from average rate
         avg_successful = round(evaluated_checks * avg_success_rate / 100.0)
@@ -373,16 +350,13 @@ class FabricDataQualityRunner:
                         "success_rate": r.get("success_rate", 0.0),
                         "evaluated_checks": r.get("evaluated_checks", 0),
                         "failed_checks": r.get("failed_checks", 0),
-                        "failed_expectations": r.get(
-                            "failed_expectations", []
-                        ),
+                        "failed_expectations": r.get("failed_expectations", []),
                     }
                 )
 
         return {
             "success": avg_success_rate >= threshold,
-            "batch_name": batch_name
-            or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "batch_name": batch_name or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             "suite_name": valid_results[0].get("suite_name", "unknown"),
             "timestamp": datetime.now().isoformat(),
             "evaluated_checks": evaluated_checks,
@@ -393,15 +367,13 @@ class FabricDataQualityRunner:
             "chunked_processing": True,
             "num_chunks": len(chunk_results),
             "chunks": chunks_detail,
-            "chunk_errors": [r.get("error") for r in error_results]
-            if error_results
-            else None,
+            "chunk_errors": [r.get("error") for r in error_results] if error_results else None,
         }
 
     def validate_delta_table(
         self,
         table_name: str,
-        batch_name: Optional[str] = None,
+        batch_name: str | None = None,
     ) -> dict[str, Any]:
         """
         Validate a Delta table in Lakehouse.
@@ -414,9 +386,7 @@ class FabricDataQualityRunner:
             Validation results dictionary
         """
         if not SPARK_AVAILABLE:
-            raise ImportError(
-                "PySpark not available. Run in Fabric environment."
-            )
+            raise ImportError("PySpark not available. Run in Fabric environment.")
 
         logger.info(f"Validating Delta table: {table_name}")
 
@@ -430,15 +400,14 @@ class FabricDataQualityRunner:
 
         return self.validate_spark_dataframe(
             spark_df=spark_df,
-            batch_name=batch_name
-            or f"{table_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            batch_name=batch_name or f"{table_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         )
 
     def validate_lakehouse_file(
         self,
         file_path: str,
         file_format: str = "parquet",
-        batch_name: Optional[str] = None,
+        batch_name: str | None = None,
     ) -> dict[str, Any]:
         """
         Validate a file in Lakehouse.
@@ -452,9 +421,7 @@ class FabricDataQualityRunner:
             Validation results dictionary
         """
         if not SPARK_AVAILABLE:
-            raise ImportError(
-                "PySpark not available. Run in Fabric environment."
-            )
+            raise ImportError("PySpark not available. Run in Fabric environment.")
 
         logger.info(f"Validating file: {file_path} (format: {file_format})")
 
@@ -465,9 +432,7 @@ class FabricDataQualityRunner:
             if fmt == "parquet":
                 spark_df = spark.read.parquet(file_path)
             elif fmt == "csv":
-                spark_df = spark.read.csv(
-                    file_path, header=True, inferSchema=True
-                )
+                spark_df = spark.read.csv(file_path, header=True, inferSchema=True)
             elif fmt == "json":
                 spark_df = spark.read.json(file_path)
             elif fmt == "delta":
@@ -480,8 +445,7 @@ class FabricDataQualityRunner:
 
         return self.validate_spark_dataframe(
             spark_df=spark_df,
-            batch_name=batch_name
-            or f"file_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            batch_name=batch_name or f"file_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
         )
 
     def handle_failure(
@@ -508,17 +472,13 @@ class FabricDataQualityRunner:
         logger.error("=" * 60)
         logger.error(f"Suite: {results['suite_name']}")
         logger.error(f"Batch: {results['batch_name']}")
-        logger.error(
-            f"Failed checks: {results['failed_checks']}/{results['evaluated_checks']}"
-        )
+        logger.error(f"Failed checks: {results['failed_checks']}/{results['evaluated_checks']}")
         logger.error(f"Success rate: {results['success_rate']:.1f}%")
 
         if "failed_expectations" in results:
             logger.error("\nFailed expectations:")
             for fail in results["failed_expectations"][:MAX_FAILURE_DISPLAY]:
-                logger.error(
-                    f"  - {fail['expectation']} on column '{fail['column']}'"
-                )
+                logger.error(f"  - {fail['expectation']} on column '{fail['column']}'")
 
         if action == "halt":
             raise ValueError(
@@ -558,28 +518,22 @@ class FabricDataQualityRunner:
         for attempt in range(max_retries + 1):
             try:
                 # TODO: Implement actual alert logic (Teams, email, webhook, etc.)
-                logger.info(
-                    f"Alert notification sent (attempt {attempt + 1}): "
-                    f"{alert_payload}"
-                )
+                logger.info(f"Alert notification sent (attempt {attempt + 1}): {alert_payload}")
                 return True
 
             except Exception as e:
                 if attempt < max_retries:
                     delay = retry_delay_seconds * (2**attempt)
                     logger.warning(
-                        f"Alert attempt {attempt + 1} failed: {e}. "
-                        f"Retrying in {delay:.1f}s..."
+                        f"Alert attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s..."
                     )
                     time.sleep(delay)
                 else:
-                    logger.error(
-                        f"Alert failed after {max_retries + 1} attempts. "
-                        f"Last error: {e}"
-                    )
+                    logger.error(f"Alert failed after {max_retries + 1} attempts. Last error: {e}")
                     return False
 
         return False
+
 
 def quick_validate(
     df,

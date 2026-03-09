@@ -1,0 +1,75 @@
+# Azure DevOps CI Pipeline for Fabric Data Quality Framework
+# ==========================================================
+# Single-stage CI gate: lint, test, package
+
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+      - feature/*
+
+pr:
+  branches:
+    include:
+      - main
+      - master
+      - develop
+
+variables:
+  pythonVersion: '3.12'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: UsePythonVersion@0
+    displayName: 'Use Python $(pythonVersion)'
+    inputs:
+      versionSpec: '$(pythonVersion)'
+      addToPath: true
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install -e ".[dev]"
+    displayName: 'Install dependencies'
+
+  - script: |
+      ruff check dq_framework/ tests/
+    displayName: 'Lint gate (ruff check)'
+
+  - script: |
+      ruff format --check dq_framework/ tests/
+    displayName: 'Format gate (ruff format)'
+
+  - script: |
+      pytest tests/ -v --junitxml=test-results/results.xml --cov=dq_framework --cov-report=xml --cov-report=term-missing
+    displayName: 'Test gate (pytest)'
+
+  - task: PublishTestResults@2
+    displayName: 'Publish test results'
+    condition: always()
+    inputs:
+      testResultsFiles: 'test-results/results.xml'
+      testRunTitle: 'DQ Framework Tests'
+      failTaskOnFailedTests: true
+
+  - task: PublishCodeCoverageResults@2
+    displayName: 'Publish code coverage'
+    condition: always()
+    inputs:
+      summaryFileLocation: 'coverage.xml'
+
+  - script: |
+      pip install build twine
+      python -m build --wheel
+      twine check dist/*
+    displayName: 'Package gate (build + check wheel)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish wheel artifact'
+    inputs:
+      PathtoPublish: 'dist'
+      ArtifactName: 'dq-framework-wheel'
+      publishLocation: 'Container'

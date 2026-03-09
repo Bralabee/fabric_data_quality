@@ -1,11 +1,13 @@
 """Data ingestion module."""
-from pathlib import Path
-from typing import Optional
-import pandas as pd
+
 import logging
 import shutil
+from pathlib import Path
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
 
 class DataIngester:
     """Handles data ingestion operations."""
@@ -17,12 +19,12 @@ class DataIngester:
         """
         Ingest a single file from source to target.
         Handles hybrid environment (Local vs Fabric).
-        
+
         Args:
             source_path: Path to source file
             target_path: Path to target file
             is_fabric: Whether running in Fabric environment
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -30,7 +32,7 @@ class DataIngester:
             # Ensure target directory exists
             if not is_fabric:
                 target_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             if is_fabric:
                 # Fabric: Use Pandas (or Spark if available) for Lakehouse integration
                 # Note: In a real Fabric pipeline, we might use mssparkutils.fs.cp
@@ -40,10 +42,10 @@ class DataIngester:
             else:
                 # Local: Use shutil for efficient file copy (avoids memory overhead)
                 shutil.copy2(source_path, target_path)
-            
+
             logger.info(f"Ingested {source_path.name} -> {target_path}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to ingest {source_path}: {e}")
             return False

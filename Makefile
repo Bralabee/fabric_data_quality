@@ -1,34 +1,83 @@
 # ==================================================================================
 # Makefile for Fabric Data Quality Framework
 # ==================================================================================
-# 
-# This Makefile provides common development tasks.
-# 
-# Usage:
-#   make help          # Show this help message
-#   make install       # Install package in development mode
-#   make test          # Run tests
-#   make lint          # Run linters
-#   make format        # Format code
+#
+# Prerequisites:
+#   conda activate fabric-dq
+#   pip install -e ".[dev]"
+#
+# Quick start:
+#   make help       Show all commands
+#   make test       Run tests
+#   make format     Auto-format code
+#   make dev-setup  Full dev environment setup
 #
 # ==================================================================================
 
-.PHONY: help install install-dev test test-cov lint format clean docs build
-
-# Default target
 .DEFAULT_GOAL := help
+
+# All targets are phony (no file outputs)
+.PHONY: help \
+        install install-dev install-conda update-conda \
+        test test-cov test-quick \
+        lint format format-check \
+        pre-commit-install pre-commit-run \
+        docs docs-serve \
+        build \
+        clean clean-all \
+        dev-setup check-all ci \
+        version info
 
 # Colors for output
 BLUE := \033[0;34m
 GREEN := \033[0;32m
 YELLOW := \033[0;33m
-RED := \033[0;31m
-NC := \033[0m # No Color
+NC := \033[0m
+
+# ==================================================================================
+# Help
+# ==================================================================================
 
 help: ## Show this help message
-	@echo "$(BLUE)Fabric Data Quality Framework - Development Commands$(NC)"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
+	@echo "  $(BLUE)Fabric Data Quality Framework$(NC)"
+	@echo ""
+	@echo "  $(YELLOW)INSTALLATION$(NC)"
+	@echo "  install            Install package in editable mode"
+	@echo "  install-dev        Install with dev dependencies (pytest, ruff, mypy)"
+	@echo "  install-conda      Create conda env from environment.yml"
+	@echo "  update-conda       Update existing conda env"
+	@echo ""
+	@echo "  $(YELLOW)TESTING$(NC)"
+	@echo "  test               Run full test suite"
+	@echo "  test-quick         Run tests, stop on first failure"
+	@echo "  test-cov           Run tests with coverage report"
+	@echo ""
+	@echo "  $(YELLOW)CODE QUALITY$(NC)"
+	@echo "  format             Auto-format code (ruff format + fix)"
+	@echo "  format-check       Check formatting without changing files"
+	@echo "  lint               Run ruff check + mypy"
+	@echo "  pre-commit-install Install pre-commit hooks"
+	@echo "  pre-commit-run     Run pre-commit on all files"
+	@echo ""
+	@echo "  $(YELLOW)DOCUMENTATION$(NC)"
+	@echo "  docs               List available docs with titles"
+	@echo "  docs-serve         Serve docs/ on http://localhost:8000"
+	@echo ""
+	@echo "  $(YELLOW)BUILD & PACKAGE$(NC)"
+	@echo "  build              Build sdist and wheel into dist/"
+	@echo ""
+	@echo "  $(YELLOW)WORKFLOWS$(NC)"
+	@echo "  dev-setup          One-command dev setup (install-dev + pre-commit)"
+	@echo "  check-all          Run format-check + lint + test"
+	@echo "  ci                 CI pipeline: format-check, lint, test-cov"
+	@echo ""
+	@echo "  $(YELLOW)MAINTENANCE$(NC)"
+	@echo "  clean              Remove caches, build artifacts, coverage"
+	@echo "  clean-all          clean + remove conda env"
+	@echo "  version            Show installed package version"
+	@echo "  info               Show Python/conda environment info"
+	@echo ""
 
 # ==================================================================================
 # Installation
@@ -59,49 +108,35 @@ test: ## Run tests
 	@echo "$(BLUE)Running tests...$(NC)"
 	pytest tests/ -v
 
+test-quick: ## Run tests, stop on first failure
+	@echo "$(BLUE)Running tests (fail-fast)...$(NC)"
+	pytest tests/ -x -q
+
 test-cov: ## Run tests with coverage report
 	@echo "$(BLUE)Running tests with coverage...$(NC)"
 	pytest tests/ -v --cov=dq_framework --cov-report=html --cov-report=term-missing
-	@echo "$(GREEN)Coverage report generated in htmlcov/index.html$(NC)"
-
-test-fast: ## Run tests (skip slow tests)
-	@echo "$(BLUE)Running fast tests...$(NC)"
-	pytest tests/ -v -m "not slow"
-
-test-integration: ## Run integration tests only
-	@echo "$(BLUE)Running integration tests...$(NC)"
-	pytest tests/ -v -m "integration"
+	@echo "$(GREEN)Coverage report: htmlcov/index.html$(NC)"
 
 # ==================================================================================
 # Code Quality
 # ==================================================================================
 
-lint: ## Run all linters
+lint: ## Run ruff check and mypy
 	@echo "$(BLUE)Running linters...$(NC)"
-	@echo "$(YELLOW)Running ruff check...$(NC)"
-	ruff check .
-	@echo "$(YELLOW)Running mypy...$(NC)"
+	ruff check dq_framework/
 	mypy dq_framework/ --ignore-missing-imports || true
-	@echo "$(GREEN)Linting complete!$(NC)"
+	@echo "$(GREEN)Linting complete$(NC)"
 
 format: ## Format code with ruff
 	@echo "$(BLUE)Formatting code...$(NC)"
-	ruff format .
-	ruff check --fix .
-	@echo "$(GREEN)Formatting complete!$(NC)"
+	ruff format dq_framework/ tests/
+	ruff check --fix dq_framework/ tests/
+	@echo "$(GREEN)Formatting complete$(NC)"
 
 format-check: ## Check code formatting without making changes
 	@echo "$(BLUE)Checking code formatting...$(NC)"
-	ruff format --check .
-	ruff check .
-
-security: ## Run security checks
-	@echo "$(BLUE)Running security checks...$(NC)"
-	@echo "$(YELLOW)Running bandit...$(NC)"
-	bandit -r dq_framework/ -ll
-	@echo "$(YELLOW)Running safety...$(NC)"
-	safety check --file requirements.txt || true
-	@echo "$(GREEN)Security checks complete!$(NC)"
+	ruff format --check dq_framework/ tests/
+	ruff check dq_framework/ tests/
 
 # ==================================================================================
 # Pre-commit
@@ -110,7 +145,7 @@ security: ## Run security checks
 pre-commit-install: ## Install pre-commit hooks
 	@echo "$(BLUE)Installing pre-commit hooks...$(NC)"
 	pre-commit install
-	@echo "$(GREEN)Pre-commit hooks installed!$(NC)"
+	@echo "$(GREEN)Pre-commit hooks installed$(NC)"
 
 pre-commit-run: ## Run pre-commit hooks on all files
 	@echo "$(BLUE)Running pre-commit hooks...$(NC)"
@@ -120,14 +155,13 @@ pre-commit-run: ## Run pre-commit hooks on all files
 # Documentation
 # ==================================================================================
 
-docs: ## Build documentation
-	@echo "$(BLUE)Building documentation...$(NC)"
-	cd docs && make html
-	@echo "$(GREEN)Documentation built in docs/_build/html/index.html$(NC)"
+docs: ## List available documentation in docs/
+	@echo "$(BLUE)Documentation (docs/)$(NC)"
+	@echo ""
+	@ls -1 docs/*.md 2>/dev/null | while read f; do printf "  $(GREEN)%-45s$(NC) %s\n" "$$(basename $$f)" "$$(head -1 $$f | sed 's/^#* *//')"; done
 
-docs-serve: ## Serve documentation locally
-	@echo "$(BLUE)Serving documentation on http://localhost:8000$(NC)"
-	cd docs/_build/html && python -m http.server 8000
+docs-serve: ## Serve docs/ as local website (auto-selects free port)
+	@cd docs && python -u -c "import http.server,socketserver;s=socketserver.TCPServer(('',0),http.server.SimpleHTTPRequestHandler);print('Serving docs at http://localhost:' + str(s.server_address[1]),flush=True);s.serve_forever()"
 
 # ==================================================================================
 # Build and Package
@@ -144,65 +178,46 @@ build: ## Build distribution packages
 
 clean: ## Clean build artifacts and cache files
 	@echo "$(BLUE)Cleaning build artifacts...$(NC)"
-	rm -rf build/
-	rm -rf dist/
-	rm -rf *.egg-info
-	rm -rf .pytest_cache/
-	rm -rf .mypy_cache/
-	rm -rf .coverage
-	rm -rf htmlcov/
-	rm -rf .tox/
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name '*.pyc' -delete
-	find . -type f -name '*.pyo' -delete
-	find . -type f -name '*~' -delete
-	@echo "$(GREEN)Cleanup complete!$(NC)"
+	@rm -rf build/ dist/ *.egg-info
+	@rm -rf .pytest_cache/ .mypy_cache/ .coverage htmlcov/ .tox/ .ruff_cache/
+	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name '*.pyc' -delete 2>/dev/null || true
+	@find . -type f -name '*.pyo' -delete 2>/dev/null || true
+	@echo "$(GREEN)Clean complete$(NC)"
 
 clean-all: clean ## Deep clean including conda environment
 	@echo "$(BLUE)Removing conda environment...$(NC)"
 	conda env remove -n fabric-dq -y || true
-	@echo "$(GREEN)Deep cleanup complete!$(NC)"
+	@echo "$(GREEN)Deep clean complete$(NC)"
 
 # ==================================================================================
-# Development Workflow
+# Development Workflows
 # ==================================================================================
 
 dev-setup: install-dev pre-commit-install ## Complete development setup
-	@echo "$(GREEN)Development environment setup complete!$(NC)"
-	@echo "$(YELLOW)Next steps:$(NC)"
-	@echo "  1. Run tests: make test"
-	@echo "  2. Check code: make lint"
-	@echo "  3. Format code: make format"
+	@echo "$(GREEN)Development environment ready$(NC)"
+	@echo ""
+	@echo "  Next steps:"
+	@echo "    make test       Run tests"
+	@echo "    make lint       Check code"
+	@echo "    make format     Format code"
 
-check-all: format-check lint test security ## Run all quality checks
-	@echo "$(GREEN)All checks passed!$(NC)"
+check-all: format-check lint test ## Run all quality checks
+	@echo "$(GREEN)All checks passed$(NC)"
 
-# ==================================================================================
-# Continuous Integration
-# ==================================================================================
-
-ci: ## Run CI pipeline (format, lint, test, security)
-	@echo "$(BLUE)Running CI pipeline...$(NC)"
-	make format-check
-	make lint
-	make test-cov
-	make security
-	@echo "$(GREEN)CI pipeline complete!$(NC)"
+ci: format-check lint test-cov ## CI pipeline: format-check, lint, test-cov
+	@echo "$(GREEN)CI pipeline complete$(NC)"
 
 # ==================================================================================
 # Utility
 # ==================================================================================
 
-requirements: ## Generate requirements.txt from pyproject.toml
-	@echo "$(BLUE)Generating requirements.txt...$(NC)"
-	pip-compile pyproject.toml -o requirements.txt
-
 version: ## Show package version
 	@python -c "from dq_framework import __version__; print(__version__)" 2>/dev/null || echo "Package not installed"
 
 info: ## Show environment information
-	@echo "$(BLUE)Environment Information:$(NC)"
-	@echo "Python version: $$(python --version)"
-	@echo "Pip version: $$(pip --version)"
-	@echo "Conda version: $$(conda --version 2>/dev/null || echo 'Not installed')"
-	@echo "Virtual environment: $${CONDA_DEFAULT_ENV:-$${VIRTUAL_ENV:-None}}"
+	@echo "$(BLUE)Environment Information$(NC)"
+	@echo "  Python:    $$(python --version 2>&1)"
+	@echo "  Pip:       $$(pip --version 2>&1 | cut -d' ' -f1-2)"
+	@echo "  Conda:     $$(conda --version 2>/dev/null || echo 'Not installed')"
+	@echo "  Conda env: $${CONDA_DEFAULT_ENV:-$${VIRTUAL_ENV:-None}}"

@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
@@ -13,8 +13,10 @@ def pytest_addoption(parser):
         "--fabric", action="store_true", default=False, help="run fabric integration tests"
     )
 
+
 def pytest_configure(config):
     config.addinivalue_line("markers", "fabric: mark test as requiring fabric environment")
+
 
 def pytest_collection_modifyitems(config, items):
     if config.getoption("--fabric"):
@@ -29,6 +31,7 @@ def pytest_collection_modifyitems(config, items):
 # ---------------------------------------------------------------------------
 # Shared Spark / Fabric mock fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_spark_session():
@@ -53,11 +56,13 @@ def mock_spark_df():
     df = MagicMock(name="SparkDataFrame")
     df.count.return_value = 100
     df.columns = ["id", "name", "age"]
-    df.toPandas.return_value = pd.DataFrame({
-        "id": [1, 2, 3],
-        "name": ["Alice", "Bob", "Charlie"],
-        "age": [25, 30, 35],
-    })
+    df.toPandas.return_value = pd.DataFrame(
+        {
+            "id": [1, 2, 3],
+            "name": ["Alice", "Bob", "Charlie"],
+            "age": [25, 30, 35],
+        }
+    )
     # Method chaining support
     df.withColumn.return_value = df
     df.filter.return_value = df

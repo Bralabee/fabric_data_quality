@@ -4,7 +4,6 @@ import pytest
 
 from dq_framework.alerting import (
     AlertConfig,
-    ChannelConfig,
     CircuitBreakerConfig,
     FailurePolicy,
 )

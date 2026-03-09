@@ -23,7 +23,7 @@ import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .utils import FABRIC_AVAILABLE, _is_fabric_runtime, get_mssparkutils
 
@@ -64,7 +64,7 @@ class ResultStore(ABC):
         """
 
     @abstractmethod
-    def list(self, prefix: Optional[str] = None) -> list[str]:
+    def list(self, prefix: str | None = None) -> list[str]:
         """List available result keys.
 
         Args:
@@ -139,7 +139,7 @@ class JSONFileStore(ResultStore):
             raise FileNotFoundError(f"No result found for key: {key}")
         return json.loads(file_path.read_text())
 
-    def list(self, prefix: Optional[str] = None) -> list[str]:
+    def list(self, prefix: str | None = None) -> list[str]:
         """List available result keys from JSON files in directory."""
         keys = [f.stem for f in self.results_dir.glob("*.json")]
         if prefix:
@@ -180,17 +180,13 @@ class LakehouseStore(ResultStore):
         content = self._mssparkutils.fs.head(file_path, 10_000_000)
         return json.loads(content)
 
-    def list(self, prefix: Optional[str] = None) -> list[str]:
+    def list(self, prefix: str | None = None) -> list[str]:
         """List available result keys from Lakehouse directory."""
         try:
             files = self._mssparkutils.fs.ls(self.results_dir)
         except Exception:
             return []
-        keys = [
-            Path(f.path).stem
-            for f in files
-            if f.path.endswith(".json") and not f.isDir
-        ]
+        keys = [Path(f.path).stem for f in files if f.path.endswith(".json") and not f.isDir]
         if prefix:
             keys = [k for k in keys if k.startswith(prefix)]
         return sorted(keys)
@@ -207,8 +203,8 @@ class LakehouseStore(ResultStore):
 
 
 def get_store(
-    results_dir: Optional[str] = None,
-    backend: Optional[str] = None,
+    results_dir: str | None = None,
+    backend: str | None = None,
 ) -> ResultStore:
     """Create a ResultStore instance.
 

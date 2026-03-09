@@ -185,15 +185,15 @@ if runner.validate_spark_dataframe(df_clean)["success"]:
 
 ```
 Your Fabric Notebook
-        ↓
+        v
 FabricDataQualityRunner (Orchestration Layer)
-        ↓
+        v
 ConfigLoader (Config Management)
-        ↓
+        v
 DataQualityValidator (Validation Engine)
-        ↓
+        v
 Great Expectations (Core Library)
-        ↓
+        v
 Validation Results
 ```
 

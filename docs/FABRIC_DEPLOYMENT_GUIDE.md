@@ -13,13 +13,13 @@ This guide walks you through deploying the Data Quality Framework to Microsoft F
 
 ```
 Phase 1: Prepare Locally (15 min)
-   ↓
+   v
 Phase 2: Setup Fabric Workspace (10 min)
-   ↓
+   v
 Phase 3: Upload Files & Configs (15 min)
-   ↓
+   v
 Phase 4: Create Validation Module (10 min)
-   ↓
+   v
 Phase 5: Test & Validate (10 min)
 ```
 
@@ -180,13 +180,13 @@ tree fabric_deployment_package
 **Expected structure:**
 ```
 fabric_deployment_package/
-├── dq_configs/
-│   ├── causeway_bronze_validation.yml
-│   ├── causeway_silver_validation.yml
-│   ├── causeway_gold_validation.yml
-│   └── hss_incidents_validation.yml
-└── sample_data/
-    └── CAUSEWAY_combined_scr_2024.csv (optional)
++-- dq_configs/
+|   +-- causeway_bronze_validation.yml
+|   +-- causeway_silver_validation.yml
+|   +-- causeway_gold_validation.yml
+|   +-- hss_incidents_validation.yml
++-- sample_data/
+    +-- CAUSEWAY_combined_scr_2024.csv (optional)
 ```
 
 ---
@@ -228,8 +228,8 @@ Once created, you should see:
 
 ```
 dq_framework_lakehouse/
-├── Tables/          ← SQL tables (Bronze/Silver/Gold will go here)
-└── Files/           ← File storage (configs and logs go here)
++-- Tables/          <- SQL tables (Bronze/Silver/Gold will go here)
++-- Files/           <- File storage (configs and logs go here)
 ```
 
 ---
@@ -246,9 +246,9 @@ dq_framework_lakehouse/
 **Result:**
 ```
 Files/
-├── dq_configs/      ← Validation YAML files
-├── dq_logs/         ← Auto-generated validation logs
-└── raw_data/        ← Source data files
++-- dq_configs/      <- Validation YAML files
++-- dq_logs/         <- Auto-generated validation logs
++-- raw_data/        <- Source data files
 ```
 
 ---
@@ -863,22 +863,22 @@ if log_files:
 
 ```
 Workspace: HS2_Data_Quality
-├── Lakehouse: dq_framework_lakehouse
-│   ├── Files/
-│   │   ├── dq_configs/
-│   │   │   ├── causeway_bronze_validation.yml ✅
-│   │   │   ├── causeway_silver_validation.yml ✅
-│   │   │   └── hss_incidents_validation.yml ✅
-│   │   ├── dq_logs/
-│   │   │   └── validation_*.json ✅ (auto-generated)
-│   │   └── raw_data/
-│   │       └── (your source data)
-│   └── Tables/
-│       ├── causeway_bronze ✅
-│       └── causeway_silver ✅
-├── Notebooks/
-│   ├── DQ_Module ✅ (reusable validator)
-│   └── Test_DQ_Integration ✅ (test pipeline)
++-- Lakehouse: dq_framework_lakehouse
+|   +-- Files/
+|   |   +-- dq_configs/
+|   |   |   +-- causeway_bronze_validation.yml
+|   |   |   +-- causeway_silver_validation.yml
+|   |   |   +-- hss_incidents_validation.yml
+|   |   +-- dq_logs/
+|   |   |   +-- validation_*.json (auto-generated)
+|   |   +-- raw_data/
+|   |       +-- (your source data)
+|   +-- Tables/
+|       +-- causeway_bronze
+|       +-- causeway_silver
++-- Notebooks/
+|   +-- DQ_Module (reusable validator)
+|   +-- Test_DQ_Integration (test pipeline)
 ```
 
 ---

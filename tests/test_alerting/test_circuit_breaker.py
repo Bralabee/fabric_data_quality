@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from dq_framework.alerting.circuit_breaker import CircuitBreaker, CircuitState
 
 

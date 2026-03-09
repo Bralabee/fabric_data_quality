@@ -9,62 +9,62 @@ A complete data quality framework that integrates into MS Fabric ETL pipelines t
 ## 📋 Integration Workflow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     LOCAL DEVELOPMENT                            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Step 1: Profile Your Data (One Time)                           │
-│  ────────────────────────────────────                           │
-│  $ python profile_data.py your_data.csv \                       │
-│      --output config/validation.yml                             │
-│                                                                  │
-│  Output: validation.yml (65 expectations generated)             │
-│                                                                  │
-│  Step 2: Review & Enhance Config (One Time)                     │
-│  ──────────────────────────────────────                         │
-│  - Open validation.yml                                           │
-│  - Add business-specific rules                                   │
-│  - Adjust severity levels                                        │
-│  - Save final version                                            │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ Upload
-┌─────────────────────────────────────────────────────────────────┐
-│                      MS FABRIC LAKEHOUSE                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Files/                                                          │
-│    dq_configs/                                                   │
-│      causeway_bronze_validation.yml  ← Upload here              │
-│      causeway_silver_validation.yml                             │
-│      hss_incidents_validation.yml                               │
-│                                                                  │
-│    dq_logs/                          ← Auto-created             │
-│      validation_2025-10-28.json                                 │
-│                                                                  │
-│  Notebooks/                                                      │
-│    DQ_Module                         ← Validator class          │
-│    CAUSEWAY_ETL_Pipeline            ← Your ETL + DQ checks      │
-│                                                                  │
-│  Tables/                                                         │
-│    causeway_bronze                   ← Raw data                 │
-│    causeway_silver                   ← Cleaned data             │
-│    causeway_gold                     ← Business metrics         │
-│    dq_pipeline_monitoring           ← Quality metrics           │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓ Query
-┌─────────────────────────────────────────────────────────────────┐
-│                        POWER BI                                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Dashboard: Data Quality Monitoring                              │
-│  - Quality trends over time                                      │
-│  - Failed checks by layer                                        │
-│  - Data volume metrics                                           │
-│  - Alert on quality drops                                        │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------+
+|                     LOCAL DEVELOPMENT                            |
++-----------------------------------------------------------------+
+|                                                                  |
+|  Step 1: Profile Your Data (One Time)                           |
+|  ----------------------------------------                       |
+|  $ python profile_data.py your_data.csv \                       |
+|      --output config/validation.yml                             |
+|                                                                  |
+|  Output: validation.yml (65 expectations generated)             |
+|                                                                  |
+|  Step 2: Review & Enhance Config (One Time)                     |
+|  ----------------------------------------                       |
+|  - Open validation.yml                                           |
+|  - Add business-specific rules                                   |
+|  - Adjust severity levels                                        |
+|  - Save final version                                            |
+|                                                                  |
++-----------------------------------------------------------------+
+                              v Upload
++-----------------------------------------------------------------+
+|                      MS FABRIC LAKEHOUSE                         |
++-----------------------------------------------------------------+
+|                                                                  |
+|  Files/                                                          |
+|    dq_configs/                                                   |
+|      causeway_bronze_validation.yml  <- Upload here              |
+|      causeway_silver_validation.yml                             |
+|      hss_incidents_validation.yml                               |
+|                                                                  |
+|    dq_logs/                          <- Auto-created             |
+|      validation_2025-10-28.json                                 |
+|                                                                  |
+|  Notebooks/                                                      |
+|    DQ_Module                         <- Validator class          |
+|    CAUSEWAY_ETL_Pipeline            <- Your ETL + DQ checks      |
+|                                                                  |
+|  Tables/                                                         |
+|    causeway_bronze                   <- Raw data                 |
+|    causeway_silver                   <- Cleaned data             |
+|    causeway_gold                     <- Business metrics         |
+|    dq_pipeline_monitoring           <- Quality metrics           |
+|                                                                  |
++-----------------------------------------------------------------+
+                              v Query
++-----------------------------------------------------------------+
+|                        POWER BI                                  |
++-----------------------------------------------------------------+
+|                                                                  |
+|  Dashboard: Data Quality Monitoring                              |
+|  - Quality trends over time                                      |
+|  - Failed checks by layer                                        |
+|  - Data volume metrics                                           |
+|  - Alert on quality drops                                        |
+|                                                                  |
++-----------------------------------------------------------------+
 ```
 
 ---
@@ -166,16 +166,16 @@ spark.createDataFrame(df_gold).write.mode("overwrite").saveAsTable("my_gold")
 
 ```
 Profile (once per dataset)
-   ↓
+   v
 Generate Config
-   ↓
+   v
 Review & Enhance (once)
-   ↓
-Use Config Forever ←──────┐
-   ↓                      │
-Validate Batch 1          │
-Validate Batch 2          │
-Validate Batch 3 ─────────┘
+   v
+Use Config Forever <------+
+   v                      |
+Validate Batch 1          |
+Validate Batch 2          |
+Validate Batch 3 ---------+
 Validate Batch N...
 
 Only re-profile if:
@@ -200,16 +200,16 @@ Only re-profile if:
 ```
 2_DATA_QUALITY_LIBRARY/
   config/
-    causeway_validation.yml       ← Generated by profiler
-    hss_incidents_validation.yml  ← Generated by profiler
-  
+    causeway_validation.yml       <- Generated by profiler
+    hss_incidents_validation.yml  <- Generated by profiler
+
   docs/
-    FABRIC_QUICK_START.md         ← 5-minute setup guide
-    FABRIC_ETL_INTEGRATION.md     ← Complete integration guide
-  
+    FABRIC_QUICK_START.md         <- 5-minute setup guide
+    FABRIC_ETL_INTEGRATION.md     <- Complete integration guide
+
   examples/
-    fabric_etl_example.py         ← Copy-paste code for Fabric
-    complete_workflow_example.py  ← End-to-end example
+    fabric_etl_example.py         <- Copy-paste code for Fabric
+    complete_workflow_example.py  <- End-to-end example
 ```
 
 ### Fabric (Production)
@@ -217,23 +217,23 @@ Only re-profile if:
 Lakehouse/
   Files/
     dq_configs/
-      causeway_bronze_validation.yml  ← Uploaded from local
+      causeway_bronze_validation.yml  <- Uploaded from local
       causeway_silver_validation.yml
       hss_incidents_validation.yml
-    
+
     dq_logs/
-      validation_2025-10-28-13-08-59.json  ← Auto-generated
+      validation_2025-10-28-13-08-59.json  <- Auto-generated
       validation_2025-10-28-14-15-32.json
-  
+
   Notebooks/
-    DQ_Module                    ← Validator class
-    CAUSEWAY_ETL_Pipeline       ← Your ETL with DQ
-  
+    DQ_Module                    <- Validator class
+    CAUSEWAY_ETL_Pipeline       <- Your ETL with DQ
+
   Tables/
     causeway_bronze
     causeway_silver
     causeway_gold
-    dq_pipeline_monitoring      ← Quality metrics history
+    dq_pipeline_monitoring      <- Quality metrics history
 ```
 
 ---
@@ -248,7 +248,7 @@ Lakehouse/
 ### This Week
 1. Integrate into one ETL pipeline (start with CAUSEWAY)
 2. Create monitoring table: `dq_pipeline_monitoring`
-3. Run full Bronze → Silver → Gold pipeline
+3. Run full Bronze -> Silver -> Gold pipeline
 
 ### This Month
 1. Expand to HSS project

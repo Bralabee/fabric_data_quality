@@ -20,7 +20,6 @@ from dq_framework.storage import (
     make_result_key,
 )
 
-
 # ---------------------------------------------------------------------------
 # TestResultStoreABC
 # ---------------------------------------------------------------------------
@@ -69,7 +68,7 @@ class TestJSONFileStore:
     def test_init_creates_directory(self, tmp_path):
         """__init__ creates results_dir if it does not exist."""
         results_dir = tmp_path / "new_results"
-        store = JSONFileStore(results_dir=str(results_dir))
+        JSONFileStore(results_dir=str(results_dir))
         assert results_dir.is_dir()
 
     def test_write_creates_json_file(self, tmp_path):
@@ -147,15 +146,19 @@ class TestLakehouseStore:
 
     def test_init_raises_when_mssparkutils_unavailable(self):
         """__init__ raises RuntimeError when mssparkutils unavailable."""
-        with patch("dq_framework.storage.get_mssparkutils", return_value=None), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", False):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=None),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", False),
+        ):
             with pytest.raises(RuntimeError, match="Fabric runtime"):
                 LakehouseStore()
 
     def test_write_calls_fs_put(self, mock_mssparkutils):
         """write() calls mssparkutils.fs.put with correct path and data."""
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             store.write("result_001", {"success": True})
 
@@ -166,8 +169,10 @@ class TestLakehouseStore:
     def test_read_calls_fs_head(self, mock_mssparkutils):
         """read() calls mssparkutils.fs.head with 10MB maxBytes limit."""
         mock_mssparkutils.fs.head.return_value = '{"success": true}'
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             result = store.read("result_001")
 
@@ -186,8 +191,10 @@ class TestLakehouseStore:
         file_a.isDir = False
         mock_mssparkutils.fs.ls.return_value = [file_b, file_a]
 
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             keys = store.list()
             assert keys == ["alpha", "beta"]
@@ -202,8 +209,10 @@ class TestLakehouseStore:
         file_o.isDir = False
         mock_mssparkutils.fs.ls.return_value = [file_v, file_o]
 
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             keys = store.list(prefix="validation_")
             assert keys == ["validation_a"]
@@ -212,15 +221,19 @@ class TestLakehouseStore:
         """list() returns empty list on error."""
         mock_mssparkutils.fs.ls.side_effect = Exception("access denied")
 
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             assert store.list() == []
 
     def test_delete_returns_true_on_success(self, mock_mssparkutils):
         """delete() calls mssparkutils.fs.rm and returns True on success."""
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             assert store.delete("result_001") is True
             mock_mssparkutils.fs.rm.assert_called_once()
@@ -229,8 +242,10 @@ class TestLakehouseStore:
         """delete() returns False on error."""
         mock_mssparkutils.fs.rm.side_effect = Exception("not found")
 
-        with patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = LakehouseStore(results_dir="Files/test_results")
             assert store.delete("nonexistent") is False
 
@@ -251,9 +266,11 @@ class TestGetStore:
 
     def test_returns_lakehouse_store_when_fabric(self, mock_mssparkutils):
         """get_store() returns LakehouseStore when _is_fabric_runtime() is True."""
-        with patch("dq_framework.storage._is_fabric_runtime", return_value=True), \
-             patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage._is_fabric_runtime", return_value=True),
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = get_store()
             assert isinstance(store, LakehouseStore)
 
@@ -265,19 +282,23 @@ class TestGetStore:
 
     def test_explicit_fabric_backend_in_fabric(self, mock_mssparkutils):
         """get_store(backend='fabric') returns LakehouseStore when in Fabric."""
-        with patch("dq_framework.storage._is_fabric_runtime", return_value=True), \
-             patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", True):
+        with (
+            patch("dq_framework.storage._is_fabric_runtime", return_value=True),
+            patch("dq_framework.storage.get_mssparkutils", return_value=mock_mssparkutils),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", True),
+        ):
             store = get_store(backend="fabric")
             assert isinstance(store, LakehouseStore)
 
     def test_explicit_fabric_backend_not_in_fabric(self):
         """get_store(backend='fabric') raises RuntimeError when not in Fabric."""
-        with patch("dq_framework.storage._is_fabric_runtime", return_value=False), \
-             patch("dq_framework.storage.get_mssparkutils", return_value=None), \
-             patch("dq_framework.storage.FABRIC_AVAILABLE", False):
-            with pytest.raises(RuntimeError):
-                get_store(backend="fabric")
+        with (
+            patch("dq_framework.storage._is_fabric_runtime", return_value=False),
+            patch("dq_framework.storage.get_mssparkutils", return_value=None),
+            patch("dq_framework.storage.FABRIC_AVAILABLE", False),
+            pytest.raises(RuntimeError),
+        ):
+            get_store(backend="fabric")
 
     def test_invalid_backend_raises_value_error(self):
         """get_store(backend='invalid') raises ValueError."""

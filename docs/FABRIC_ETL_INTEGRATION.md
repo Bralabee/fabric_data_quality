@@ -9,20 +9,20 @@ This guide shows you how to integrate the Data Quality framework into your Micro
 ## Architecture: Data Quality in Fabric ETL
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    MS Fabric Lakehouse                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Source Data → [DQ Check] → Bronze → [DQ Check] → Silver →     │
-│                                       [DQ Check] → Gold          │
-│                                                                  │
-│  Each stage:                                                     │
-│  1. Load data                                                    │
-│  2. Run quality validation                                       │
-│  3. Log results                                                  │
-│  4. Decide: Continue or Fail                                     │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------+
+|                    MS Fabric Lakehouse                           |
++-----------------------------------------------------------------+
+|                                                                  |
+|  Source Data -> [DQ Check] -> Bronze -> [DQ Check] -> Silver ->  |
+|                                         [DQ Check] -> Gold       |
+|                                                                  |
+|  Each stage:                                                     |
+|  1. Load data                                                    |
+|  2. Run quality validation                                       |
+|  3. Log results                                                  |
+|  4. Decide: Continue or Fail                                     |
+|                                                                  |
++-----------------------------------------------------------------+
 ```
 
 ---

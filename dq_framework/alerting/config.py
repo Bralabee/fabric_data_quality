@@ -127,20 +127,18 @@ class AlertConfig:
         policy_str = data.get("failure_policy", "warn")
         try:
             failure_policy = FailurePolicy(policy_str)
-        except ValueError:
+        except ValueError as err:
             valid = [p.value for p in FailurePolicy]
             raise ValueError(
                 f"Invalid failure_policy: {policy_str!r}. Must be one of {valid}"
-            )
+            ) from err
 
         # Parse channels
         channels = []
         for ch_data in data.get("channels", []):
             ch_type = ch_data.pop("type")
             ch_enabled = ch_data.pop("enabled", True)
-            channels.append(
-                ChannelConfig(type=ch_type, enabled=ch_enabled, settings=ch_data)
-            )
+            channels.append(ChannelConfig(type=ch_type, enabled=ch_enabled, settings=ch_data))
 
         # Parse circuit breaker
         cb_data = data.get("circuit_breaker", {})

@@ -294,17 +294,17 @@ for file in sharepoint_files:
 
 ```
 your_project/
-├── config/
-│   └── data_quality/
-│       ├── source1_validation.yml      # Created once, used forever
-│       ├── source2_validation.yml      # Created once, used forever
-│       └── source3_validation.yml      # Created once, used forever
-├── data/
-│   ├── batch_20251028.csv              # New data arrives
-│   ├── batch_20251029.csv              # New data arrives
-│   └── batch_20251030.csv              # New data arrives
-└── pipelines/
-    └── validate_data.py                # Uses config/ files
++-- config/
+|   +-- data_quality/
+|       +-- source1_validation.yml      # Created once, used forever
+|       +-- source2_validation.yml      # Created once, used forever
+|       +-- source3_validation.yml      # Created once, used forever
++-- data/
+|   +-- batch_20251028.csv              # New data arrives
+|   +-- batch_20251029.csv              # New data arrives
+|   +-- batch_20251030.csv              # New data arrives
++-- pipelines/
+    +-- validate_data.py                # Uses config/ files
 ```
 
 **ETL Pipeline** (`pipelines/validate_data.py`):

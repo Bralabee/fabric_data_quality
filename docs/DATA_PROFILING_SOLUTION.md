@@ -59,13 +59,13 @@ For your CAUSEWAY data, it found:
 
 **2. Column Patterns**
 ```
-Column                         Type            Nulls      Unique    
-─────────────────────────────────────────────────────────────────
-Allocation Uniqid              id              45.5%      54.5%     
-Base Value                     monetary        45.5%      21.2%     
-Contract description           string          45.5%      0.0%      
-Value type (A,D,E)             categorical     45.5%      0.0%      
-Period Accruals                unknown        100.0%      0.0%      
+Column                         Type            Nulls      Unique
+-----------------------------------------------------------------
+Allocation Uniqid              id              45.5%      54.5%
+Base Value                     monetary        45.5%      21.2%
+Contract description           string          45.5%      0.0%
+Value type (A,D,E)             categorical     45.5%      0.0%
+Period Accruals                unknown        100.0%      0.0%
 ```
 
 **3. Real Data Characteristics**
