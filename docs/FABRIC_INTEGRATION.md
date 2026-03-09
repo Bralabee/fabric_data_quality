@@ -471,8 +471,174 @@ except NameError:
     print("❌ Spark not available - restart kernel")
 ```
 
+## Advanced Integration Patterns
+
+### Pattern: Conditional Processing Based on Quality
+
+```python
+results = validator.validate(df)
+
+if results['success_rate'] >= 95:
+    # High quality: Standard processing
+    process_standard(df)
+elif results['success_rate'] >= 80:
+    # Medium quality: Apply corrections
+    df_corrected = apply_data_corrections(df)
+    process_standard(df_corrected)
+elif results['success_rate'] >= 60:
+    # Low quality: Manual review required
+    save_for_manual_review(df)
+    send_alert("Data quality requires manual review")
+else:
+    # Very low quality: Reject batch
+    raise ValueError("Data quality unacceptable - rejecting batch")
+```
+
+### Pattern: Incremental Validation
+
+```python
+# Validate only new/changed records in incremental loads
+previous_batch = spark.read.table("metadata").toPandas()
+last_processed_date = previous_batch['max_date'].max()
+
+new_records = df[df['date'] > last_processed_date]
+
+if len(new_records) > 0:
+    validator = FabricDataQualityValidator('Files/dq_configs/incremental_validation.yml')
+    results = validator.validate(new_records, fail_on_error=True)
+    spark.createDataFrame(new_records).write.mode("append").saveAsTable("my_silver")
+```
+
+### Pattern: Quality Monitoring Dashboard
+
+```python
+def log_quality_metrics(layer: str, dataset: str, results: dict, row_count: int):
+    """Log quality metrics for Power BI dashboard"""
+    metrics = {
+        'timestamp': datetime.now(),
+        'layer': layer,
+        'dataset': dataset,
+        'success_rate': results['success_rate'],
+        'passed_checks': results['passed_count'],
+        'failed_checks': results['failed_count'],
+        'row_count': row_count,
+    }
+    spark.createDataFrame([metrics]).write.mode("append").saveAsTable("dq_monitoring_metrics")
+
+# Use in pipeline
+results = validator.validate(df)
+log_quality_metrics('silver', 'causeway', results, len(df))
+```
+
+## Complete ETL Pipeline Example (CAUSEWAY)
+
+```python
+# Notebook: CAUSEWAY_ETL_Pipeline
+%run DQ_Module
+from pyspark.sql import functions as F
+
+# === BRONZE LAYER ===
+raw_df = spark.read.csv("Files/raw_data/causeway_data.csv",
+                        header=True, inferSchema=True, encoding="latin-1").toPandas()
+
+validator_bronze = FabricDataQualityValidator('Files/dq_configs/causeway_bronze_validation.yml')
+results_bronze = validator_bronze.validate(raw_df, fail_on_error=False)
+
+if results_bronze['success_rate'] < 50:
+    raise ValueError(f"Bronze quality too low: {results_bronze['success_rate']:.1f}%")
+spark.createDataFrame(raw_df).write.mode("overwrite").saveAsTable("causeway_bronze")
+
+# === SILVER LAYER ===
+df_silver = raw_df.copy()
+df_silver.columns = [col.strip().replace(' ', '_').lower() for col in df_silver.columns]
+
+validator_silver = FabricDataQualityValidator('Files/dq_configs/causeway_silver_validation.yml')
+results_silver = validator_silver.validate(df_silver, fail_on_error=True)
+spark.createDataFrame(df_silver).write.mode("overwrite").saveAsTable("causeway_silver")
+
+# === GOLD LAYER ===
+df_gold = df_silver.groupby(['vendor_name']).agg({'base_value': 'sum'}).reset_index()
+
+validator_gold = FabricDataQualityValidator('Files/dq_configs/causeway_gold_validation.yml')
+results_gold = validator_gold.validate(df_gold, fail_on_error=True)
+spark.createDataFrame(df_gold).write.mode("overwrite").saveAsTable("causeway_gold")
+
+print(f"Bronze: {results_bronze['success_rate']:.1f}%")
+print(f"Silver: {results_silver['success_rate']:.1f}%")
+print(f"Gold: {results_gold['success_rate']:.1f}%")
+```
+
+## Integration Workflow Overview
+
+```
++------------------------------------------------------------------+
+|                     LOCAL DEVELOPMENT                              |
++------------------------------------------------------------------+
+|  1. Profile your data:                                            |
+|     python scripts/profile_data.py data.csv --output config.yml   |
+|  2. Review & enhance the generated config                         |
++------------------------------------------------------------------+
+                            v Upload
++------------------------------------------------------------------+
+|                    MS FABRIC LAKEHOUSE                             |
++------------------------------------------------------------------+
+|  Files/dq_configs/    <- Upload configs here                      |
+|  Notebooks/DQ_Module  <- Validator class                          |
+|  Tables/              <- Bronze/Silver/Gold layers                |
++------------------------------------------------------------------+
+                            v Query
++------------------------------------------------------------------+
+|                        POWER BI                                    |
++------------------------------------------------------------------+
+|  Dashboard: Data Quality Monitoring                                |
+|  - Quality trends, failed checks, data volume metrics              |
++------------------------------------------------------------------+
+```
+
+### Validation Strategies by Layer
+
+| Layer  | Strategy    | Threshold | Fail? | Purpose                          |
+|--------|-------------|-----------|-------|----------------------------------|
+| Bronze | Lenient     | 50-60%    | No    | Catch obvious issues, log        |
+| Silver | Strict      | 80-90%    | Yes   | Ensure clean, standardized data  |
+| Gold   | Very Strict | 95-100%   | Yes   | Perfect business metrics         |
+
+## Configuration Management in Fabric
+
+```
+# Store configs in Lakehouse Files with versioning
+Files/
+  dq_configs/
+    causeway/
+      v1_bronze_validation.yml
+      v1_silver_validation.yml
+      v1_gold_validation.yml
+    hss/
+      v1_incidents_validation.yml
+```
+
+## Error Handling and Alerts
+
+```python
+from notebookutils import mssparkutils
+
+def send_quality_alert(results: dict, dataset: str, layer: str):
+    """Send email alert on quality failure"""
+    if results['success_rate'] < 80:
+        message = f"Data Quality Alert: {dataset} - {layer} Layer\n"
+        message += f"Success Rate: {results['success_rate']:.1f}%\n"
+        message += f"Passed: {results['passed_count']}, Failed: {results['failed_count']}"
+        mssparkutils.notify.sendEmail(
+            recipients=['data-team@example.com'],
+            subject=f'DQ Alert: {dataset} - {layer}',
+            body=message
+        )
+```
+
 ## Next Steps
 
 - Review [Usage Examples](../examples/usage_examples.py)
 - Check [Configuration Guide](CONFIGURATION_GUIDE.md)
 - See project-specific examples in `examples/` folder
+- See [Quick Start Guide](FABRIC_QUICK_START.md) for 5-minute setup
+- See [Profiling Workflow](PROFILING_WORKFLOW.md) for data profiling

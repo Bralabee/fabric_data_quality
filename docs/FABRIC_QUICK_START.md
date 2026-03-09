@@ -6,7 +6,7 @@
 
 ```python
 # In a Fabric notebook, Cell 1:
-%pip install pyyaml great_expectations==0.18.22 pandas pyarrow
+%pip install pyyaml great-expectations>=1.0.0,<2.0.0 pandas pyarrow
 ```
 
 ### Step 2: Upload Your Configs (1 minute)
@@ -187,7 +187,7 @@ os.listdir('/lakehouse/default/Files/dq_configs/')
 ### Issue: Module not found
 ```python
 # Reinstall in notebook
-%pip install --upgrade pyyaml great_expectations==0.18.22
+%pip install --upgrade pyyaml great-expectations>=1.0.0,<2.0.0
 ```
 
 ### Issue: Memory error with large files
@@ -203,7 +203,7 @@ results = validator.validate(df_sample)
 
 ```python
 # ===== SETUP =====
-%pip install pyyaml great_expectations==0.18.22
+%pip install pyyaml great-expectations>=1.0.0,<2.0.0
 %run DQ_Module
 
 # ===== BRONZE LAYER =====
@@ -267,7 +267,7 @@ print(f"Gold: {results_gold['success_rate']:.1f}%")
 
 ## Resources
 
-- Full integration guide: `docs/FABRIC_ETL_INTEGRATION.md`
+- Full integration guide: `docs/FABRIC_INTEGRATION.md`
 - Complete example: `examples/fabric_etl_example.py`
 - Profiling workflow: `PROFILING_WORKFLOW.md`
 - Quick reference: `QUICK_REFERENCE.md`

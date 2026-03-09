@@ -5,16 +5,23 @@
 A reusable, configuration-driven data quality framework for Microsoft Fabric ETL processes, built on Great Expectations. Enables declarative data quality validation across bronze, silver, and gold data layers using YAML configuration files.
 
 **Created**: January 2025  
-**Status**: ✅ Complete and Ready for Use (v1.2.0, ~70% coverage, 213+ tests)  
+**Status**: ✅ Complete and Ready for Use (v2.0.0, ~70% coverage, 213+ tests)  
 **Location**: `/home/sanmi/Documents/HS2/HS2_PROJECTS_2025/2_DATA_QUALITY_LIBRARY/`
 
 ## 📦 What's Included
 
 ### Core Framework (dq_framework/)
-- **config_loader.py** (159 lines) - YAML configuration loading and validation
-- **validator.py** (232 lines) - Great Expectations integration and validation engine
-- **fabric_connector.py** (256 lines) - MS Fabric/Spark integration layer
-- **__init__.py** - Package initialization with clean API exports
+- **config_loader.py** (163 lines) - YAML configuration loading and validation
+- **validator.py** (348 lines) - Great Expectations integration and validation engine
+- **fabric_connector.py** (572 lines) - MS Fabric/Spark integration layer
+- **data_profiler.py** (564 lines) - Data profiling and assessment engine
+- **batch_profiler.py** (127 lines) - Batch/parallel profiling support
+- **constants.py** (132 lines) - Framework constants and defaults
+- **ingestion.py** (51 lines) - Data ingestion utilities
+- **loader.py** (145 lines) - Data loading from multiple formats
+- **storage.py** (240 lines) - Validation result storage
+- **utils.py** (112 lines) - Shared utility functions
+- **__init__.py** (61 lines) - Package initialization with clean API exports
 
 ### Configuration Templates (config_templates/)
 - **bronze_layer_template.yml** - Raw data ingestion validation template
@@ -221,8 +228,8 @@ Validation Results
 
 ## 🔧 Technical Stack
 
-- **Python**: 3.9+
-- **Great Expectations**: 0.18.0+ (data validation)
+- **Python**: 3.10+
+- **Great Expectations**: 1.0+ (data validation)
 - **PyYAML**: 6.0+ (configuration parsing)
 - **Pandas**: 1.5.0+ (DataFrame operations)
 - **PySpark**: 3.3.0+ (provided by Fabric)
@@ -296,4 +303,4 @@ After implementing this framework, you can expect:
 
 **Ready to use!** Start with the README.md and QUICK_REFERENCE.md for fastest onboarding.
 ---
-*Last Updated: January 2026 | Framework v1.2.0*
+*Last Updated: January 2026 | Framework v2.0.0*

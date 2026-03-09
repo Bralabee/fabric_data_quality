@@ -354,4 +354,56 @@ validate_batch('data/batch_20251030.csv')
 
 ---
 
+## DataProfiler API
+
+The `DataProfiler` class in `dq_framework/data_profiler.py` provides programmatic access to data profiling and config generation.
+
+### Basic Usage
+
+```python
+from dq_framework import DataProfiler
+import pandas as pd
+
+# Load your data
+df = pd.read_csv('your_data.csv')
+
+# Profile it
+profiler = DataProfiler(df)
+profile = profiler.profile()
+
+# See what you're working with
+profiler.print_summary()  # Shows columns, types, nulls, uniqueness
+
+# Generate appropriate validation config
+config = profiler.generate_expectations(
+    validation_name="my_validation",
+    null_tolerance=10.0,
+)
+
+# Save it
+profiler.save_config(config, 'my_validation.yml')
+```
+
+### What the Profiler Discovers
+
+The profiler analyses your data and identifies:
+- **Data quality score** (e.g., 41.7/100 for raw data with many nulls)
+- **Column patterns** (types, null rates, uniqueness)
+- **Data characteristics** (row counts, encodings, monetary patterns)
+- **Appropriate validation thresholds** based on actual data
+
+### Data-Driven vs Template-Driven
+
+**Before (template-driven)**: Generic configs with wrong assumptions about column names, unrealistic null tolerances, and expectations not tailored to actual data.
+
+**After (data-driven)**: The profiler analyses YOUR actual data, discovers real patterns, and generates expectations that reflect the true structure. You then enhance with business rules.
+
+### Complete Workflow Phases
+
+1. **Profile** (`DataProfiler.profile()`) - Automated assessment
+2. **Generate** (`generate_expectations()`) - Data-driven config generation
+3. **Enhance** - Add business knowledge manually
+4. **Validate** (`DataQualityValidator.validate()`) - Test on real data
+5. **Iterate** - Adjust based on results
+
 **The profiler is universal and flexible. Profile once, validate forever.**

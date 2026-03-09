@@ -1,6 +1,6 @@
 # Fabric Data Quality Framework - API Reference
 
-> **Version:** 1.2.0  
+> **Version:** 2.0.0
 > **Last Updated:** January 2026  
 > **Author:** HS2 Data Engineering Team
 
