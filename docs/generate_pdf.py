@@ -4,9 +4,10 @@ Generate a modern, minimalist PDF from the dual platform architecture MD file.
 Uses WeasyPrint for high-quality PDF rendering with custom CSS.
 """
 
+from pathlib import Path
+
 import markdown
 from weasyprint import HTML
-from pathlib import Path
 
 # --- Paths ---
 DOCS_DIR = Path(__file__).parent
@@ -18,6 +19,7 @@ md_content = MD_FILE.read_text(encoding="utf-8")
 
 # --- Pre-process: protect reference citations [N] from markdown parser ---
 import re
+
 
 # Replace inline citations like [1], [13] with a placeholder before markdown processing
 # but NOT markdown links like [text](url) or reference list entries at start of line
