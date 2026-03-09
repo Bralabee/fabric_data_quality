@@ -185,15 +185,15 @@ class DataProfiler:
 
         sample = series.astype(str).head(TYPE_DETECTION_SAMPLE_SIZE)
 
-        # Date patterns
-        if series.dtype == "datetime64[ns]" or self._looks_like_date(sample):
-            return "date"
-
-        # ID patterns (mostly numeric, high uniqueness)
+        # ID patterns (check before date to prevent numeric IDs being coerced to dates)
         if series.nunique() / len(series) > ID_UNIQUENESS_THRESHOLD and (
             "id" in series.name.lower() or "uniqid" in series.name.lower()
         ):
             return "id"
+
+        # Date patterns
+        if series.dtype == "datetime64[ns]" or self._looks_like_date(sample):
+            return "date"
 
         # Code patterns (alphanumeric, limited length, moderate uniqueness)
         if "code" in series.name.lower() or "nr" in series.name.lower():

@@ -4,9 +4,10 @@ Generate a modern, minimalist PDF from the dual platform architecture MD file.
 Uses WeasyPrint for high-quality PDF rendering with custom CSS.
 """
 
+from pathlib import Path
+
 import markdown
 from weasyprint import HTML
-from pathlib import Path
 
 # --- Paths ---
 DOCS_DIR = Path(__file__).parent
@@ -19,12 +20,14 @@ md_content = MD_FILE.read_text(encoding="utf-8")
 # --- Pre-process: protect reference citations [N] from markdown parser ---
 import re
 
+
 # Replace inline citations like [1], [13] with a placeholder before markdown processing
 # but NOT markdown links like [text](url) or reference list entries at start of line
 def protect_citations(text):
     # Protect inline citations: space/punctuation + [N] but not [text](url)
     # Match [N] that is NOT followed by ( which would make it a markdown link
-    return re.sub(r'\[(\d{1,2})\](?!\()', r'CITE_REF_\1_END', text)
+    return re.sub(r"\[(\d{1,2})\](?!\()", r"CITE_REF_\1_END", text)
+
 
 md_content = protect_citations(md_content)
 
@@ -49,13 +52,15 @@ html_body = markdown.markdown(
 for emoji, replacement in EMOJI_MAP.items():
     html_body = html_body.replace(emoji, replacement)
 
+
 # --- Post-process: restore citation references as styled superscripts ---
 def restore_citations(html):
     return re.sub(
-        r'CITE_REF_(\d{1,2})_END',
+        r"CITE_REF_(\d{1,2})_END",
         r'<sup class="cite-ref">[\1]</sup>',
         html,
     )
+
 
 html_body = restore_citations(html_body)
 
@@ -88,10 +93,10 @@ SHORT_VERSION_HTML = """
 
 # Replace the Short Version content
 short_version_pattern = re.compile(
-    r'(<h2[^>]*>The Short Version</h2>).*?(?=<hr)',
+    r"(<h2[^>]*>The Short Version</h2>).*?(?=<hr)",
     re.DOTALL,
 )
-html_body = short_version_pattern.sub(r'\1' + SHORT_VERSION_HTML, html_body)
+html_body = short_version_pattern.sub(r"\1" + SHORT_VERSION_HTML, html_body)
 
 # --- Post-process: replace the risk register table with styled cards ---
 RISK_REGISTER_HTML = """
@@ -156,10 +161,10 @@ RISK_REGISTER_HTML = """
 
 # Replace the risk register table
 risk_pattern = re.compile(
-    r'(<h3[^>]*>Risk Register</h3>).*?(?=<blockquote)',
+    r"(<h3[^>]*>Risk Register</h3>).*?(?=<blockquote)",
     re.DOTALL,
 )
-html_body = risk_pattern.sub(r'\1' + RISK_REGISTER_HTML, html_body)
+html_body = risk_pattern.sub(r"\1" + RISK_REGISTER_HTML, html_body)
 
 # --- Post-process: replace the 3 timeline tables with a single styled timeline ---
 import re
@@ -208,10 +213,10 @@ TIMELINE_HTML = """
 # Find and replace the timeline section in the HTML.
 # The pattern: <h3>The Timeline</h3> ... up to <h3>Where Things Stand Now</h3>
 timeline_pattern = re.compile(
-    r'(<h3[^>]*>The Timeline</h3>).*?(?=<h3[^>]*>Where Things Stand Now</h3>)',
+    r"(<h3[^>]*>The Timeline</h3>).*?(?=<h3[^>]*>Where Things Stand Now</h3>)",
     re.DOTALL,
 )
-html_body = timeline_pattern.sub(r'\1' + TIMELINE_HTML, html_body)
+html_body = timeline_pattern.sub(r"\1" + TIMELINE_HTML, html_body)
 
 # --- Modern Minimalist CSS ---
 CSS = """

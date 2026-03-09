@@ -4,6 +4,8 @@ This guide explains how to create and customize data quality validation configur
 
 ## Configuration Structure
 
+> **Note:** As of v2.0.0, the framework uses Great Expectations 1.x API internally. Configuration YAML format remains backward-compatible.
+
 A validation configuration consists of:
 
 1. **Validation Metadata** - Name, description, metadata

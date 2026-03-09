@@ -2,10 +2,13 @@
 
 A reusable, configurable data quality framework using Great Expectations, designed for Microsoft Fabric environments and usable across all your HS2 projects.
 
-## 🚀 What's New in v1.2.0
-- **ABFSS Support**: Added support for loading configuration files directly from `abfss://` paths in Microsoft Fabric.
-- **Configurable Thresholds**: Set custom pass/fail thresholds (e.g., 95%) instead of hardcoded 100%.
-- **Enhanced Reporting**: Validation results now include threshold details.
+## What's New in v2.0.0
+- **Great Expectations 1.x Migration**: Full rewrite of validation engine for GX 1.x API (DataSources, ExpectationSuite, ValidationDefinition)
+- **Python 3.10+**: Minimum Python version raised from 3.8 to 3.10
+- **Unified Linting**: Replaced black/flake8/isort/pylint with ruff
+- **Storage Abstraction**: Pluggable result stores (JSON, Lakehouse)
+- **Alert Infrastructure**: Shared alerting layer with formatting, config, dispatcher, and circuit breaker
+- **65% Test Coverage**: 213+ tests passing
 
 ## 🧭 Environment & Path Support
 
@@ -129,7 +132,7 @@ To use this framework as a standard library in Fabric:
     ```bash
     python -m build --wheel --no-isolation
     ```
-    This creates `dist/fabric_data_quality-1.2.0-py3-none-any.whl`.
+    This creates `dist/fabric_data_quality-2.0.0-py3-none-any.whl`.
 
 2.  **Upload to Fabric**:
     *   Go to your Fabric Workspace -> **Manage environments**.
@@ -418,6 +421,7 @@ pytest tests/
 
 ## 🔄 Version History
 
+- **v2.0.0** (2026-03-07) - Great Expectations 1.x migration, storage abstraction, alert infrastructure
 - **v1.2.0** (2026-01-19) - Enhanced test coverage (~70%, 213+ tests), stability improvements
 - **v1.1.3** (2025-12-06) - Added configurable global thresholds and ABFSS support
 - **v1.1.0** (2025-10-28) - Added MS Fabric ETL integration guides
@@ -459,5 +463,5 @@ For questions or issues:
 ---
 
 **Framework Owner:** Data Engineering Team  
-**Last Updated:** January 2026  
+**Last Updated:** March 2026
 **Status:** Production Ready
