@@ -46,6 +46,7 @@ except ImportError:
 # Try to import mssparkutils for Fabric support
 try:
     from notebookutils import mssparkutils  # noqa: F401
+
     FABRIC_AVAILABLE = True
 except ImportError:
     FABRIC_AVAILABLE = False
@@ -58,8 +59,9 @@ from dq_framework.utils import FileSystemHandler
 # FileSystemHandler and load_data are now imported from dq_framework
 
 
-
-def process_single_file(file_path: Path | str, args, output_dir: Path | None = None, quiet: bool = False):
+def process_single_file(
+    file_path: Path | str, args, output_dir: Path | None = None, quiet: bool = False
+):
     """
     Process a single file: load, profile, and generate config.
     """
@@ -67,9 +69,9 @@ def process_single_file(file_path: Path | str, args, output_dir: Path | None = N
     file_name = FileSystemHandler.get_name(path_str)
 
     if not quiet:
-        print(f"\n{'='*40}")
+        print(f"\n{'=' * 40}")
         print(f"Processing: {file_name}")
-        print(f"{'='*40}")
+        print(f"{'=' * 40}")
         print(f"📥 Loading data from: {file_name}")
 
     # Check file size and auto-sample if too large (Local only for now)
@@ -78,11 +80,7 @@ def process_single_file(file_path: Path | str, args, output_dir: Path | None = N
 
     # Load data
     try:
-        df = DataLoader.load_data(
-            path_str,
-            sample_size=local_sample,
-            encoding=args.encoding
-        )
+        df = DataLoader.load_data(path_str, sample_size=local_sample, encoding=args.encoding)
         if not quiet:
             print(f"   ✓ Loaded {len(df):,} rows and {len(df.columns)} columns")
     except Exception as e:
@@ -118,7 +116,7 @@ def process_single_file(file_path: Path | str, args, output_dir: Path | None = N
         # Determine output path
         if args.output:
             # If output is a directory (or ends in /), treat as dir
-            if Path(args.output).suffix == '' or args.output.endswith('/'):
+            if Path(args.output).suffix == "" or args.output.endswith("/"):
                 out_dir = Path(args.output)
                 # Ensure output dir exists (local only)
                 if not FileSystemHandler.is_abfss(str(out_dir)):
@@ -173,94 +171,69 @@ Examples:
 
   # Profile parquet with custom settings
   python scripts/profile_data.py data/events.parquet --null-tolerance 10 --severity medium
-        """
+        """,
     )
 
     # Required arguments
-    parser.add_argument(
-        'input_path',
-        help='Path to data file OR directory containing data files'
-    )
+    parser.add_argument("input_path", help="Path to data file OR directory containing data files")
 
     # Output options
     parser.add_argument(
-        '-o', '--output',
-        help='Output path (file path for single file, directory for folder input)',
-        default=None
+        "-o",
+        "--output",
+        help="Output path (file path for single file, directory for folder input)",
+        default=None,
     )
 
     parser.add_argument(
-        '--profile-only',
-        action='store_true',
-        help='Only show data profile, do not generate config'
+        "--profile-only", action="store_true", help="Only show data profile, do not generate config"
     )
 
     # Validation config options
     parser.add_argument(
-        '--name',
-        help='Validation name (default: derived from filename)',
-        default=None
+        "--name", help="Validation name (default: derived from filename)", default=None
     )
 
-    parser.add_argument(
-        '--description',
-        help='Validation description',
-        default=None
-    )
+    parser.add_argument("--description", help="Validation description", default=None)
 
     parser.add_argument(
-        '--null-tolerance',
+        "--null-tolerance",
         type=float,
         default=5.0,
-        help='Percentage of nulls to tolerate (default: 5.0)'
+        help="Percentage of nulls to tolerate (default: 5.0)",
     )
 
     parser.add_argument(
-        '--severity',
-        choices=['critical', 'high', 'medium', 'low'],
-        default='medium',
-        help='Default severity level (default: medium)'
+        "--severity",
+        choices=["critical", "high", "medium", "low"],
+        default="medium",
+        help="Default severity level (default: medium)",
     )
 
     # Performance options
     parser.add_argument(
-        '--sample',
-        type=int,
-        default=None,
-        help='Sample size for large datasets (e.g., 10000)'
+        "--sample", type=int, default=None, help="Sample size for large datasets (e.g., 10000)"
     )
 
     parser.add_argument(
-        '--encoding',
-        default=None,
-        help='File encoding for CSV files (default: auto-detect)'
+        "--encoding", default=None, help="File encoding for CSV files (default: auto-detect)"
     )
 
     parser.add_argument(
-        '--workers',
+        "--workers",
         type=int,
         default=1,
-        help='Number of parallel workers for batch processing (default: 1)'
+        help="Number of parallel workers for batch processing (default: 1)",
     )
 
     # Feature flags
-    parser.add_argument(
-        '--no-structural',
-        action='store_true',
-        help='Exclude structural checks'
-    )
+    parser.add_argument("--no-structural", action="store_true", help="Exclude structural checks")
 
     parser.add_argument(
-        '--no-completeness',
-        action='store_true',
-        help='Exclude completeness checks'
+        "--no-completeness", action="store_true", help="Exclude completeness checks"
     )
 
-    parser.add_argument(
-        '--no-validity',
-        action='store_true',
-        help='Exclude validity checks'
-    )
+    parser.add_argument("--no-validity", action="store_true", help="Exclude validity checks")
 
     args = parser.parse_args()
 
@@ -280,21 +253,22 @@ Examples:
     # Check if directory
     if FileSystemHandler.is_dir(input_path_str):
         # Validate output path for directory input
-        if args.output and Path(args.output).suffix != '' and not args.output.endswith('/'):
-            print("❌ Error: When input is a directory, output must be a directory (or end with /).")
+        if args.output and Path(args.output).suffix != "" and not args.output.endswith("/"):
+            print(
+                "❌ Error: When input is a directory, output must be a directory (or end with /)."
+            )
             print(f"   Received: {args.output}")
             return 1
 
         print(f"📂 Directory detected: {input_path_str}")
         print("   Scanning for supported files (csv, parquet, xlsx, json)...")
 
-        supported_extensions = {'.csv', '.parquet', '.xlsx', '.xls', '.json'}
+        supported_extensions = {".csv", ".parquet", ".xlsx", ".xls", ".json"}
 
         try:
             all_files = FileSystemHandler.list_files(input_path_str)
             files_to_process = [
-                p for p in all_files
-                if FileSystemHandler.get_suffix(p) in supported_extensions
+                p for p in all_files if FileSystemHandler.get_suffix(p) in supported_extensions
             ]
         except Exception as e:
             print(f"❌ Error scanning directory: {e}")
@@ -308,7 +282,7 @@ Examples:
 
         if args.workers > 1:
             print(f"🚀 Starting parallel processing with {args.workers} workers...")
-            print(f"{'='*80}")
+            print(f"{'=' * 80}")
 
             # Note: Multiprocessing with mssparkutils might be tricky if workers don't inherit the context
             # But for file reading via pandas (which uses fsspec/adlfs under the hood), it should be fine
@@ -341,6 +315,7 @@ Examples:
     print("=" * 80)
     print("✅ ALL OPERATIONS COMPLETE!")
     print("=" * 80)
+
 
 if __name__ == "__main__":
     main()
