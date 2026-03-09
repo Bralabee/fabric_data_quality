@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-09T00:11:36.539Z"
+status: in-progress
+last_updated: "2026-03-09T19:38:30Z"
 progress:
   total_phases: 10
   completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 6 — Alert Infrastructure
+**Current focus:** Phase 7 — Alert Channels
 
 ## Current Milestone
 
@@ -33,7 +33,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 4 | Test Coverage | Complete | 3/3 |
 | 5 | Storage Abstraction | Complete | 2/2 |
 | 6 | Alert Infrastructure | Complete | 2/2 |
-| 7 | Alert Channels | Not started | 0/2 |
+| 7 | Alert Channels | In Progress | 1/2 |
 | 8 | Schema Evolution | Not started | 0/3 |
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
@@ -42,11 +42,11 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 
 ## Active Phase
 
-**Phase 6: Alert Infrastructure** -- COMPLETE
-- Goal: Build shared alerting layer with formatting, config, dispatcher, and circuit breaker
-- Requirements: ALRT-03, ALRT-05, ALRT-06, ALRT-07
-- Status: Complete
-- Plans: 2/2 complete
+**Phase 7: Alert Channels** -- IN PROGRESS
+- Goal: Implement TeamsChannel and EmailChannel concrete AlertChannel subclasses with severity routing
+- Requirements: ALRT-01, ALRT-02, ALRT-04
+- Status: In Progress
+- Plans: 1/2 complete (07-01 done, 07-02 pending)
 
 ## Key Decisions
 
@@ -75,12 +75,15 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Deep copy config dict before env var substitution | 6 | Prevents mutation of caller's data during config parsing |
 | In-memory per-process circuit breaker state | 6 | Correct for batch pipeline usage; each run starts fresh |
 | AlertChannel ABC with send() contract | 6 | Minimal interface for Phase 7 channel implementations |
+| Workflows envelope format for Teams | 7 | type:message + attachments array required by Power Automate |
+| Adaptive Card v1.3 for mobile compat | 7 | v1.5 features silently ignored on Teams mobile |
+| httpx as required dependency | 7 | Teams alerting is core v2.0 feature, not optional |
 
 ## Environment
 
-- **Branch:** feature/gx-1x-migration
+- **Branch:** feature/07-alert-channels
 - **Conda env:** fabric-dq (from environment.yml)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-09 after completing 06-02-PLAN.md (circuit breaker and alert dispatcher)*
+*Last updated: 2026-03-09 after completing 07-01-PLAN.md (TeamsChannel, EmailChannel, Adaptive Card template, channel factory)*

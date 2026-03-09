@@ -126,11 +126,11 @@ Plans:
   2. Email channel sends HTML-formatted messages with summary tables via SMTP
   3. Critical-severity failures trigger immediate alerts; low-severity results are batched or suppressed
   4. Both channels render correctly with validation result data (not raw JSON)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- Implement TeamsChannel and EmailChannel with Adaptive Card template and channel factory
+- [ ] 07-02-PLAN.md -- Implement SeverityRouter and integrate severity-based routing into AlertDispatcher
 
 ### Phase 8: Schema Evolution
 **Goal**: Schema changes are automatically detected, classified, tracked over time, and surfaced as alerts
