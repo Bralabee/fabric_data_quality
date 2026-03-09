@@ -70,6 +70,9 @@ Issues = "https://github.com/hs2/fabric-data-quality/issues"
 [tool.setuptools.packages.find]
 include = ["dq_framework*"]
 
+[tool.setuptools.package-data]
+dq_framework = ["alerting/templates/*.j2"]
+
 # ==================================================================================
 # Tool Configurations
 # ==================================================================================

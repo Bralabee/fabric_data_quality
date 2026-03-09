@@ -1,0 +1,30 @@
+DATA QUALITY ALERT: {{ suite_name }}
+{{ "=" * 50 }}
+Status: {{ "PASSED" if success else "FAILED" }}
+Batch: {{ batch_name }}
+Timestamp: {{ timestamp }}
+Success Rate: {{ "%.1f"|format(success_rate) }}%
+Checks: {{ evaluated_checks }} evaluated, {{ failed_checks }} failed
+
+{% if threshold_failures %}
+Threshold Violations:
+{% for failure in threshold_failures %}
+  - {{ failure }}
+{% endfor %}
+{% endif %}
+
+{% if failed_expectations %}
+Failed Expectations:
+{% for exp in failed_expectations %}
+  - [{{ exp.severity | upper }}] {{ exp.expectation }} on column '{{ exp.column }}'
+{% endfor %}
+{% endif %}
+
+{% if severity_stats %}
+Severity Breakdown:
+{% for severity, stats in severity_stats.items() %}
+{% if stats.total > 0 %}
+  {{ severity | upper }}: {{ stats.passed }}/{{ stats.total }} passed
+{% endif %}
+{% endfor %}
+{% endif %}
