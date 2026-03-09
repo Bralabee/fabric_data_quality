@@ -36,7 +36,7 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 - [x] **ALRT-01**: Implement Microsoft Teams webhook alerting using Power Automate Workflows with Adaptive Card format
 - [x] **ALRT-02**: Implement email (SMTP) alerting with HTML-formatted messages including summary tables and failed expectations
 - [x] **ALRT-03**: Implement alert message formatting layer shared by Teams and email channels (jinja2 templates)
-- [ ] **ALRT-04**: Implement severity-based alert routing (critical alerts immediately, low-severity batched/suppressed)
+- [x] **ALRT-04**: Implement severity-based alert routing (critical alerts immediately, low-severity batched/suppressed)
 - [x] **ALRT-05**: Add YAML-driven alert configuration (alerts: section in existing config YAML)
 - [x] **ALRT-06**: Fix existing _send_alert return value handling (caller ignores failures — implement failure policies)
 - [x] **ALRT-07**: Implement alert retry with circuit breaker (stop retrying after N consecutive failures)
@@ -129,7 +129,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | ALRT-01 | Phase 7 | Complete |
 | ALRT-02 | Phase 7 | Complete |
 | ALRT-03 | Phase 6 | Complete |
-| ALRT-04 | Phase 7 | Pending |
+| ALRT-04 | Phase 7 | Complete |
 | ALRT-05 | Phase 6 | Complete |
 | ALRT-06 | Phase 6 | Complete |
 | ALRT-07 | Phase 6 | Complete |
