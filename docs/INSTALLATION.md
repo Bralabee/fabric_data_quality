@@ -4,8 +4,8 @@ This guide provides detailed installation instructions for the Fabric Data Quali
 
 ## Prerequisites
 
-- Python 3.9 or higher
-- Microsoft Fabric workspace access
+- Python 3.10 or higher
+- Microsoft Fabric workspace access (for Fabric deployment)
 - Git (for cloning the repository)
 
 ## Installation Methods
@@ -96,7 +96,7 @@ print("✅ Fabric Data Quality Framework installed successfully!")
 3. **Install Dependencies (if needed):**
    ```python
    # Run in notebook cell
-   %pip install great-expectations pyyaml pandas
+   %pip install "great-expectations>=1.0.0,<2.0.0" pyyaml pandas
    ```
 
 ### Local Development Environment
@@ -126,7 +126,7 @@ Add to your `azure-pipelines.yml`:
 ```yaml
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.9'
+    versionSpec: '3.10'
 
 - script: |
     pip install -r requirements.txt
@@ -156,8 +156,8 @@ sys.path.insert(0, '/Workspace/2_DATA_QUALITY_LIBRARY')
 
 **Solution:**
 ```bash
-# Install/upgrade Great Expectations
-pip install --upgrade great-expectations
+# Install/upgrade Great Expectations (v2.0.0 requires GX 1.x)
+pip install "great-expectations>=1.0.0,<2.0.0"
 ```
 
 ### Issue: YAML parsing error

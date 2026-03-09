@@ -7,9 +7,9 @@
 The **Fabric Data Quality Framework** is a reusable data quality validation library built on Great Expectations. It provides YAML-based configuration for data validation rules with Microsoft Fabric integration support.
 
 **Key Facts:**
-- **Version:** 1.2.0
-- **Python:** 3.8+ (tested on 3.8, 3.9, 3.10, 3.11)
-- **Core Dependency:** Great Expectations 0.18.x
+- **Version:** 2.0.0
+- **Python:** 3.10+ (tested on 3.10, 3.11, 3.12, 3.13)
+- **Core Dependency:** Great Expectations 1.x (>=1.0.0,<2.0.0)
 - **Package Name:** `fabric-data-quality`
 - **Conda Environment:** `fabric-dq`
 
@@ -156,25 +156,26 @@ results = runner.run_validation("my_dataset")
 ## Dependencies
 
 ### Required
-- great_expectations>=0.18.0,<0.19.0
-- pandas>=1.5.0
+- great-expectations>=1.0.0,<2.0.0
+- pandas>=2.0.0
 - pyyaml>=6.0
-- numpy>=1.21.0
-- typing_extensions>=4.0.0
+- numpy>=1.24.0
+- pyarrow>=14.0.0
+- sqlalchemy>=2.0.0
 
 ### Development
-- pytest>=7.0.0
-- pytest-cov>=4.0.0
-- black>=23.0.0
-- flake8>=6.0.0
-- mypy>=1.0.0
+- pytest>=9.0.0
+- pytest-cov>=7.0.0
+- pytest-mock>=3.15.0
+- ruff>=0.15.0
+- mypy>=1.19.0
 
 ## Known Limitations
 
 1. **Spark DataFrames**: Must be converted to Pandas before validation
 2. **Large Datasets**: Use `sample_size` parameter in DataProfiler
 3. **Fabric Notebooks**: Some imports behave differently in Fabric runtime
-4. **GE Version**: Pinned to 0.18.x for stability
+4. **GE Version**: Pinned to 1.x (>=1.0.0,<2.0.0)
 
 ## File Locations
 
@@ -188,9 +189,9 @@ results = runner.run_validation("my_dataset")
 
 GitHub Actions workflow at `.github/workflows/ci.yml`:
 - Runs on push to main and PRs
-- Tests Python 3.8, 3.9, 3.10, 3.11
+- Tests Python 3.10, 3.11, 3.12, 3.13
 - Enforces 60% minimum coverage
-- Runs linting (flake8) and security scan (bandit)
+- Runs linting (ruff) and type checking (mypy)
 
 ## Best Practices for Changes
 
@@ -211,9 +212,9 @@ GitHub Actions workflow at `.github/workflows/ci.yml`:
 
 4. **Code quality:**
    - Line length: 100 characters max
-   - Format with black
+   - Format with ruff
    - Type hints encouraged
 
 ---
 
-*Last Updated: January 2026 | Framework v1.2.0*
+*Last Updated: March 2026 | Framework v2.0.0*
