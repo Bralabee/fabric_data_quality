@@ -19,11 +19,14 @@ from .config import (
     ChannelConfig,
     CircuitBreakerConfig,
     FailurePolicy,
+    SeverityRoutingConfig,
 )
 from .dispatcher import AlertChannel, AlertDispatcher
 from .formatter import AlertFormatter
+from .routing import AlertAction, SeverityRouter
 
 __all__ = [
+    "AlertAction",
     "AlertChannel",
     "AlertConfig",
     "AlertDeliveryError",
@@ -35,6 +38,8 @@ __all__ = [
     "CircuitState",
     "EmailChannel",
     "FailurePolicy",
+    "SeverityRouter",
+    "SeverityRoutingConfig",
     "TeamsChannel",
     "create_channel",
 ]

@@ -30,6 +30,7 @@ from abc import ABC, abstractmethod
 from .circuit_breaker import CircuitBreaker
 from .config import AlertConfig, AlertDeliveryError, FailurePolicy
 from .formatter import AlertFormatter
+from .routing import AlertAction, SeverityRouter
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,14 @@ class AlertDispatcher:
         self._channels: dict[str, AlertChannel] = {}
         self._breakers: dict[str, CircuitBreaker] = {}
 
+        # Severity routing (None = backwards compatible, send all)
+        self._router: SeverityRouter | None = None
+        if config.severity_routing is not None:
+            self._router = SeverityRouter(
+                min_severity=config.severity_routing.min_severity,
+                alert_on_success=config.severity_routing.alert_on_success,
+            )
+
     def register_channel(self, name: str, channel: AlertChannel) -> None:
         """Register an alert delivery channel.
 
@@ -107,6 +116,13 @@ class AlertDispatcher:
 
         if not self._channels:
             return {}
+
+        # Severity routing: suppress if router says so
+        if self._router is not None:
+            action = self._router.route(results)
+            if action == AlertAction.SUPPRESS:
+                logger.debug("Alert suppressed by severity router")
+                return {}
 
         # Render message
         template_name = self._config.templates.get("summary", "summary.txt.j2")
