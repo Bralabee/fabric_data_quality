@@ -1,0 +1,71 @@
+{
+    "type": "AdaptiveCard",
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.3",
+    "body": [
+        {
+            "type": "Container",
+            "style": "{% if success %}good{% else %}attention{% endif %}",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Data Quality Alert: {{ suite_name }}",
+                    "weight": "Bolder",
+                    "size": "Large",
+                    "wrap": true
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "{{ 'PASSED' if success else 'FAILED' }} | {{ '%.1f'|format(success_rate) }}% success rate",
+                    "spacing": "None",
+                    "isSubtle": true,
+                    "wrap": true
+                }
+            ]
+        },
+        {
+            "type": "FactSet",
+            "facts": [
+                {"title": "Batch", "value": "{{ batch_name }}"},
+                {"title": "Checks", "value": "{{ evaluated_checks }} evaluated, {{ failed_checks }} failed"},
+                {"title": "Timestamp", "value": "{{ timestamp }}"}
+            ]
+        }
+        {% if failed_expectations %},
+        {
+            "type": "Container",
+            "items": [
+                {
+                    "type": "TextBlock",
+                    "text": "Failed Expectations",
+                    "weight": "Bolder",
+                    "spacing": "Medium"
+                }
+                {% for exp in failed_expectations %},
+                {
+                    "type": "TextBlock",
+                    "text": "[{{ exp.severity | upper }}] {{ exp.expectation }} on '{{ exp.column }}'",
+                    "wrap": true,
+                    "color": "{% if exp.severity == 'critical' %}Attention{% elif exp.severity == 'high' %}Warning{% else %}Default{% endif %}"
+                }
+                {% endfor %}
+            ]
+        }
+        {% endif %}
+        {% if severity_stats %},
+        {
+            "type": "FactSet",
+            "facts": [
+                {% set ns = namespace(first=true) %}
+                {% for severity, stats in severity_stats.items() %}
+                {% if stats.total > 0 %}
+                {% if not ns.first %},{% endif %}
+                {"title": "{{ severity | upper }}", "value": "{{ stats.passed }}/{{ stats.total }} passed"}
+                {% set ns.first = false %}
+                {% endif %}
+                {% endfor %}
+            ]
+        }
+        {% endif %}
+    ]
+}
