@@ -9,11 +9,18 @@
 +-- requirements.txt                           # Python dependencies
 +-- .gitignore                                 # Git ignore patterns
 |
-+-- dq_framework/                              # Core framework code
-|   +-- __init__.py                            # Package initialization
-|   +-- config_loader.py                       # YAML config loader (159 lines)
-|   +-- validator.py                           # Validation engine (232 lines)
-|   +-- fabric_connector.py                    # Fabric/Spark integration (256 lines)
++-- dq_framework/                              # Core framework code (11 modules)
+|   +-- __init__.py                            # Package initialization (61 lines)
+|   +-- config_loader.py                       # YAML config loader (163 lines)
+|   +-- validator.py                           # Validation engine (348 lines)
+|   +-- fabric_connector.py                    # Fabric/Spark integration (572 lines)
+|   +-- data_profiler.py                       # Data profiling engine (564 lines)
+|   +-- batch_profiler.py                      # Batch/parallel profiling (127 lines)
+|   +-- constants.py                           # Framework constants (132 lines)
+|   +-- ingestion.py                           # Data ingestion utilities (51 lines)
+|   +-- loader.py                              # Multi-format data loading (145 lines)
+|   +-- storage.py                             # Result storage layer (240 lines)
+|   +-- utils.py                               # Shared utilities (112 lines)
 |
 +-- config_templates/                          # Reusable YAML templates
 |   +-- bronze_layer_template.yml              # Bronze layer validation
@@ -24,7 +31,18 @@
 |   +-- hss_incidents_example.yml              # full_stack_hss project config
 |   +-- aims_data_example.yml                  # AIMS_LOCAL project config
 |   +-- aca_commercial_example.yml             # ACA_COMMERCIAL project config
-|   +-- usage_examples.py                      # 8 Python usage examples (360+ lines)
+|   +-- causeway_auto_generated_v1.yml         # Auto-generated CAUSEWAY config
+|   +-- causeway_financial_enhanced.yml        # Enhanced CAUSEWAY config
+|   +-- causeway_financial_example.yml         # CAUSEWAY financial example
+|   +-- causeway_financial_generated.yml       # Generated CAUSEWAY config
+|   +-- usage_examples.py                      # Python usage examples
+|   +-- complete_workflow_example.py           # End-to-end workflow demo
+|   +-- demo_causeway_validation.py            # CAUSEWAY validation demo
+|   +-- demo_usage.py                          # General usage demo
+|   +-- fabric_etl_example.py                  # Fabric ETL example
+|   +-- profile_causeway_data.py               # CAUSEWAY profiling script
+|   +-- simple_demo.py                         # Simple getting-started demo
+|   +-- universal_profiler_demo.py             # Universal profiler demo
 |
 +-- tests/                                     # Unit and integration tests
 |   +-- test_config_loader.py                  # Config loading tests
@@ -41,9 +59,9 @@
 ## 📊 Project Statistics
 
 ### Code Files
-- **Total Python Files**: 7 (4 core + 3 test files)
-- **Total Lines of Code**: ~1,100 lines
-- **Core Framework**: ~650 lines
+- **Total Python Files**: 14 (11 core + 3 test files)
+- **Total Lines of Code**: ~2,515 lines
+- **Core Framework**: ~2,515 lines
 - **Test Coverage**: ~70% coverage, 213+ tests
 
 ### Configuration Files
@@ -67,10 +85,17 @@
 
 | File | Purpose | Lines | Key Classes/Functions |
 |------|---------|-------|----------------------|
-| `config_loader.py` | Config management | 159 | ConfigLoader |
-| `validator.py` | Validation logic | 232 | DataQualityValidator |
-| `fabric_connector.py` | Fabric integration | 256 | FabricDataQualityRunner, quick_validate |
-| `__init__.py` | Package exports | 19 | - |
+| `config_loader.py` | Config management | 163 | ConfigLoader |
+| `validator.py` | Validation logic | 348 | DataQualityValidator |
+| `fabric_connector.py` | Fabric integration | 572 | FabricDataQualityRunner, quick_validate |
+| `data_profiler.py` | Data profiling | 564 | DataProfiler |
+| `batch_profiler.py` | Batch profiling | 127 | BatchProfiler |
+| `constants.py` | Constants/defaults | 132 | - |
+| `ingestion.py` | Data ingestion | 51 | - |
+| `loader.py` | Data loading | 145 | DataLoader |
+| `storage.py` | Result storage | 240 | ResultStorage |
+| `utils.py` | Utilities | 112 | - |
+| `__init__.py` | Package exports | 61 | - |
 
 ### 2. Configuration Templates (config_templates/)
 
@@ -87,7 +112,14 @@
 | `hss_incidents_example.yml` | full_stack_hss | Incidents | NLP readiness |
 | `aims_data_example.yml` | AIMS_LOCAL | Parquet files | Data platform |
 | `aca_commercial_example.yml` | ACA_COMMERCIAL | SharePoint | File migration |
-| `usage_examples.py` | All | Various | 8 usage patterns |
+| `causeway_*.yml` (4 files) | CAUSEWAY | Financial | Transaction validation |
+| `usage_examples.py` | All | Various | Usage patterns |
+| `complete_workflow_example.py` | All | Various | End-to-end demo |
+| `demo_*.py` (2 files) | All | Various | Quick demos |
+| `fabric_etl_example.py` | Fabric | ETL | Fabric pipeline example |
+| `profile_causeway_data.py` | CAUSEWAY | CSV | Profiling script |
+| `simple_demo.py` | All | Various | Getting started |
+| `universal_profiler_demo.py` | All | Various | Profiler demo |
 
 ### 4. Documentation (docs/)
 
@@ -214,7 +246,7 @@
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Core Framework | ✅ Complete | All 4 modules implemented |
+| Core Framework | ✅ Complete | All 11 modules implemented |
 | Configuration Templates | ✅ Complete | 3 layer templates |
 | Project Examples | ✅ Complete | 3 project configs + usage examples |
 | Tests | ✅ Complete | Unit and integration tests |
@@ -226,7 +258,7 @@
 
 ---
 
-**Total Project Effort**: ~1,100 lines of code + ~2,500 lines of documentation  
+**Total Project Effort**: ~2,515 lines of code + ~2,500 lines of documentation  
 **Ready for**: Immediate deployment and use across all HS2 projects  
 **Maintainability**: High - configuration-driven, well-documented, tested  
 **Scalability**: Excellent - reusable across unlimited projects

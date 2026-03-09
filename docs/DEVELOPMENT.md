@@ -55,11 +55,10 @@ pre-commit install
 
 ### Python Version
 - **Minimum**: Python 3.10
-- **Recommended**: Python 3.12
-- **Maximum tested**: Python 3.11
+- **Recommended**: Python 3.11+
 
 ### Core Dependencies
-- `great-expectations>=0.18.0` - Data validation framework
+- `great-expectations>=1.0.0,<2.0.0` - Data validation framework
 - `pandas>=1.5.0` - Data manipulation
 - `pyyaml>=6.0` - Configuration parsing
 - `pyarrow>=12.0.0` - Parquet support
@@ -119,7 +118,7 @@ After setting up your environment, run these verification steps:
 
 ### 1. Test Python Installation
 ```bash
-python --version  # Should be 3.8 or higher
+python --version  # Should be 3.10 or higher
 ```
 
 ### 2. Test Package Import
@@ -182,7 +181,7 @@ conda env create -f environment.yml --force
 ```bash
 # Reinstall Great Expectations
 pip uninstall great-expectations -y
-pip install great-expectations>=0.18.0
+pip install "great-expectations>=1.0.0,<2.0.0"
 ```
 
 ### Issue: Module not found errors

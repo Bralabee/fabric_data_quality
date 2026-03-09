@@ -95,7 +95,7 @@ In Lakehouse Files section:
 
 ### Step 2: Install Dependencies (Cell 1)
 ```python
-%pip install pyyaml great_expectations==0.18.22 pandas pyarrow --quiet
+%pip install pyyaml great-expectations>=1.0.0,<2.0.0 pandas pyarrow --quiet
 ```
 - [ ] Dependencies installed (no errors)
 
@@ -211,7 +211,7 @@ _____________________________________________
 | Issue | Quick Fix |
 |-------|-----------|
 | Config not found | Check path: `Files/dq_configs/file.yml` (no leading /) |
-| Module not found | Run: `%pip install great_expectations==0.18.22` |
+| Module not found | Run: `%pip install great-expectations>=1.0.0,<2.0.0` |
 | Memory error | Sample data: `df.sample(n=100000)` |
 | Table not found | Use: `spark.createDataFrame(df).write.mode("overwrite").saveAsTable("name")` |
 
@@ -225,5 +225,5 @@ _____________________________________________
 
 ---
 
-**Framework Version:** 1.2.0  
+**Framework Version:** 2.0.0
 **Last Updated:** 2026-01-19

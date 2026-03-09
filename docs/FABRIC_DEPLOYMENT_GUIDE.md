@@ -345,7 +345,7 @@ display(mssparkutils.fs.ls("Files/dq_configs/"))
 
 ```python
 # Cell 1: Install dependencies
-%pip install pyyaml great_expectations==0.18.22 pandas pyarrow --quiet
+%pip install pyyaml great-expectations>=1.0.0,<2.0.0 pandas pyarrow --quiet
 print("✅ Dependencies installed")
 ```
 
@@ -989,7 +989,7 @@ ModuleNotFoundError: No module named 'great_expectations'
 **Solution:**
 ```python
 # Reinstall in notebook
-%pip install --upgrade great_expectations==0.18.22
+%pip install --upgrade great-expectations>=1.0.0,<2.0.0
 ```
 
 ---
@@ -1053,7 +1053,7 @@ spark.createDataFrame(df).write.format("delta").mode("overwrite").save("Tables/m
 
 1. **Check Documentation**
    - `FABRIC_QUICK_START.md` - Quick reference
-   - `FABRIC_ETL_INTEGRATION.md` - Detailed patterns
+   - `FABRIC_INTEGRATION.md` - Detailed patterns
    - `PROFILING_WORKFLOW.md` - Data profiling guide
 
 2. **Review Examples**
@@ -1114,7 +1114,7 @@ Use this to verify your deployment:
 ---
 
 **Deployment Status:** ✅ Ready for Production Use  
-**Framework Version:** 1.2.0  
+**Framework Version:** 2.0.0  
 **Last Updated:** 2026-01-19  
 **Contact:** Data Engineering Team
 
