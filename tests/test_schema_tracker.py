@@ -1,13 +1,17 @@
 """Tests for dq_framework.schema_tracker module.
 
 Covers SCHM-01 (baseline CRUD), SCHM-02 (change detection),
-SCHM-03 (change classification), SCHM-05 (baseline from profile).
+SCHM-03 (change classification), SCHM-04 (history tracking),
+SCHM-05 (baseline from profile), SCHM-06 (alert wiring).
 """
 
 import pytest
 
+from unittest.mock import MagicMock
+
 from dq_framework.schema_tracker import (
     SchemaTracker,
+    alert_on_breaking_changes,
     classify_changes,
     create_baseline_from_profile,
 )
@@ -320,3 +324,140 @@ class TestBaselineFromProfile:
         """Baseline includes column_count from profile."""
         baseline = create_baseline_from_profile(profile_result, "test_ds")
         assert baseline["column_count"] == 3
+
+
+# ---------------------------------------------------------------------------
+# TestSchemaHistory (SCHM-04)
+# ---------------------------------------------------------------------------
+
+
+class TestSchemaHistory:
+    """Tests for schema evolution history tracking via ResultStore."""
+
+    def test_record_change_stores_entry(self, tracker, store):
+        """record_change persists a timestamped history entry."""
+        classified = {"breaking": [{"type": "column_removed", "path": "root['amount']"}], "non_breaking": []}
+        diff_raw = {"dictionary_item_removed": ["root['amount']"]}
+        key = tracker.record_change(classified, diff_raw)
+        assert key.startswith("schema_history_orders_")
+        stored = store.read(key)
+        assert stored["dataset_name"] == "orders"
+        assert stored["has_breaking_changes"] is True
+
+    def test_record_change_entry_fields(self, tracker, store):
+        """History entry contains timestamp, dataset, breaking lists, diff_raw."""
+        classified = {"breaking": [], "non_breaking": [{"type": "column_added", "path": "root['email']"}]}
+        diff_raw = {"dictionary_item_added": ["root['email']"]}
+        key = tracker.record_change(classified, diff_raw)
+        entry = store.read(key)
+        assert "timestamp" in entry
+        assert entry["dataset_name"] == "orders"
+        assert entry["has_breaking_changes"] is False
+        assert entry["breaking"] == []
+        assert len(entry["non_breaking"]) == 1
+        assert entry["diff_raw"] == diff_raw
+
+    def test_get_history_returns_sorted(self, tracker, store):
+        """get_history returns entries sorted by timestamp ascending."""
+        classified_1 = {"breaking": [], "non_breaking": [{"type": "column_added", "path": "x"}]}
+        classified_2 = {"breaking": [{"type": "column_removed", "path": "y"}], "non_breaking": []}
+        tracker.record_change(classified_1, {})
+        tracker.record_change(classified_2, {})
+        history = tracker.get_history()
+        assert len(history) == 2
+        assert history[0]["timestamp"] <= history[1]["timestamp"]
+
+    def test_get_history_empty_when_no_entries(self, tracker):
+        """get_history returns empty list when no history exists."""
+        history = tracker.get_history()
+        assert history == []
+
+    def test_get_history_scoped_to_dataset(self, store):
+        """get_history only returns entries for the tracker's dataset."""
+        tracker_a = SchemaTracker(store=store, dataset_name="alpha")
+        tracker_b = SchemaTracker(store=store, dataset_name="beta")
+        tracker_a.record_change({"breaking": [], "non_breaking": []}, {})
+        tracker_b.record_change({"breaking": [], "non_breaking": []}, {})
+        assert len(tracker_a.get_history()) == 1
+        assert len(tracker_b.get_history()) == 1
+
+
+# ---------------------------------------------------------------------------
+# TestAlertIntegration (SCHM-06)
+# ---------------------------------------------------------------------------
+
+
+class TestAlertIntegration:
+    """Tests for breaking change alert wiring via AlertDispatcher."""
+
+    def test_alert_dispatched_on_breaking_changes(self):
+        """alert_on_breaking_changes calls dispatcher.dispatch with severity=critical."""
+        dispatcher = MagicMock()
+        dispatcher.dispatch.return_value = {"teams": True}
+        classified = {"breaking": [{"type": "column_removed", "path": "root['x']"}], "non_breaking": []}
+        result = alert_on_breaking_changes(dispatcher, "orders", classified)
+        dispatcher.dispatch.assert_called_once()
+        call_args = dispatcher.dispatch.call_args
+        assert call_args[1]["severity"] == "critical" or call_args[0][1] == "critical"
+        assert result == {"teams": True}
+
+    def test_alert_returns_none_when_no_breaking(self):
+        """alert_on_breaking_changes returns None when no breaking changes."""
+        dispatcher = MagicMock()
+        classified = {"breaking": [], "non_breaking": [{"type": "column_added", "path": "root['x']"}]}
+        result = alert_on_breaking_changes(dispatcher, "orders", classified)
+        assert result is None
+        dispatcher.dispatch.assert_not_called()
+
+    def test_alert_payload_format(self):
+        """Alert payload includes suite_name, failed_expectations with schema_stability type."""
+        dispatcher = MagicMock()
+        dispatcher.dispatch.return_value = {}
+        classified = {
+            "breaking": [
+                {"type": "column_removed", "path": "root['x']"},
+                {"type": "dtype_changed", "path": "root['y']"},
+            ],
+            "non_breaking": [],
+        }
+        alert_on_breaking_changes(dispatcher, "orders", classified)
+        payload = dispatcher.dispatch.call_args[0][0]
+        assert payload["success"] is False
+        assert payload["suite_name"] == "schema_check_orders"
+        assert payload["batch_name"] == "orders"
+        assert len(payload["failed_expectations"]) == 1
+        assert payload["failed_expectations"][0]["expectation_type"] == "schema_stability"
+        assert payload["failed_expectations"][0]["meta"]["severity"] == "critical"
+
+    def test_check_and_alert_records_and_alerts(self, tracker, baseline_schema):
+        """check_and_alert records history and dispatches alert for breaking changes."""
+        tracker.save_baseline(baseline_schema)
+        current = {
+            **baseline_schema,
+            "columns": {k: v for k, v in baseline_schema["columns"].items() if k != "amount"},
+        }
+        dispatcher = MagicMock()
+        dispatcher.dispatch.return_value = {"teams": True}
+        result = tracker.check_and_alert(current, dispatcher=dispatcher)
+        assert result["has_changes"] is True
+        assert "history_key" in result
+        assert result["alert_result"] == {"teams": True}
+
+    def test_check_and_alert_no_alert_without_dispatcher(self, tracker, baseline_schema):
+        """check_and_alert skips alerting when no dispatcher provided."""
+        tracker.save_baseline(baseline_schema)
+        current = {
+            **baseline_schema,
+            "columns": {k: v for k, v in baseline_schema["columns"].items() if k != "amount"},
+        }
+        result = tracker.check_and_alert(current)
+        assert result["has_changes"] is True
+        assert "history_key" in result
+        assert result.get("alert_result") is None
+
+    def test_check_and_alert_no_changes(self, tracker, baseline_schema):
+        """check_and_alert returns no-change result for identical schemas."""
+        tracker.save_baseline(baseline_schema)
+        result = tracker.check_and_alert(baseline_schema)
+        assert result["has_changes"] is False
+        assert result.get("history_key") is None
