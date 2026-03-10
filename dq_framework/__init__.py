@@ -38,10 +38,23 @@ from .utils import (
     _is_fabric_runtime,
     get_mssparkutils,
 )
+from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, create_channel
+from .alerting import SeverityRouter
 from .schema_tracker import SchemaTracker
+from .validation_history import ValidationHistory
 from .validator import DataQualityValidator
 
+# Convenience alias: INTG-04 references AlertManager
+AlertManager = AlertDispatcher
+
 __all__ = [
+    # Alerting
+    "AlertConfig",
+    "AlertDispatcher",
+    "AlertFormatter",
+    "AlertManager",
+    "SeverityRouter",
+    "create_channel",
     # Fabric detection utilities
     "FABRIC_AVAILABLE",
     "FABRIC_UTILS_AVAILABLE",
@@ -59,6 +72,8 @@ __all__ = [
     "ResultStore",
     # Schema evolution
     "SchemaTracker",
+    # Validation history
+    "ValidationHistory",
     "get_mssparkutils",
     "get_store",
 ]

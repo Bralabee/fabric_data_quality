@@ -143,3 +143,23 @@ DEFAULT_HISTORY_DB = "dq_results/validation_history.db"
 
 # Default Parquet directory for Fabric validation history
 DEFAULT_HISTORY_PARQUET_DIR = "Files/dq_results/history"
+
+# =============================================================================
+# ALERTING DEFAULTS
+# =============================================================================
+
+# Default circuit breaker failure threshold before opening circuit
+DEFAULT_CB_FAILURE_THRESHOLD = 5
+
+# Default circuit breaker cooldown period in seconds
+DEFAULT_CB_COOLDOWN_SECONDS = 300.0
+
+# Default alert failure policy ("warn" logs warning, "raise" raises exception)
+DEFAULT_FAILURE_POLICY = "warn"
+
+# =============================================================================
+# SCHEMA TRACKING DEFAULTS
+# =============================================================================
+
+# Default directory for schema baseline storage
+DEFAULT_SCHEMA_BASELINES_DIR = "dq_results/schema_baselines"
