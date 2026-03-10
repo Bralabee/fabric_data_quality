@@ -38,6 +38,7 @@ from .utils import (
     _is_fabric_runtime,
     get_mssparkutils,
 )
+from .schema_tracker import SchemaTracker
 from .validator import DataQualityValidator
 
 __all__ = [
@@ -56,6 +57,8 @@ __all__ = [
     "LakehouseStore",
     # Storage abstraction
     "ResultStore",
+    # Schema evolution
+    "SchemaTracker",
     "get_mssparkutils",
     "get_store",
 ]
