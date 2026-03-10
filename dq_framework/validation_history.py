@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -236,3 +236,202 @@ class ValidationHistory:
             result.get("suite_name", "unknown"),
             result.get("success"),
         )
+
+    # ------------------------------------------------------------------
+    # Query APIs
+    # ------------------------------------------------------------------
+
+    _TREND_COLUMNS = ["timestamp", "success", "success_rate", "failed_checks", "duration_seconds"]
+
+    def get_trend(
+        self,
+        dataset: str | None = None,
+        days: int = 30,
+    ) -> pd.DataFrame:
+        """Return quality metrics filtered by date range.
+
+        Parameters
+        ----------
+        dataset:
+            Filter by dataset name. Defaults to ``self._dataset_name``.
+        days:
+            Number of days to look back from now.
+
+        Returns
+        -------
+        pd.DataFrame
+            Columns: timestamp, success, success_rate, failed_checks, duration_seconds.
+            Sorted ascending by timestamp.
+        """
+        ds = dataset or self._dataset_name
+        cutoff = (datetime.now() - timedelta(days=days)).isoformat()
+
+        if self._is_fabric:
+            return self._get_trend_parquet(ds, cutoff)
+        return self._get_trend_sqlite(ds, cutoff)
+
+    def _get_trend_sqlite(self, dataset: str, cutoff: str) -> pd.DataFrame:
+        sql = (
+            "SELECT timestamp, success, success_rate, failed_checks, duration_seconds "
+            "FROM validation_history "
+            "WHERE dataset = ? AND timestamp >= ? "
+            "ORDER BY timestamp ASC"
+        )
+        df = pd.read_sql(sql, self._conn, params=(dataset, cutoff))
+        if df.empty:
+            return pd.DataFrame(columns=self._TREND_COLUMNS)
+        return df
+
+    def _get_trend_parquet(self, dataset: str, cutoff: str) -> pd.DataFrame:
+        if not self._parquet_path.exists():
+            return pd.DataFrame(columns=self._TREND_COLUMNS)
+        df = pd.read_parquet(self._parquet_path)
+        mask = (df["dataset"] == dataset) & (df["timestamp"] >= cutoff)
+        result = df.loc[mask, self._TREND_COLUMNS].sort_values("timestamp").reset_index(drop=True)
+        return result
+
+    def get_failure_history(
+        self,
+        dataset: str | None = None,
+    ) -> pd.DataFrame:
+        """Return aggregated failure data with frequency and recency.
+
+        Parameters
+        ----------
+        dataset:
+            Filter by dataset name. Defaults to ``self._dataset_name``.
+
+        Returns
+        -------
+        pd.DataFrame
+            Columns: expectation_type, column, frequency, most_recent_at, severity.
+        """
+        ds = dataset or self._dataset_name
+
+        if self._is_fabric:
+            return self._get_failure_history_parquet(ds)
+        return self._get_failure_history_sqlite(ds)
+
+    _FAILURE_COLUMNS = ["expectation_type", "column", "frequency", "most_recent_at", "severity"]
+
+    def _get_failure_history_sqlite(self, dataset: str) -> pd.DataFrame:
+        sql = (
+            "SELECT timestamp, failed_expectations "
+            "FROM validation_history "
+            "WHERE dataset = ? AND failed_expectations IS NOT NULL"
+        )
+        cursor = self._conn.execute(sql, (dataset,))
+        rows = cursor.fetchall()
+        return self._aggregate_failures(rows)
+
+    def _get_failure_history_parquet(self, dataset: str) -> pd.DataFrame:
+        if not self._parquet_path.exists():
+            return pd.DataFrame(columns=self._FAILURE_COLUMNS)
+        df = pd.read_parquet(self._parquet_path)
+        mask = (df["dataset"] == dataset) & (df["failed_expectations"].notna())
+        subset = df.loc[mask, ["timestamp", "failed_expectations"]]
+        rows = list(subset.itertuples(index=False, name=None))
+        return self._aggregate_failures(rows)
+
+    def _aggregate_failures(self, rows: list) -> pd.DataFrame:
+        """Aggregate failure rows into (expectation_type, column, frequency, most_recent_at, severity)."""
+        aggregation: dict[tuple[str, str], dict[str, Any]] = {}
+
+        for timestamp, failed_json in rows:
+            expectations = json.loads(failed_json) if isinstance(failed_json, str) else failed_json
+            if not expectations:
+                continue
+            for exp in expectations:
+                key = (exp.get("expectation_type", ""), exp.get("column", ""))
+                if key not in aggregation:
+                    aggregation[key] = {
+                        "expectation_type": key[0],
+                        "column": key[1],
+                        "frequency": 0,
+                        "most_recent_at": timestamp,
+                        "severity": exp.get("severity", "unknown"),
+                    }
+                aggregation[key]["frequency"] += 1
+                if timestamp > aggregation[key]["most_recent_at"]:
+                    aggregation[key]["most_recent_at"] = timestamp
+
+        if not aggregation:
+            return pd.DataFrame(columns=self._FAILURE_COLUMNS)
+        return pd.DataFrame(list(aggregation.values()), columns=self._FAILURE_COLUMNS)
+
+    def compare_periods(
+        self,
+        dataset: str | None = None,
+        period_a: tuple[str, str] = ("", ""),
+        period_b: tuple[str, str] = ("", ""),
+    ) -> pd.DataFrame:
+        """Compare quality metrics between two time ranges.
+
+        Parameters
+        ----------
+        dataset:
+            Filter by dataset name. Defaults to ``self._dataset_name``.
+        period_a:
+            ``(start_date, end_date)`` in ISO format for the first period.
+        period_b:
+            ``(start_date, end_date)`` in ISO format for the second period.
+
+        Returns
+        -------
+        pd.DataFrame
+            Columns: metric, period_a_value, period_b_value, change, change_pct.
+        """
+        ds = dataset or self._dataset_name
+        agg_a = self._period_aggregates(ds, period_a)
+        agg_b = self._period_aggregates(ds, period_b)
+
+        metrics = []
+        for metric_name in ("mean_success_rate", "total_runs", "total_failures"):
+            val_a = agg_a[metric_name]
+            val_b = agg_b[metric_name]
+            change = val_b - val_a
+            change_pct = (change / val_a * 100) if val_a != 0 else None
+            metrics.append(
+                {
+                    "metric": metric_name,
+                    "period_a_value": val_a,
+                    "period_b_value": val_b,
+                    "change": change,
+                    "change_pct": change_pct,
+                }
+            )
+
+        return pd.DataFrame(metrics)
+
+    def _period_aggregates(self, dataset: str, period: tuple[str, str]) -> dict[str, float]:
+        """Compute aggregates for a single time period."""
+        start, end = period
+
+        if self._is_fabric:
+            df = self._query_period_parquet(dataset, start, end)
+        else:
+            df = self._query_period_sqlite(dataset, start, end)
+
+        if df.empty:
+            return {"mean_success_rate": 0.0, "total_runs": 0.0, "total_failures": 0.0}
+
+        return {
+            "mean_success_rate": float(df["success_rate"].mean()),
+            "total_runs": float(len(df)),
+            "total_failures": float(df["failed_checks"].sum()),
+        }
+
+    def _query_period_sqlite(self, dataset: str, start: str, end: str) -> pd.DataFrame:
+        sql = (
+            "SELECT success_rate, failed_checks "
+            "FROM validation_history "
+            "WHERE dataset = ? AND timestamp >= ? AND timestamp <= ?"
+        )
+        return pd.read_sql(sql, self._conn, params=(dataset, start, end))
+
+    def _query_period_parquet(self, dataset: str, start: str, end: str) -> pd.DataFrame:
+        if not self._parquet_path.exists():
+            return pd.DataFrame(columns=["success_rate", "failed_checks"])
+        df = pd.read_parquet(self._parquet_path)
+        mask = (df["dataset"] == dataset) & (df["timestamp"] >= start) & (df["timestamp"] <= end)
+        return df.loc[mask, ["success_rate", "failed_checks"]].reset_index(drop=True)
