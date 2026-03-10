@@ -1,8 +1,9 @@
 """Schema evolution tracking with baseline management and change detection.
 
 Provides schema baseline CRUD operations, change detection via deepdiff,
-change classification (breaking vs non-breaking), and baseline generation
-from DataProfiler output.
+change classification (breaking vs non-breaking), baseline generation
+from DataProfiler output, evolution history tracking, and alert wiring
+for breaking changes.
 
 Usage::
 
@@ -11,6 +12,9 @@ Usage::
     tracker = SchemaTracker(dataset_name="orders")
     tracker.save_baseline(schema)
     changes = tracker.detect_changes(current_schema)
+
+    # Full workflow with history and alerting
+    result = tracker.check_and_alert(current_schema, dispatcher=my_dispatcher)
 
     # Generate baseline from profiler output
     baseline = create_baseline_from_profile(profile_result, "orders")
@@ -117,6 +121,48 @@ def create_baseline_from_profile(
     }
 
 
+def alert_on_breaking_changes(
+    dispatcher: Any,
+    dataset_name: str,
+    classified: dict[str, list[dict[str, Any]]],
+) -> dict[str, bool] | None:
+    """Dispatch a critical alert if breaking schema changes exist.
+
+    Uses the AlertDispatcher interface without a hard import, keeping
+    the alerting dependency optional.
+
+    Args:
+        dispatcher: Object with a ``dispatch(results, severity=...)`` method.
+        dataset_name: Dataset name for the alert payload.
+        classified: Output from :func:`classify_changes`.
+
+    Returns:
+        Dispatch result dict, or None if no breaking changes.
+    """
+    if not classified["breaking"]:
+        return None
+
+    count = len(classified["breaking"])
+    alert_payload: dict[str, Any] = {
+        "success": False,
+        "suite_name": f"schema_check_{dataset_name}",
+        "batch_name": dataset_name,
+        "success_rate": 0.0,
+        "evaluated_checks": 1,
+        "successful_checks": 0,
+        "failed_checks": 1,
+        "failed_expectations": [
+            {
+                "expectation_type": "schema_stability",
+                "success": False,
+                "description": f"{count} breaking schema change(s) detected",
+                "meta": {"severity": "critical"},
+            }
+        ],
+    }
+    return dispatcher.dispatch(alert_payload, severity="critical")
+
+
 class SchemaTracker:
     """Tracks schema baselines, detects changes, and classifies them.
 
@@ -172,6 +218,55 @@ class SchemaTracker:
             logger.info("Schema baseline deleted for dataset '%s'", self._dataset_name)
         return deleted
 
+    def record_change(
+        self,
+        classified: dict[str, list[dict[str, Any]]],
+        diff_raw: dict[str, Any],
+    ) -> str:
+        """Record a schema change in the evolution history.
+
+        Stores a timestamped entry via ResultStore with key
+        ``schema_history_{dataset}_{timestamp}``.
+
+        Args:
+            classified: Output from :func:`classify_changes`.
+            diff_raw: Serialized DeepDiff dict.
+
+        Returns:
+            The ResultStore key for the history entry.
+        """
+        now = datetime.now()
+        ts_key = now.strftime("%Y%m%d_%H%M%S_%f")
+        key = f"schema_history_{self._dataset_name}_{ts_key}"
+        entry = {
+            "timestamp": now.isoformat(),
+            "dataset_name": self._dataset_name,
+            "has_breaking_changes": len(classified.get("breaking", [])) > 0,
+            "breaking": classified.get("breaking", []),
+            "non_breaking": classified.get("non_breaking", []),
+            "diff_raw": diff_raw,
+        }
+        self._store.write(key, entry)
+        logger.info("Schema change recorded for dataset '%s' at %s", self._dataset_name, key)
+        return key
+
+    def get_history(self) -> list[dict[str, Any]]:
+        """Retrieve all schema change history entries for this dataset.
+
+        Returns:
+            List of history entry dicts sorted by timestamp ascending.
+            Empty list if no history exists.
+        """
+        prefix = f"schema_history_{self._dataset_name}_"
+        keys = self._store.list(prefix=prefix)
+        entries = []
+        for key in keys:
+            try:
+                entries.append(self._store.read(key))
+            except (FileNotFoundError, KeyError):
+                logger.warning("History entry '%s' not readable, skipping", key)
+        return sorted(entries, key=lambda e: e.get("timestamp", ""))
+
     def detect_changes(
         self, current_schema: dict[str, Any]
     ) -> dict[str, Any]:
@@ -221,3 +316,39 @@ class SchemaTracker:
             "non_breaking": classified["non_breaking"],
             "diff_raw": diff_raw,
         }
+
+    def check_and_alert(
+        self,
+        current_schema: dict[str, Any],
+        dispatcher: Any = None,
+    ) -> dict[str, Any]:
+        """Detect changes, record history, and optionally alert on breaking changes.
+
+        Convenience method combining :meth:`detect_changes`,
+        :meth:`record_change`, and :func:`alert_on_breaking_changes`.
+
+        Args:
+            current_schema: Current schema dict with 'columns' key.
+            dispatcher: Optional AlertDispatcher instance for breaking-change alerts.
+
+        Returns:
+            detect_changes result augmented with ``history_key`` (if recorded)
+            and ``alert_result`` (if dispatched).
+        """
+        result = self.detect_changes(current_schema)
+
+        history_key = None
+        alert_result = None
+
+        if result["has_changes"]:
+            classified = {"breaking": result["breaking"], "non_breaking": result["non_breaking"]}
+            history_key = self.record_change(classified, result["diff_raw"])
+
+            if result["breaking"] and dispatcher is not None:
+                alert_result = alert_on_breaking_changes(
+                    dispatcher, self._dataset_name, classified
+                )
+
+        result["history_key"] = history_key
+        result["alert_result"] = alert_result
+        return result
