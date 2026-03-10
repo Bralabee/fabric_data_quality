@@ -622,3 +622,148 @@ class TestComparePeriods:
         for _, row in result.iterrows():
             expected_change = row["period_b_value"] - row["period_a_value"]
             assert row["change"] == pytest.approx(expected_change)
+
+
+# ===========================================================================
+# TestRetention
+# ===========================================================================
+
+class TestRetention:
+    """Tests for the apply_retention() method."""
+
+    def test_deletes_old_records(self, tmp_path: Path) -> None:
+        """apply_retention() with retention_days=30 deletes records older than 30 days."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "ret.db")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="local", db_path=db_path, retention_days=30
+        )
+
+        now = datetime.now()
+        # 2 old records (40+ days ago)
+        for i in range(2):
+            vh.record(_make_result(timestamp=(now - timedelta(days=40 + i)).isoformat()))
+        # 3 recent records (within 30 days)
+        for i in range(3):
+            vh.record(_make_result(timestamp=(now - timedelta(days=i + 1)).isoformat()))
+
+        deleted = vh.apply_retention()
+
+        # Old records should be gone
+        cursor = vh._conn.execute("SELECT COUNT(*) FROM validation_history")
+        remaining = cursor.fetchone()[0]
+        assert remaining == 3
+        assert deleted == 2
+
+    def test_keeps_recent_records(self, tmp_path: Path) -> None:
+        """apply_retention() does not delete records within retention window."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "ret.db")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="local", db_path=db_path, retention_days=90
+        )
+
+        now = datetime.now()
+        for i in range(5):
+            vh.record(_make_result(timestamp=(now - timedelta(days=i + 1)).isoformat()))
+
+        deleted = vh.apply_retention()
+        assert deleted == 0
+
+        cursor = vh._conn.execute("SELECT COUNT(*) FROM validation_history")
+        assert cursor.fetchone()[0] == 5
+
+    def test_returns_deleted_count(self, tmp_path: Path) -> None:
+        """apply_retention() returns integer count of deleted records."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "ret.db")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="local", db_path=db_path, retention_days=10
+        )
+
+        now = datetime.now()
+        for i in range(4):
+            vh.record(_make_result(timestamp=(now - timedelta(days=20 + i)).isoformat()))
+
+        deleted = vh.apply_retention()
+        assert isinstance(deleted, int)
+        assert deleted == 4
+
+    def test_zero_when_nothing_to_delete(self, tmp_path: Path) -> None:
+        """Returns 0 when all records are recent."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "ret.db")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="local", db_path=db_path, retention_days=90
+        )
+
+        now = datetime.now()
+        vh.record(_make_result(timestamp=now.isoformat()))
+        deleted = vh.apply_retention()
+        assert deleted == 0
+
+    def test_uses_constructor_retention_days(self, tmp_path: Path) -> None:
+        """retention_days from constructor is used by default."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "ret.db")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="local", db_path=db_path, retention_days=5
+        )
+
+        now = datetime.now()
+        # Record at 10 days ago (older than 5 day retention)
+        vh.record(_make_result(timestamp=(now - timedelta(days=10)).isoformat()))
+        # Record at 2 days ago (within 5 day retention)
+        vh.record(_make_result(timestamp=(now - timedelta(days=2)).isoformat()))
+
+        deleted = vh.apply_retention()
+        assert deleted == 1
+
+    def test_parquet_retention(self, tmp_path: Path) -> None:
+        """apply_retention() works on Parquet backend."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="fabric", parquet_dir=pq_dir, retention_days=30
+        )
+
+        now = datetime.now()
+        # 2 old records
+        for i in range(2):
+            vh.record(_make_result(timestamp=(now - timedelta(days=40 + i)).isoformat()))
+        # 3 recent records
+        for i in range(3):
+            vh.record(_make_result(timestamp=(now - timedelta(days=i + 1)).isoformat()))
+
+        deleted = vh.apply_retention()
+        assert deleted == 2
+
+        df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
+        assert len(df) == 3
+
+
+# ===========================================================================
+# TestConstants
+# ===========================================================================
+
+class TestConstants:
+    """Tests for validation history constants in constants.py."""
+
+    def test_default_retention_days_exists(self) -> None:
+        """DEFAULT_RETENTION_DAYS defined in constants.py."""
+        from dq_framework.constants import DEFAULT_RETENTION_DAYS
+
+        assert DEFAULT_RETENTION_DAYS == 90
+
+    def test_default_history_db_exists(self) -> None:
+        """DEFAULT_HISTORY_DB defined in constants.py."""
+        from dq_framework.constants import DEFAULT_HISTORY_DB
+
+        assert isinstance(DEFAULT_HISTORY_DB, str)
+        assert "validation_history.db" in DEFAULT_HISTORY_DB
