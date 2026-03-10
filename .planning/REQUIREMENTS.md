@@ -52,8 +52,8 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 
 ### Validation History
 
-- [ ] **HIST-01**: Implement structured result storage replacing scattered JSON files (Parquet in Fabric, SQLite locally)
-- [ ] **HIST-02**: Define validation result record schema (timestamp, suite_name, success, success_rate, severity_stats, duration)
+- [x] **HIST-01**: Implement structured result storage replacing scattered JSON files (Parquet in Fabric, SQLite locally)
+- [x] **HIST-02**: Define validation result record schema (timestamp, suite_name, success, success_rate, severity_stats, duration)
 - [ ] **HIST-03**: Implement trend query API: get_trend(dataset, days) returning pandas DataFrames
 - [ ] **HIST-04**: Implement failure history query: get_failure_history(dataset) returning failed expectations over time
 - [ ] **HIST-05**: Implement period comparison: compare_periods(dataset, period_a, period_b)
@@ -139,8 +139,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCHM-04 | Phase 8 | Complete |
 | SCHM-05 | Phase 8 | Complete |
 | SCHM-06 | Phase 8 | Complete |
-| HIST-01 | Phase 9 | Pending |
-| HIST-02 | Phase 9 | Pending |
+| HIST-01 | Phase 9 | Complete |
+| HIST-02 | Phase 9 | Complete |
 | HIST-03 | Phase 9 | Pending |
 | HIST-04 | Phase 9 | Pending |
 | HIST-05 | Phase 9 | Pending |

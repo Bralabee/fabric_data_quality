@@ -159,12 +159,11 @@ Plans:
   4. get_failure_history(dataset) returns failed expectations with frequency and recency data
   5. compare_periods(dataset, period_a, period_b) identifies quality changes between time ranges
   6. Retention policy automatically cleans up records older than configured retention_days
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
-- [ ] 09-03: TBD
+- [x] 09-01-PLAN.md -- ValidationHistory class with dual-backend storage (SQLite/Parquet) and record() method
+- [ ] 09-02-PLAN.md -- Query APIs (get_trend, get_failure_history, compare_periods) and retention policy
 
 ### Phase 10: Pipeline Integration
 **Goal**: All new components are wired into FabricRunner and the library's public API is updated
@@ -199,5 +198,5 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 6. Alert Infrastructure | 2/2 | Complete   | 2026-03-09 |
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
 | 8. Schema Evolution | 2/2 | Complete   | 2026-03-10 |
-| 9. Validation History | 0/3 | Not started | - |
+| 9. Validation History | 1/2 | In progress | - |
 | 10. Pipeline Integration | 0/3 | Not started | - |

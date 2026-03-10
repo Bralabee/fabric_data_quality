@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-10T11:12:26.938Z"
+last_updated: "2026-03-10T15:50:29Z"
 progress:
   total_phases: 10
   completed_phases: 8
-  total_plans: 18
-  completed_plans: 17
-  percent: 94
+  total_plans: 17
+  completed_plans: 18
+  percent: 95
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 8 in progress — Schema Evolution plan 2/3 complete
+**Current focus:** Phase 9 in progress — Validation History plan 1/2 complete
 
 ## Current Milestone
 
@@ -35,18 +35,18 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 6 | Alert Infrastructure | Complete | 2/2 |
 | 7 | Alert Channels | Complete | 2/2 |
 | 8 | Schema Evolution | Complete | 2/2 |
-| 9 | Validation History | Not started | 0/3 |
+| 9 | Validation History | In progress | 1/2 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** [█████████░] 94%
+**Progress:** [█████████░] 95%
 
 ## Active Phase
 
-**Phase 8: Schema Evolution** -- IN PROGRESS
-- Goal: Schema baseline management, change detection, classification, history, and alerting
-- Requirements: SCHM-01, SCHM-02, SCHM-03, SCHM-04, SCHM-05, SCHM-06
+**Phase 9: Validation History** -- IN PROGRESS
+- Goal: Record validation results in structured format with trend analysis and retention policies
+- Requirements: HIST-01, HIST-02, HIST-03, HIST-04, HIST-05, HIST-06
 - Status: In progress
-- Plans: 2/2 complete (08-01 tracker core, 08-02 history + alerts)
+- Plans: 1/2 complete (09-01 dual-backend storage + record())
 
 ## Key Decisions
 
@@ -85,12 +85,15 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Microsecond timestamps in history keys | 8 | Same-second key collisions would silently lose history entries |
 | Any-typed dispatcher in alert_on_breaking_changes | 8 | Keeps alerting dependency optional; no hard import of AlertDispatcher |
 | check_and_alert augments detect_changes result | 8 | Single return dict with history_key and alert_result rather than new structure |
+| Import _is_fabric_runtime from utils with try/except | 9 | utils.py is canonical location; try/except allows tests without full package |
+| JSON text for complex fields in both backends | 9 | severity_stats and failed_expectations stored as JSON strings in SQLite and Parquet |
+| Single Parquet file with read-concat-write | 9 | Start simple; partitioning added later if performance requires it |
 
 ## Environment
 
-- **Branch:** feature/08-schema-evolution
+- **Branch:** feature/09-validation-history
 - **Conda env:** fabric-dq (from environment.yml)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 08-02-PLAN.md (Schema history tracking with alert wiring and public API export)*
+*Last updated: 2026-03-10 after completing 09-01-PLAN.md (ValidationHistory dual-backend storage and record() method)*
