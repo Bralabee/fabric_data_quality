@@ -272,7 +272,21 @@ class FabricDataQualityRunner:
             logger.error(f"Failed to convert Spark DataFrame to Pandas: {e}")
             raise
 
-        # Run validation
+        start_time = time.time()
+
+        # --- Stage 1: Schema check (fire-and-forget) ---
+        schema_result = None
+        if self._schema_tracker:
+            try:
+                current_schema = self._build_schema_from_df(pdf)
+                schema_result = self._schema_tracker.check_and_alert(
+                    current_schema, dispatcher=self._alert_dispatcher
+                )
+            except Exception as e:
+                logger.error("Schema check failed (continuing): %s", e)
+                schema_result = None
+
+        # --- Stage 2: Validation (core, unchanged) ---
         results = self.validator.validate(
             df=pdf,
             batch_name=batch_name or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -284,6 +298,32 @@ class FabricDataQualityRunner:
             self._store.write(key, results)
         except Exception as e:
             logger.error(f"Failed to save results: {e}")
+
+        elapsed = time.time() - start_time
+
+        # --- Stage 3: Record history (fire-and-forget) ---
+        history_recorded = False
+        if self._history:
+            try:
+                self._history.record(results, duration_seconds=elapsed)
+                self._history.apply_retention()
+                history_recorded = True
+            except Exception as e:
+                logger.error("History recording failed (continuing): %s", e)
+
+        # --- Stage 4: Alert on failure (fire-and-forget) ---
+        if self._alert_dispatcher and not results.get("success", True):
+            try:
+                severity = self._determine_severity(results)
+                self._alert_dispatcher.dispatch(results, severity=severity)
+            except Exception as e:
+                logger.error("Alert dispatch failed (continuing): %s", e)
+
+        # --- Augment results with pipeline metadata ---
+        if schema_result is not None:
+            results["schema_check"] = schema_result
+        if history_recorded:
+            results["history_recorded"] = True
 
         return results
 
