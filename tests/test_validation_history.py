@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
+import pandas as pd
 import pytest
 
 
@@ -196,3 +198,109 @@ class TestRecordSchema:
         """dataset column populated from constructor dataset_name."""
         row = self._get_row(tmp_path, sample_result)
         assert row["dataset"] == "orders"
+
+
+# ===========================================================================
+# TestParquetBackend
+# ===========================================================================
+
+class TestParquetBackend:
+    """Tests for the Parquet backend (Fabric environment)."""
+
+    def test_creates_parquet_on_first_record(
+        self, tmp_path: Path, sample_result: dict
+    ) -> None:
+        """record() creates parquet file when none exists."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
+        )
+        vh.record(sample_result)
+
+        pq_file = tmp_path / "history" / "validation_history.parquet"
+        assert pq_file.exists(), "Parquet file should be created on first record"
+
+    def test_record_appends(
+        self, tmp_path: Path, sample_result: dict
+    ) -> None:
+        """Second record() appends row (read_parquet returns 2 rows)."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
+        )
+        vh.record(sample_result)
+        vh.record(sample_result)
+
+        df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
+        assert len(df) == 2
+
+    def test_schema_matches_sqlite(
+        self, tmp_path: Path, sample_result: dict
+    ) -> None:
+        """Parquet columns match SQLite columns."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
+        )
+        vh.record(sample_result)
+
+        df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
+        expected_cols = {
+            "timestamp",
+            "dataset",
+            "suite_name",
+            "success",
+            "success_rate",
+            "evaluated_checks",
+            "failed_checks",
+            "severity_stats",
+            "duration_seconds",
+            "failed_expectations",
+        }
+        assert set(df.columns) == expected_cols
+
+    def test_severity_stats_as_string(
+        self, tmp_path: Path, sample_result: dict
+    ) -> None:
+        """severity_stats stored as string column in Parquet (JSON text)."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(
+            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
+        )
+        vh.record(sample_result)
+
+        df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
+        val = df["severity_stats"].iloc[0]
+        assert isinstance(val, str)
+        recovered = json.loads(val)
+        assert recovered == sample_result["severity_stats"]
+
+    @patch("dq_framework.validation_history._is_fabric_runtime", return_value=False)
+    def test_backend_auto_detect_local(
+        self, mock_runtime: Any, tmp_path: Path
+    ) -> None:
+        """backend=None with _is_fabric_runtime()=False uses SQLite."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "test.db")
+        vh = ValidationHistory(dataset_name="orders", db_path=db_path)
+        assert vh._is_fabric is False
+
+    @patch("dq_framework.validation_history._is_fabric_runtime", return_value=True)
+    def test_backend_auto_detect_fabric(
+        self, mock_runtime: Any, tmp_path: Path
+    ) -> None:
+        """backend=None with _is_fabric_runtime()=True uses Parquet."""
+        from dq_framework.validation_history import ValidationHistory
+
+        pq_dir = str(tmp_path / "history")
+        vh = ValidationHistory(dataset_name="orders", parquet_dir=pq_dir)
+        assert vh._is_fabric is True
