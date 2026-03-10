@@ -827,5 +827,362 @@ class TestQuickValidate:
                 quick_validate(df, str(config_file), halt_on_failure=True)
 
 
+# ---------------------------------------------------------------------------
+# Phase 10 Plan 02 — Pipeline wiring tests
+# ---------------------------------------------------------------------------
+
+
+class TestLazyComponentInitialization:
+    """Task 1: Verify lazy initialization of AlertDispatcher, ValidationHistory, SchemaTracker."""
+
+    def _make_runner_with_config(self, tmp_path, extra_config=None):
+        """Create a FabricDataQualityRunner with optional extra config sections."""
+        config = {
+            "validation_name": "pipeline_test",
+            "expectations": [
+                {
+                    "expectation_type": "expect_table_row_count_to_be_between",
+                    "kwargs": {"min_value": 1},
+                }
+            ],
+        }
+        if extra_config:
+            config.update(extra_config)
+        config_file = tmp_path / "pipeline_config.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        return FabricDataQualityRunner(str(config_file))
+
+    def test_no_new_sections_all_none(self, tmp_path):
+        """Runner with config lacking all new sections has None for all three (backward compat)."""
+        runner = self._make_runner_with_config(tmp_path)
+        assert runner._alert_dispatcher is None
+        assert runner._history is None
+        assert runner._schema_tracker is None
+
+    def test_alerts_section_creates_dispatcher(self, tmp_path):
+        """Runner with config containing alerts section creates AlertDispatcher."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "alerts": {
+                "enabled": True,
+                "failure_policy": "warn",
+                "channels": [{"name": "test", "type": "teams", "webhook_url": "https://example.com"}],
+            }
+        })
+        assert runner._alert_dispatcher is not None
+
+    def test_alerts_disabled_no_dispatcher(self, tmp_path):
+        """Runner with alerts.enabled=false does NOT create AlertDispatcher."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "alerts": {
+                "enabled": False,
+                "failure_policy": "warn",
+                "channels": [],
+            }
+        })
+        assert runner._alert_dispatcher is None
+
+    def test_history_section_creates_history(self, tmp_path):
+        """Runner with config containing history section creates ValidationHistory."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "history": {
+                "enabled": True,
+                "retention_days": 30,
+            }
+        })
+        assert runner._history is not None
+
+    def test_history_disabled_no_history(self, tmp_path):
+        """Runner with history.enabled=false does NOT create ValidationHistory."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "history": {"enabled": False}
+        })
+        assert runner._history is None
+
+    def test_schema_tracking_section_creates_tracker(self, tmp_path):
+        """Runner with config containing schema_tracking section creates SchemaTracker."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "schema_tracking": {
+                "enabled": True,
+            }
+        })
+        assert runner._schema_tracker is not None
+
+    def test_schema_tracking_disabled_no_tracker(self, tmp_path):
+        """Runner with schema_tracking.enabled=false does NOT create SchemaTracker."""
+        runner = self._make_runner_with_config(tmp_path, {
+            "schema_tracking": {"enabled": False}
+        })
+        assert runner._schema_tracker is None
+
+    def test_send_alert_deprecation_warning(self, tmp_path):
+        """_send_alert logs deprecation warning when called."""
+        runner = self._make_runner_with_config(tmp_path)
+        results = {"suite_name": "test", "batch_name": "test", "success_rate": 50, "failed_checks": 1}
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            runner._send_alert(results)
+            deprecation_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+            assert len(deprecation_warnings) >= 1, "Expected DeprecationWarning from _send_alert"
+
+
+class TestBuildSchemaFromDf:
+    """Task 1: Test _build_schema_from_df helper."""
+
+    def test_build_schema_produces_correct_format(self, tmp_path):
+        """_build_schema_from_df returns dict with dataset_name, column_count, columns."""
+        config = {
+            "validation_name": "schema_build_test",
+            "expectations": [
+                {"expectation_type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}}
+            ],
+        }
+        config_file = tmp_path / "schema_build.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        runner = FabricDataQualityRunner(str(config_file))
+
+        df = pd.DataFrame({"id": [1, 2, None], "name": ["a", "b", "c"]})
+        schema = runner._build_schema_from_df(df)
+
+        assert "dataset_name" in schema
+        assert schema["column_count"] == 2
+        assert "id" in schema["columns"]
+        assert "dtype" in schema["columns"]["id"]
+        assert "nullable" in schema["columns"]["id"]
+        assert "null_percent" in schema["columns"]["id"]
+
+
+class TestDetermineSeverity:
+    """Task 1: Test _determine_severity helper."""
+
+    def test_returns_medium_by_default(self, tmp_path):
+        """_determine_severity returns 'medium' when no severity_stats."""
+        config = {
+            "validation_name": "sev_test",
+            "expectations": [
+                {"expectation_type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}}
+            ],
+        }
+        config_file = tmp_path / "sev.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        runner = FabricDataQualityRunner(str(config_file))
+        assert runner._determine_severity({"success": False}) == "medium"
+
+    def test_returns_critical_when_critical_failures(self, tmp_path):
+        """_determine_severity returns 'critical' when critical failures exist."""
+        config = {
+            "validation_name": "sev_test",
+            "expectations": [
+                {"expectation_type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}}
+            ],
+        }
+        config_file = tmp_path / "sev.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        runner = FabricDataQualityRunner(str(config_file))
+        results = {"severity_stats": {"critical": {"failed": 1}, "high": {"failed": 0}}}
+        assert runner._determine_severity(results) == "critical"
+
+
+class TestPipelineStages:
+    """Task 2: validate_spark_dataframe pipeline stage tests."""
+
+    def _make_pipeline_runner(self, tmp_path, extra_config=None):
+        """Create runner with all pipeline components mocked."""
+        config = {
+            "validation_name": "pipeline_test",
+            "expectations": [
+                {"expectation_type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}}
+            ],
+        }
+        if extra_config:
+            config.update(extra_config)
+        config_file = tmp_path / "pipeline_config.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        return FabricDataQualityRunner(str(config_file))
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_schema_check_called_before_validation(self, tmp_path, mock_spark_df):
+        """validate_spark_dataframe calls SchemaTracker.check_and_alert when configured."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_tracker = MagicMock()
+        mock_tracker.check_and_alert.return_value = {"has_changes": False}
+        runner._schema_tracker = mock_tracker
+        runner._alert_dispatcher = None
+        runner._history = None
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": True, "suite_name": "test", "batch_name": "test",
+            "success_rate": 100.0, "evaluated_checks": 1,
+            "successful_checks": 1, "failed_checks": 0,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        mock_tracker.check_and_alert.assert_called_once()
+        assert "schema_check" in result
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_history_record_called_after_validation(self, tmp_path, mock_spark_df):
+        """validate_spark_dataframe calls ValidationHistory.record when configured."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_history = MagicMock()
+        runner._schema_tracker = None
+        runner._alert_dispatcher = None
+        runner._history = mock_history
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": True, "suite_name": "test", "batch_name": "test",
+            "success_rate": 100.0, "evaluated_checks": 1,
+            "successful_checks": 1, "failed_checks": 0,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        mock_history.record.assert_called_once()
+        # duration_seconds should be passed
+        call_kwargs = mock_history.record.call_args
+        assert "duration_seconds" in call_kwargs[1] or (len(call_kwargs[0]) > 1)
+        assert result.get("history_recorded") is True
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_alert_dispatch_on_failure(self, tmp_path, mock_spark_df):
+        """validate_spark_dataframe calls AlertDispatcher.dispatch on failure."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_dispatcher = MagicMock()
+        runner._schema_tracker = None
+        runner._alert_dispatcher = mock_dispatcher
+        runner._history = None
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": False, "suite_name": "test", "batch_name": "test",
+            "success_rate": 80.0, "evaluated_checks": 5,
+            "successful_checks": 4, "failed_checks": 1,
+            "timestamp": "2026-01-01", "failed_expectations": [{"expectation": "x", "column": "y"}],
+        })
+
+        runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        mock_dispatcher.dispatch.assert_called_once()
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_no_dispatch_on_success(self, tmp_path, mock_spark_df):
+        """validate_spark_dataframe does NOT call dispatch when validation succeeds."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_dispatcher = MagicMock()
+        runner._schema_tracker = None
+        runner._alert_dispatcher = mock_dispatcher
+        runner._history = None
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": True, "suite_name": "test", "batch_name": "test",
+            "success_rate": 100.0, "evaluated_checks": 1,
+            "successful_checks": 1, "failed_checks": 0,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        mock_dispatcher.dispatch.assert_not_called()
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_schema_check_failure_does_not_block(self, tmp_path, mock_spark_df):
+        """Schema check failure is caught and logged, validation still proceeds."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_tracker = MagicMock()
+        mock_tracker.check_and_alert.side_effect = RuntimeError("schema boom")
+        runner._schema_tracker = mock_tracker
+        runner._alert_dispatcher = None
+        runner._history = None
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": True, "suite_name": "test", "batch_name": "test",
+            "success_rate": 100.0, "evaluated_checks": 1,
+            "successful_checks": 1, "failed_checks": 0,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        assert result["success"] is True  # Validation still proceeded
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_history_failure_does_not_block(self, tmp_path, mock_spark_df):
+        """History record failure is caught and logged, alerting still proceeds."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_history = MagicMock()
+        mock_history.record.side_effect = RuntimeError("history boom")
+        mock_dispatcher = MagicMock()
+        runner._schema_tracker = None
+        runner._alert_dispatcher = mock_dispatcher
+        runner._history = mock_history
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": False, "suite_name": "test", "batch_name": "test",
+            "success_rate": 80.0, "evaluated_checks": 5,
+            "successful_checks": 4, "failed_checks": 1,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        # Alert dispatch still called even though history failed
+        mock_dispatcher.dispatch.assert_called_once()
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_alert_failure_does_not_block(self, tmp_path, mock_spark_df):
+        """Alert dispatch failure is caught and logged, results still returned."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        mock_dispatcher = MagicMock()
+        mock_dispatcher.dispatch.side_effect = RuntimeError("alert boom")
+        runner._schema_tracker = None
+        runner._alert_dispatcher = mock_dispatcher
+        runner._history = None
+        runner._store = MagicMock()
+        runner.validator.validate = MagicMock(return_value={
+            "success": False, "suite_name": "test", "batch_name": "test",
+            "success_rate": 80.0, "evaluated_checks": 5,
+            "successful_checks": 4, "failed_checks": 1,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        })
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        assert result is not None  # Results still returned
+
+    @patch("dq_framework.fabric_connector.SPARK_AVAILABLE", True)
+    def test_no_new_config_regression(self, tmp_path, mock_spark_df):
+        """Runner without new config sections produces identical results to before."""
+        runner = self._make_pipeline_runner(tmp_path)
+        mock_spark_df.count.return_value = 5
+
+        runner._store = MagicMock()
+        expected = {
+            "success": True, "suite_name": "test", "batch_name": "test",
+            "success_rate": 100.0, "evaluated_checks": 1,
+            "successful_checks": 1, "failed_checks": 0,
+            "timestamp": "2026-01-01", "failed_expectations": [],
+        }
+        runner.validator.validate = MagicMock(return_value=expected)
+
+        result = runner.validate_spark_dataframe(mock_spark_df, batch_name="test")
+        assert result["success"] is True
+        assert "schema_check" not in result
+        assert "history_recorded" not in result
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
