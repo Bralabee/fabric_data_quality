@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -304,3 +305,320 @@ class TestParquetBackend:
         pq_dir = str(tmp_path / "history")
         vh = ValidationHistory(dataset_name="orders", parquet_dir=pq_dir)
         assert vh._is_fabric is True
+
+
+# ===========================================================================
+# Query test helpers
+# ===========================================================================
+
+def _make_result(
+    *,
+    timestamp: str,
+    success: bool = True,
+    success_rate: float = 90.0,
+    failed_checks: int = 1,
+    dataset: str = "orders",
+    failed_expectations: list | None = None,
+    duration_seconds: float | None = 1.5,
+) -> dict:
+    """Build a result dict with specified timestamp and optional overrides."""
+    return {
+        "success": success,
+        "suite_name": "orders_suite",
+        "batch_name": "batch_001",
+        "timestamp": timestamp,
+        "evaluated_checks": 10,
+        "successful_checks": 10 - failed_checks,
+        "failed_checks": failed_checks,
+        "success_rate": success_rate,
+        "severity_stats": {"critical": {"total": 5, "passed": 5}},
+        "failed_expectations": failed_expectations,
+    }
+
+
+@pytest.fixture()
+def history_with_data(tmp_path: Path):
+    """Create a ValidationHistory with sample records spanning 40 days."""
+    from dq_framework.validation_history import ValidationHistory
+
+    db_path = str(tmp_path / "trend.db")
+    vh = ValidationHistory(dataset_name="orders", backend="local", db_path=db_path)
+
+    now = datetime.now()
+
+    # Recent records (within 7 days)
+    for i in range(3):
+        ts = (now - timedelta(days=i + 1)).isoformat()
+        vh.record(
+            _make_result(timestamp=ts, success_rate=90.0 + i, failed_checks=1),
+            duration_seconds=1.0 + i,
+        )
+
+    # Older records (10-15 days ago)
+    for i in range(2):
+        ts = (now - timedelta(days=10 + i)).isoformat()
+        vh.record(
+            _make_result(timestamp=ts, success_rate=80.0, failed_checks=2),
+            duration_seconds=2.0,
+        )
+
+    # Very old records (35-40 days ago)
+    for i in range(2):
+        ts = (now - timedelta(days=35 + i)).isoformat()
+        vh.record(
+            _make_result(timestamp=ts, success_rate=70.0, failed_checks=3),
+            duration_seconds=3.0,
+        )
+
+    # Record for a different dataset
+    ts = (now - timedelta(days=2)).isoformat()
+    vh.record(
+        _make_result(timestamp=ts, success_rate=95.0, failed_checks=0),
+        duration_seconds=0.5,
+    )
+    # Manually update the dataset for this record
+    vh._conn.execute(
+        "UPDATE validation_history SET dataset='shipments' WHERE rowid=?",
+        (vh._conn.execute("SELECT MAX(id) FROM validation_history").fetchone()[0],),
+    )
+    vh._conn.commit()
+
+    return vh
+
+
+@pytest.fixture()
+def history_with_failures(tmp_path: Path):
+    """Create a ValidationHistory with failure records for aggregation tests."""
+    from dq_framework.validation_history import ValidationHistory
+
+    db_path = str(tmp_path / "failures.db")
+    vh = ValidationHistory(dataset_name="orders", backend="local", db_path=db_path)
+
+    now = datetime.now()
+
+    # 3 records with the same failure type
+    for i in range(3):
+        ts = (now - timedelta(days=i + 1)).isoformat()
+        vh.record(
+            _make_result(
+                timestamp=ts,
+                success=False,
+                success_rate=50.0,
+                failed_checks=2,
+                failed_expectations=[
+                    {
+                        "expectation_type": "expect_column_values_to_not_be_null",
+                        "column": "order_id",
+                        "severity": "high",
+                    },
+                    {
+                        "expectation_type": "expect_column_values_to_be_between",
+                        "column": "amount",
+                        "severity": "medium",
+                    },
+                ],
+            ),
+        )
+
+    # 1 record with a different failure
+    ts = (now - timedelta(days=5)).isoformat()
+    vh.record(
+        _make_result(
+            timestamp=ts,
+            success=False,
+            success_rate=80.0,
+            failed_checks=1,
+            failed_expectations=[
+                {
+                    "expectation_type": "expect_column_values_to_not_be_null",
+                    "column": "order_id",
+                    "severity": "high",
+                },
+            ],
+        ),
+    )
+
+    # 1 success record (no failures)
+    ts = (now - timedelta(days=6)).isoformat()
+    vh.record(
+        _make_result(timestamp=ts, success=True, success_rate=100.0, failed_checks=0),
+    )
+
+    return vh
+
+
+# ===========================================================================
+# TestGetTrend
+# ===========================================================================
+
+class TestGetTrend:
+    """Tests for the get_trend() query method."""
+
+    def test_returns_dataframe(self, history_with_data) -> None:
+        """get_trend() returns a pandas DataFrame."""
+        result = history_with_data.get_trend()
+        assert isinstance(result, pd.DataFrame)
+
+    def test_columns(self, history_with_data) -> None:
+        """DataFrame has the expected columns."""
+        result = history_with_data.get_trend()
+        expected = {"timestamp", "success", "success_rate", "failed_checks", "duration_seconds"}
+        assert set(result.columns) == expected
+
+    def test_filters_by_days(self, history_with_data) -> None:
+        """get_trend(days=7) only returns records from last 7 days."""
+        result = history_with_data.get_trend(days=7)
+        # Should have 3 recent orders records (not the 10+ day old ones)
+        assert len(result) == 3
+
+    def test_filters_by_dataset(self, history_with_data) -> None:
+        """get_trend(dataset='shipments') only returns shipments records."""
+        result = history_with_data.get_trend(dataset="shipments")
+        assert len(result) == 1
+
+    def test_default_dataset(self, history_with_data) -> None:
+        """get_trend() without dataset arg uses constructor dataset_name ('orders')."""
+        result = history_with_data.get_trend(days=365)
+        # All 7 orders records (3 recent + 2 older + 2 very old), not the shipments one
+        assert len(result) == 7
+
+    def test_empty_result(self, history_with_data) -> None:
+        """Returns empty DataFrame (not error) when no matching records."""
+        result = history_with_data.get_trend(dataset="nonexistent")
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 0
+
+    def test_ordered_by_timestamp(self, history_with_data) -> None:
+        """Results sorted ascending by timestamp."""
+        result = history_with_data.get_trend(days=365)
+        timestamps = result["timestamp"].tolist()
+        assert timestamps == sorted(timestamps)
+
+
+# ===========================================================================
+# TestGetFailureHistory
+# ===========================================================================
+
+class TestGetFailureHistory:
+    """Tests for the get_failure_history() query method."""
+
+    def test_returns_dataframe(self, history_with_failures) -> None:
+        """get_failure_history() returns a DataFrame."""
+        result = history_with_failures.get_failure_history()
+        assert isinstance(result, pd.DataFrame)
+
+    def test_aggregates_failures(self, history_with_failures) -> None:
+        """Multiple records with same failure type produce aggregated row with frequency count."""
+        result = history_with_failures.get_failure_history()
+        # order_id null check appears in 4 records (3 + 1)
+        null_rows = result[
+            (result["expectation_type"] == "expect_column_values_to_not_be_null")
+            & (result["column"] == "order_id")
+        ]
+        assert len(null_rows) == 1
+        assert null_rows.iloc[0]["frequency"] == 4
+
+        # amount between check appears in 3 records
+        between_rows = result[
+            (result["expectation_type"] == "expect_column_values_to_be_between")
+            & (result["column"] == "amount")
+        ]
+        assert len(between_rows) == 1
+        assert between_rows.iloc[0]["frequency"] == 3
+
+    def test_includes_most_recent(self, history_with_failures) -> None:
+        """Result includes most_recent_at column with latest occurrence timestamp."""
+        result = history_with_failures.get_failure_history()
+        assert "most_recent_at" in result.columns
+        # All entries should have a non-null most_recent_at
+        assert result["most_recent_at"].notna().all()
+
+    def test_empty_when_no_failures(self, tmp_path: Path) -> None:
+        """Returns empty DataFrame when all records have no failed expectations."""
+        from dq_framework.validation_history import ValidationHistory
+
+        db_path = str(tmp_path / "nofails.db")
+        vh = ValidationHistory(dataset_name="orders", backend="local", db_path=db_path)
+
+        now = datetime.now()
+        vh.record(
+            _make_result(
+                timestamp=now.isoformat(),
+                success=True,
+                success_rate=100.0,
+                failed_checks=0,
+            ),
+        )
+        result = vh.get_failure_history()
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 0
+
+
+# ===========================================================================
+# TestComparePeriods
+# ===========================================================================
+
+class TestComparePeriods:
+    """Tests for the compare_periods() query method."""
+
+    def test_returns_dataframe(self, history_with_data) -> None:
+        """compare_periods() returns a DataFrame."""
+        now = datetime.now()
+        period_a = (
+            (now - timedelta(days=40)).strftime("%Y-%m-%d"),
+            (now - timedelta(days=30)).strftime("%Y-%m-%d"),
+        )
+        period_b = (
+            (now - timedelta(days=7)).strftime("%Y-%m-%d"),
+            now.strftime("%Y-%m-%d"),
+        )
+        result = history_with_data.compare_periods(period_a=period_a, period_b=period_b)
+        assert isinstance(result, pd.DataFrame)
+
+    def test_columns(self, history_with_data) -> None:
+        """DataFrame has metric, period_a_value, period_b_value, change, change_pct columns."""
+        now = datetime.now()
+        period_a = (
+            (now - timedelta(days=40)).strftime("%Y-%m-%d"),
+            (now - timedelta(days=30)).strftime("%Y-%m-%d"),
+        )
+        period_b = (
+            (now - timedelta(days=7)).strftime("%Y-%m-%d"),
+            now.strftime("%Y-%m-%d"),
+        )
+        result = history_with_data.compare_periods(period_a=period_a, period_b=period_b)
+        expected = {"metric", "period_a_value", "period_b_value", "change", "change_pct"}
+        assert set(result.columns) == expected
+
+    def test_metrics_included(self, history_with_data) -> None:
+        """Metrics include mean_success_rate, total_runs, total_failures."""
+        now = datetime.now()
+        period_a = (
+            (now - timedelta(days=40)).strftime("%Y-%m-%d"),
+            (now - timedelta(days=30)).strftime("%Y-%m-%d"),
+        )
+        period_b = (
+            (now - timedelta(days=7)).strftime("%Y-%m-%d"),
+            now.strftime("%Y-%m-%d"),
+        )
+        result = history_with_data.compare_periods(period_a=period_a, period_b=period_b)
+        metrics = set(result["metric"].tolist())
+        assert "mean_success_rate" in metrics
+        assert "total_runs" in metrics
+        assert "total_failures" in metrics
+
+    def test_change_calculation(self, history_with_data) -> None:
+        """change = period_b_value - period_a_value."""
+        now = datetime.now()
+        period_a = (
+            (now - timedelta(days=40)).strftime("%Y-%m-%d"),
+            (now - timedelta(days=30)).strftime("%Y-%m-%d"),
+        )
+        period_b = (
+            (now - timedelta(days=7)).strftime("%Y-%m-%d"),
+            now.strftime("%Y-%m-%d"),
+        )
+        result = history_with_data.compare_periods(period_a=period_a, period_b=period_b)
+        for _, row in result.iterrows():
+            expected_change = row["period_b_value"] - row["period_a_value"]
+            assert row["change"] == pytest.approx(expected_change)
