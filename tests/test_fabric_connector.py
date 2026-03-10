@@ -866,7 +866,7 @@ class TestLazyComponentInitialization:
             "alerts": {
                 "enabled": True,
                 "failure_policy": "warn",
-                "channels": [{"name": "test", "type": "teams", "webhook_url": "https://example.com"}],
+                "channels": [{"type": "teams", "enabled": True, "webhook_url": "https://example.com"}],
             }
         })
         assert runner._alert_dispatcher is not None
