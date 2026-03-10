@@ -130,3 +130,16 @@ DEFAULT_RESULTS_DIR = "dq_results"
 
 # Default Lakehouse path for Fabric validation results storage
 DEFAULT_FABRIC_RESULTS_DIR = "Files/dq_results"
+
+# =============================================================================
+# VALIDATION HISTORY
+# =============================================================================
+
+# Default number of days to retain validation history records
+DEFAULT_RETENTION_DAYS = 90
+
+# Default SQLite database path for local validation history
+DEFAULT_HISTORY_DB = "dq_results/validation_history.db"
+
+# Default Parquet directory for Fabric validation history
+DEFAULT_HISTORY_PARQUET_DIR = "Files/dq_results/history"

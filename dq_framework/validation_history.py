@@ -35,6 +35,13 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 try:
+    from .constants import DEFAULT_HISTORY_DB, DEFAULT_HISTORY_PARQUET_DIR, DEFAULT_RETENTION_DAYS
+except ImportError:  # pragma: no cover
+    DEFAULT_RETENTION_DAYS = 90
+    DEFAULT_HISTORY_DB = "dq_results/validation_history.db"
+    DEFAULT_HISTORY_PARQUET_DIR = "Files/dq_results/history"
+
+try:
     from .utils import _is_fabric_runtime
 except ImportError:  # pragma: no cover
 
@@ -117,9 +124,9 @@ class ValidationHistory:
         self,
         dataset_name: str = "default",
         backend: str | None = None,
-        db_path: str = "dq_results/validation_history.db",
-        parquet_dir: str = "Files/dq_results/history",
-        retention_days: int = 90,
+        db_path: str = DEFAULT_HISTORY_DB,
+        parquet_dir: str = DEFAULT_HISTORY_PARQUET_DIR,
+        retention_days: int = DEFAULT_RETENTION_DAYS,
     ) -> None:
         self._dataset_name = dataset_name
         self._retention_days = retention_days
@@ -435,3 +442,38 @@ class ValidationHistory:
         df = pd.read_parquet(self._parquet_path)
         mask = (df["dataset"] == dataset) & (df["timestamp"] >= start) & (df["timestamp"] <= end)
         return df.loc[mask, ["success_rate", "failed_checks"]].reset_index(drop=True)
+
+    # ------------------------------------------------------------------
+    # Retention
+    # ------------------------------------------------------------------
+
+    def apply_retention(self) -> int:
+        """Delete records older than ``retention_days`` and return deleted count.
+
+        Returns
+        -------
+        int
+            Number of records deleted.
+        """
+        cutoff = (datetime.now() - timedelta(days=self._retention_days)).isoformat()
+
+        if self._is_fabric:
+            return self._apply_retention_parquet(cutoff)
+        return self._apply_retention_sqlite(cutoff)
+
+    def _apply_retention_sqlite(self, cutoff: str) -> int:
+        cursor = self._conn.execute(
+            "DELETE FROM validation_history WHERE timestamp < ?", (cutoff,)
+        )
+        self._conn.commit()
+        return cursor.rowcount
+
+    def _apply_retention_parquet(self, cutoff: str) -> int:
+        if not self._parquet_path.exists():
+            return 0
+        df = pd.read_parquet(self._parquet_path)
+        original_count = len(df)
+        df = df[df["timestamp"] >= cutoff].reset_index(drop=True)
+        deleted = original_count - len(df)
+        df.to_parquet(self._parquet_path, index=False)
+        return deleted
