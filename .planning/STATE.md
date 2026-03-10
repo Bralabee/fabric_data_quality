@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-10T18:28:06.314Z"
+last_updated: "2026-03-10T18:36:26.898Z"
 progress:
   total_phases: 10
   completed_phases: 9
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -36,9 +36,9 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 7 | Alert Channels | Complete | 2/2 |
 | 8 | Schema Evolution | Complete | 2/2 |
 | 9 | Validation History | Complete | 2/2 |
-| 10 | Pipeline Integration | In Progress | 1/3 |
+| 10 | Pipeline Integration | In Progress | 2/3 |
 
-**Progress:** [█████████░] 91%
+**Progress:** [██████████] 95%
 
 ## Active Phase
 
@@ -46,7 +46,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - Goal: Wire alerting, schema tracking, and validation history into the pipeline runner
 - Requirements: INTG-02, INTG-03, INTG-04, INTG-05
 - Status: In Progress
-- Plans: 1/3 complete (10-01 config contracts and public API)
+- Plans: 2/3 complete (10-01 config contracts, 10-02 pipeline wiring)
 
 ## Key Decisions
 
@@ -93,6 +93,8 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Filter-and-rewrite for Parquet retention | 9 | Consistent with existing append pattern; no new dependency |
 | OPTIONAL_SECTION_VALIDATORS registry | 10 | Dict maps section names to validator functions for extensible config validation |
 | AlertManager alias for AlertDispatcher | 10 | Matches INTG-04 requirement text for backward compatibility |
+| Fire-and-forget pipeline stages | 10 | Each stage wrapped in try/except; failures logged not propagated |
+| getattr fallback for ChannelConfig.name | 10 | ChannelConfig dataclass has no name field; use type_idx fallback |
 
 ## Environment
 
@@ -101,4 +103,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 10-01-PLAN.md (config contracts and public API)*
+*Last updated: 2026-03-10 after completing 10-02-PLAN.md (pipeline wiring)*

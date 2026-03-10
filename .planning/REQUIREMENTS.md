@@ -67,7 +67,7 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 
 ### Integration
 
-- [ ] **INTG-01**: Wire all new components into FabricDataQualityRunner pipeline (schema check -> validate -> record history -> alert)
+- [x] **INTG-01**: Wire all new components into FabricDataQualityRunner pipeline (schema check -> validate -> record history -> alert)
 - [x] **INTG-02**: Update ConfigLoader to validate new YAML config sections (alerting, history, schema_tracking)
 - [x] **INTG-03**: Update constants.py with new default values for alerting, history, and schema tracking
 - [x] **INTG-04**: Update __init__.py exports with new public classes (AlertManager, SchemaTracker, ValidationHistory)
@@ -148,7 +148,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | STOR-01 | Phase 5 | Complete |
 | STOR-02 | Phase 5 | Complete |
 | STOR-03 | Phase 5 | Complete |
-| INTG-01 | Phase 10 | Pending |
+| INTG-01 | Phase 10 | Complete |
 | INTG-02 | Phase 10 | Complete |
 | INTG-03 | Phase 10 | Complete |
 | INTG-04 | Phase 10 | Complete |
