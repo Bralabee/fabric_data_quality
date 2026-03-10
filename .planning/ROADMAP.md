@@ -145,7 +145,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 08-01-PLAN.md -- SchemaTracker core: baseline CRUD, deepdiff detection, change classification, baseline from profiler
+- [x] 08-01-PLAN.md -- SchemaTracker core: baseline CRUD, deepdiff detection, change classification, baseline from profiler
 - [ ] 08-02-PLAN.md -- Schema history tracking, alert wiring for breaking changes, public API export
 
 ### Phase 9: Validation History
@@ -198,6 +198,6 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 2/2 | Complete   | 2026-03-09 |
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
-| 8. Schema Evolution | 0/2 | Not started | - |
+| 8. Schema Evolution | 1/2 | In progress | - |
 | 9. Validation History | 0/3 | Not started | - |
 | 10. Pipeline Integration | 0/3 | Not started | - |

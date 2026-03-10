@@ -43,11 +43,11 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 
 ### Schema Evolution
 
-- [ ] **SCHM-01**: Implement schema baseline storage (persist column names, types, nullability as JSON snapshots)
-- [ ] **SCHM-02**: Implement schema change detection (compare current schema vs stored baseline using deepdiff)
-- [ ] **SCHM-03**: Classify schema changes as breaking (removal, type change) vs non-breaking (addition, nullability change)
+- [x] **SCHM-01**: Implement schema baseline storage (persist column names, types, nullability as JSON snapshots)
+- [x] **SCHM-02**: Implement schema change detection (compare current schema vs stored baseline using deepdiff)
+- [x] **SCHM-03**: Classify schema changes as breaking (removal, type change) vs non-breaking (addition, nullability change)
 - [ ] **SCHM-04**: Implement schema evolution history (track diffs over time with timestamps)
-- [ ] **SCHM-05**: Auto-generate schema baseline from DataProfiler.profile() output
+- [x] **SCHM-05**: Auto-generate schema baseline from DataProfiler.profile() output
 - [ ] **SCHM-06**: Wire schema change detection into alerting system (breaking changes trigger critical alerts)
 
 ### Validation History
@@ -133,11 +133,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | ALRT-05 | Phase 6 | Complete |
 | ALRT-06 | Phase 6 | Complete |
 | ALRT-07 | Phase 6 | Complete |
-| SCHM-01 | Phase 8 | Pending |
-| SCHM-02 | Phase 8 | Pending |
-| SCHM-03 | Phase 8 | Pending |
+| SCHM-01 | Phase 8 | Complete |
+| SCHM-02 | Phase 8 | Complete |
+| SCHM-03 | Phase 8 | Complete |
 | SCHM-04 | Phase 8 | Pending |
-| SCHM-05 | Phase 8 | Pending |
+| SCHM-05 | Phase 8 | Complete |
 | SCHM-06 | Phase 8 | Pending |
 | HIST-01 | Phase 9 | Pending |
 | HIST-02 | Phase 9 | Pending |

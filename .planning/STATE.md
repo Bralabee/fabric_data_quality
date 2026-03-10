@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-09T19:44:39.102Z"
+last_updated: "2026-03-10T11:05:31Z"
 progress:
   total_phases: 10
   completed_phases: 7
-  total_plans: 15
-  completed_plans: 15
-  percent: 100
+  total_plans: 18
+  completed_plans: 16
+  percent: 89
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 7 complete — Alert Channels done, ready for Phase 8
+**Current focus:** Phase 8 in progress — Schema Evolution plan 1/3 complete
 
 ## Current Milestone
 
@@ -34,19 +34,19 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 5 | Storage Abstraction | Complete | 2/2 |
 | 6 | Alert Infrastructure | Complete | 2/2 |
 | 7 | Alert Channels | Complete | 2/2 |
-| 8 | Schema Evolution | Not started | 0/3 |
+| 8 | Schema Evolution | In progress | 1/3 |
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** [██████████] 100%
+**Progress:** [████████░░] 89%
 
 ## Active Phase
 
-**Phase 7: Alert Channels** -- COMPLETE
-- Goal: Implement TeamsChannel and EmailChannel concrete AlertChannel subclasses with severity routing
-- Requirements: ALRT-01, ALRT-02, ALRT-04
-- Status: Complete
-- Plans: 2/2 complete (07-01 channels, 07-02 severity routing)
+**Phase 8: Schema Evolution** -- IN PROGRESS
+- Goal: Schema baseline management, change detection, classification, history, and alerting
+- Requirements: SCHM-01, SCHM-02, SCHM-03, SCHM-04, SCHM-05, SCHM-06
+- Status: In progress
+- Plans: 1/3 complete (08-01 tracker core)
 
 ## Key Decisions
 
@@ -80,12 +80,14 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | httpx as required dependency | 7 | Teams alerting is core v2.0 feature, not optional |
 | severity_routing=None for backwards compat | 7 | Existing configs without severity_routing send all alerts unconditionally |
 | Router before message rendering | 7 | Avoid unnecessary Jinja2 work when suppressing alerts |
+| Classify all dict additions/removals directly | 8 | DeepDiff operates on columns sub-dict, so all paths are column-level |
+| diff.to_dict() for raw diff serialization | 8 | Avoids DeepDiff object serialization issues in ResultStore |
 
 ## Environment
 
-- **Branch:** feature/07-alert-channels
+- **Branch:** feature/08-schema-evolution
 - **Conda env:** fabric-dq (from environment.yml)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-09 after completing 07-02-PLAN.md (SeverityRouter, AlertAction, dispatcher routing integration)*
+*Last updated: 2026-03-10 after completing 08-01-PLAN.md (SchemaTracker core with baseline CRUD, change detection, classification)*
