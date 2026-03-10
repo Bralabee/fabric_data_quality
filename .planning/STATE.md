@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-10T15:58:00Z"
+last_updated: "2026-03-10T18:28:06.314Z"
 progress:
   total_phases: 10
   completed_phases: 9
-  total_plans: 17
-  completed_plans: 19
-  percent: 97
+  total_plans: 22
+  completed_plans: 20
+  percent: 91
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 9 complete — Validation History 2/2 plans done. Phase 10 next.
+**Current focus:** Phase 10 in progress — Pipeline Integration 1/3 plans done.
 
 ## Current Milestone
 
@@ -36,17 +36,17 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 7 | Alert Channels | Complete | 2/2 |
 | 8 | Schema Evolution | Complete | 2/2 |
 | 9 | Validation History | Complete | 2/2 |
-| 10 | Pipeline Integration | Not started | 0/3 |
+| 10 | Pipeline Integration | In Progress | 1/3 |
 
-**Progress:** [█████████░] 97%
+**Progress:** [█████████░] 91%
 
 ## Active Phase
 
-**Phase 9: Validation History** -- COMPLETE
-- Goal: Record validation results in structured format with trend analysis and retention policies
-- Requirements: HIST-01, HIST-02, HIST-03, HIST-04, HIST-05, HIST-06
-- Status: Complete
-- Plans: 2/2 complete (09-01 dual-backend storage + record(), 09-02 query APIs + retention)
+**Phase 10: Pipeline Integration** -- IN PROGRESS
+- Goal: Wire alerting, schema tracking, and validation history into the pipeline runner
+- Requirements: INTG-02, INTG-03, INTG-04, INTG-05
+- Status: In Progress
+- Plans: 1/3 complete (10-01 config contracts and public API)
 
 ## Key Decisions
 
@@ -91,12 +91,14 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Python-side JSON aggregation for failures | 9 | SQLite lacks JSON functions; Python parse-and-group ensures cross-backend consistency |
 | Constructor defaults from constants.py | 9 | Centralizes magic values; try/except fallback for standalone usage |
 | Filter-and-rewrite for Parquet retention | 9 | Consistent with existing append pattern; no new dependency |
+| OPTIONAL_SECTION_VALIDATORS registry | 10 | Dict maps section names to validator functions for extensible config validation |
+| AlertManager alias for AlertDispatcher | 10 | Matches INTG-04 requirement text for backward compatibility |
 
 ## Environment
 
-- **Branch:** feature/09-validation-history
+- **Branch:** feature/10-pipeline-integration
 - **Conda env:** fabric-dq (from environment.yml)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 09-02-PLAN.md (query APIs, retention policy, and history constants)*
+*Last updated: 2026-03-10 after completing 10-01-PLAN.md (config contracts and public API)*

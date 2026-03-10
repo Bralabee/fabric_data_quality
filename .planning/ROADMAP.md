@@ -175,12 +175,12 @@ Plans:
   3. constants.py has default values for all new configuration; __init__.py exports AlertManager, SchemaTracker, ValidationHistory
   4. dq_framework dependency versions are compatible with AIMS Data Platform (GX version resolved)
   5. End-to-end integration tests cover the full pipeline with all new components using mock fixtures
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
-- [ ] 10-03: TBD
+- [ ] 10-01-PLAN.md -- Constants, public API exports, and ConfigLoader optional section validation
+- [ ] 10-02-PLAN.md -- Wire SchemaTracker, ValidationHistory, AlertDispatcher into FabricDataQualityRunner pipeline
+- [ ] 10-03-PLAN.md -- End-to-end integration tests and final regression verification
 
 ## Progress
 
@@ -199,4 +199,4 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
 | 8. Schema Evolution | 2/2 | Complete   | 2026-03-10 |
 | 9. Validation History | 2/2 | Complete   | 2026-03-10 |
-| 10. Pipeline Integration | 0/3 | Not started | - |
+| 10. Pipeline Integration | 1/3 | In Progress|  |

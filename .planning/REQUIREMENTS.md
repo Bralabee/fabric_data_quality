@@ -68,10 +68,10 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 ### Integration
 
 - [ ] **INTG-01**: Wire all new components into FabricDataQualityRunner pipeline (schema check -> validate -> record history -> alert)
-- [ ] **INTG-02**: Update ConfigLoader to validate new YAML config sections (alerting, history, schema_tracking)
-- [ ] **INTG-03**: Update constants.py with new default values for alerting, history, and schema tracking
-- [ ] **INTG-04**: Update __init__.py exports with new public classes (AlertManager, SchemaTracker, ValidationHistory)
-- [ ] **INTG-05**: Align dq_framework with AIMS Data Platform dependency expectations
+- [x] **INTG-02**: Update ConfigLoader to validate new YAML config sections (alerting, history, schema_tracking)
+- [x] **INTG-03**: Update constants.py with new default values for alerting, history, and schema tracking
+- [x] **INTG-04**: Update __init__.py exports with new public classes (AlertManager, SchemaTracker, ValidationHistory)
+- [x] **INTG-05**: Align dq_framework with AIMS Data Platform dependency expectations
 - [ ] **INTG-06**: End-to-end integration tests covering full pipeline with all new components
 
 ## v3 Requirements
@@ -149,10 +149,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | STOR-02 | Phase 5 | Complete |
 | STOR-03 | Phase 5 | Complete |
 | INTG-01 | Phase 10 | Pending |
-| INTG-02 | Phase 10 | Pending |
-| INTG-03 | Phase 10 | Pending |
-| INTG-04 | Phase 10 | Pending |
-| INTG-05 | Phase 10 | Pending |
+| INTG-02 | Phase 10 | Complete |
+| INTG-03 | Phase 10 | Complete |
+| INTG-04 | Phase 10 | Complete |
+| INTG-05 | Phase 10 | Complete |
 | INTG-06 | Phase 10 | Pending |
 
 **Coverage:**
