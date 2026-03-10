@@ -142,12 +142,11 @@ Plans:
   3. Changes are classified as breaking (removal, type change) or non-breaking (addition, nullability)
   4. Schema evolution history records all diffs with timestamps for audit purposes
   5. Breaking schema changes trigger critical alerts through the alerting system
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
-- [ ] 08-03: TBD
+- [ ] 08-01-PLAN.md -- SchemaTracker core: baseline CRUD, deepdiff detection, change classification, baseline from profiler
+- [ ] 08-02-PLAN.md -- Schema history tracking, alert wiring for breaking changes, public API export
 
 ### Phase 9: Validation History
 **Goal**: Validation results are stored in structured format with trend analysis and retention policies
@@ -199,6 +198,6 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 2/2 | Complete   | 2026-03-09 |
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
-| 8. Schema Evolution | 0/3 | Not started | - |
+| 8. Schema Evolution | 0/2 | Not started | - |
 | 9. Validation History | 0/3 | Not started | - |
 | 10. Pipeline Integration | 0/3 | Not started | - |
