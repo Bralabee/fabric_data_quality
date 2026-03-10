@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends
 - [x] **Phase 6: Alert Infrastructure** - Build alert formatting, config, failure handling, and retry (completed 2026-03-09)
 - [x] **Phase 7: Alert Channels** - Implement Teams and email channels with severity routing (completed 2026-03-09)
-- [ ] **Phase 8: Schema Evolution** - Detect, classify, and track schema changes over time
+- [x] **Phase 8: Schema Evolution** - Detect, classify, and track schema changes over time (completed 2026-03-10)
 - [ ] **Phase 9: Validation History** - Record results and provide trend analysis queries
 - [ ] **Phase 10: Pipeline Integration** - Wire all components into FabricRunner and update public API
 
@@ -198,6 +198,6 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 2/2 | Complete   | 2026-03-09 |
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
-| 8. Schema Evolution | 1/2 | In progress | - |
+| 8. Schema Evolution | 2/2 | Complete   | 2026-03-10 |
 | 9. Validation History | 0/3 | Not started | - |
 | 10. Pipeline Integration | 0/3 | Not started | - |

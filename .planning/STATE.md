@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-10T11:05:31Z"
+last_updated: "2026-03-10T11:12:26.938Z"
 progress:
   total_phases: 10
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 18
-  completed_plans: 16
-  percent: 89
+  completed_plans: 17
+  percent: 94
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 8 in progress — Schema Evolution plan 1/3 complete
+**Current focus:** Phase 8 in progress — Schema Evolution plan 2/3 complete
 
 ## Current Milestone
 
@@ -34,11 +34,11 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 5 | Storage Abstraction | Complete | 2/2 |
 | 6 | Alert Infrastructure | Complete | 2/2 |
 | 7 | Alert Channels | Complete | 2/2 |
-| 8 | Schema Evolution | In progress | 1/3 |
+| 8 | Schema Evolution | Complete | 2/2 |
 | 9 | Validation History | Not started | 0/3 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** [████████░░] 89%
+**Progress:** [█████████░] 94%
 
 ## Active Phase
 
@@ -46,7 +46,7 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - Goal: Schema baseline management, change detection, classification, history, and alerting
 - Requirements: SCHM-01, SCHM-02, SCHM-03, SCHM-04, SCHM-05, SCHM-06
 - Status: In progress
-- Plans: 1/3 complete (08-01 tracker core)
+- Plans: 2/2 complete (08-01 tracker core, 08-02 history + alerts)
 
 ## Key Decisions
 
@@ -82,6 +82,9 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Router before message rendering | 7 | Avoid unnecessary Jinja2 work when suppressing alerts |
 | Classify all dict additions/removals directly | 8 | DeepDiff operates on columns sub-dict, so all paths are column-level |
 | diff.to_dict() for raw diff serialization | 8 | Avoids DeepDiff object serialization issues in ResultStore |
+| Microsecond timestamps in history keys | 8 | Same-second key collisions would silently lose history entries |
+| Any-typed dispatcher in alert_on_breaking_changes | 8 | Keeps alerting dependency optional; no hard import of AlertDispatcher |
+| check_and_alert augments detect_changes result | 8 | Single return dict with history_key and alert_result rather than new structure |
 
 ## Environment
 
@@ -90,4 +93,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 08-01-PLAN.md (SchemaTracker core with baseline CRUD, change detection, classification)*
+*Last updated: 2026-03-10 after completing 08-02-PLAN.md (Schema history tracking with alert wiring and public API export)*
