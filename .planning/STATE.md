@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-10T15:50:29Z"
+last_updated: "2026-03-10T15:58:00Z"
 progress:
   total_phases: 10
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 17
-  completed_plans: 18
-  percent: 95
+  completed_plans: 19
+  percent: 97
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 9 in progress — Validation History plan 1/2 complete
+**Current focus:** Phase 9 complete — Validation History 2/2 plans done. Phase 10 next.
 
 ## Current Milestone
 
@@ -35,18 +35,18 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 6 | Alert Infrastructure | Complete | 2/2 |
 | 7 | Alert Channels | Complete | 2/2 |
 | 8 | Schema Evolution | Complete | 2/2 |
-| 9 | Validation History | In progress | 1/2 |
+| 9 | Validation History | Complete | 2/2 |
 | 10 | Pipeline Integration | Not started | 0/3 |
 
-**Progress:** [█████████░] 95%
+**Progress:** [█████████░] 97%
 
 ## Active Phase
 
-**Phase 9: Validation History** -- IN PROGRESS
+**Phase 9: Validation History** -- COMPLETE
 - Goal: Record validation results in structured format with trend analysis and retention policies
 - Requirements: HIST-01, HIST-02, HIST-03, HIST-04, HIST-05, HIST-06
-- Status: In progress
-- Plans: 1/2 complete (09-01 dual-backend storage + record())
+- Status: Complete
+- Plans: 2/2 complete (09-01 dual-backend storage + record(), 09-02 query APIs + retention)
 
 ## Key Decisions
 
@@ -88,6 +88,9 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Import _is_fabric_runtime from utils with try/except | 9 | utils.py is canonical location; try/except allows tests without full package |
 | JSON text for complex fields in both backends | 9 | severity_stats and failed_expectations stored as JSON strings in SQLite and Parquet |
 | Single Parquet file with read-concat-write | 9 | Start simple; partitioning added later if performance requires it |
+| Python-side JSON aggregation for failures | 9 | SQLite lacks JSON functions; Python parse-and-group ensures cross-backend consistency |
+| Constructor defaults from constants.py | 9 | Centralizes magic values; try/except fallback for standalone usage |
+| Filter-and-rewrite for Parquet retention | 9 | Consistent with existing append pattern; no new dependency |
 
 ## Environment
 
@@ -96,4 +99,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 09-01-PLAN.md (ValidationHistory dual-backend storage and record() method)*
+*Last updated: 2026-03-10 after completing 09-02-PLAN.md (query APIs, retention policy, and history constants)*

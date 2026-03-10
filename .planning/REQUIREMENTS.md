@@ -54,10 +54,10 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 
 - [x] **HIST-01**: Implement structured result storage replacing scattered JSON files (Parquet in Fabric, SQLite locally)
 - [x] **HIST-02**: Define validation result record schema (timestamp, suite_name, success, success_rate, severity_stats, duration)
-- [ ] **HIST-03**: Implement trend query API: get_trend(dataset, days) returning pandas DataFrames
-- [ ] **HIST-04**: Implement failure history query: get_failure_history(dataset) returning failed expectations over time
-- [ ] **HIST-05**: Implement period comparison: compare_periods(dataset, period_a, period_b)
-- [ ] **HIST-06**: Implement configurable retention policy (retention_days with automatic cleanup)
+- [x] **HIST-03**: Implement trend query API: get_trend(dataset, days) returning pandas DataFrames
+- [x] **HIST-04**: Implement failure history query: get_failure_history(dataset) returning failed expectations over time
+- [x] **HIST-05**: Implement period comparison: compare_periods(dataset, period_a, period_b)
+- [x] **HIST-06**: Implement configurable retention policy (retention_days with automatic cleanup)
 
 ### Storage Foundation
 
@@ -141,10 +141,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCHM-06 | Phase 8 | Complete |
 | HIST-01 | Phase 9 | Complete |
 | HIST-02 | Phase 9 | Complete |
-| HIST-03 | Phase 9 | Pending |
-| HIST-04 | Phase 9 | Pending |
-| HIST-05 | Phase 9 | Pending |
-| HIST-06 | Phase 9 | Pending |
+| HIST-03 | Phase 9 | Complete |
+| HIST-04 | Phase 9 | Complete |
+| HIST-05 | Phase 9 | Complete |
+| HIST-06 | Phase 9 | Complete |
 | STOR-01 | Phase 5 | Complete |
 | STOR-02 | Phase 5 | Complete |
 | STOR-03 | Phase 5 | Complete |
