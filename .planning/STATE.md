@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-10T18:36:26.898Z"
+status: complete
+last_updated: "2026-03-10T18:41:03Z"
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 10 in progress — Pipeline Integration 1/3 plans done.
+**Current focus:** All phases complete. v2.0 Health Audit milestone finished.
 
 ## Current Milestone
 
@@ -36,17 +36,16 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 7 | Alert Channels | Complete | 2/2 |
 | 8 | Schema Evolution | Complete | 2/2 |
 | 9 | Validation History | Complete | 2/2 |
-| 10 | Pipeline Integration | In Progress | 2/3 |
+| 10 | Pipeline Integration | Complete | 3/3 |
 
-**Progress:** [██████████] 95%
+**Progress:** [██████████] 100%
 
 ## Active Phase
 
-**Phase 10: Pipeline Integration** -- IN PROGRESS
-- Goal: Wire alerting, schema tracking, and validation history into the pipeline runner
-- Requirements: INTG-02, INTG-03, INTG-04, INTG-05
-- Status: In Progress
-- Plans: 2/3 complete (10-01 config contracts, 10-02 pipeline wiring)
+**All phases complete.** v2.0 Health Audit & Production Hardening milestone finished.
+- Phase 10 Pipeline Integration: 3/3 plans done (config contracts, pipeline wiring, E2E tests)
+- 493 tests passing, 90.53% coverage
+- All INTG requirements satisfied
 
 ## Key Decisions
 
@@ -95,6 +94,8 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | AlertManager alias for AlertDispatcher | 10 | Matches INTG-04 requirement text for backward compatibility |
 | Fire-and-forget pipeline stages | 10 | Each stage wrapped in try/except; failures logged not propagated |
 | getattr fallback for ChannelConfig.name | 10 | ChannelConfig dataclass has no name field; use type_idx fallback |
+| Module attr swap for SPARK_AVAILABLE in E2E tests | 10 | patch.object context exits before validate call; set attr directly |
+| _build_runner helper for E2E pipeline tests | 10 | Single helper creates fully-mocked runner; keeps 6 E2E tests DRY |
 
 ## Environment
 
@@ -103,4 +104,4 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-10 after completing 10-02-PLAN.md (pipeline wiring)*
+*Last updated: 2026-03-10 after completing 10-03-PLAN.md (E2E integration tests -- Phase 10 complete)*
