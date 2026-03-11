@@ -85,6 +85,20 @@ class CircuitBreakerConfig:
 
 
 @dataclass
+class SeverityRoutingConfig:
+    """Configuration for severity-based alert routing.
+
+    Attributes:
+        min_severity: Minimum severity level that triggers an alert.
+            Must be one of ``"low"``, ``"medium"``, ``"high"``, ``"critical"``.
+        alert_on_success: If True, send alerts even when all checks pass.
+    """
+
+    min_severity: str = "medium"
+    alert_on_success: bool = False
+
+
+@dataclass
 class AlertConfig:
     """Parsed alert configuration from the YAML ``alerts:`` section.
 
@@ -94,6 +108,8 @@ class AlertConfig:
         channels: List of configured alert channels.
         circuit_breaker: Circuit breaker settings.
         templates: Template name overrides.
+        severity_routing: Severity routing config, or None for backwards
+            compatibility (send all alerts unconditionally).
     """
 
     enabled: bool = True
@@ -101,6 +117,7 @@ class AlertConfig:
     channels: list[ChannelConfig] = field(default_factory=list)
     circuit_breaker: CircuitBreakerConfig = field(default_factory=CircuitBreakerConfig)
     templates: dict[str, str] = field(default_factory=dict)
+    severity_routing: SeverityRoutingConfig | None = None
 
     @classmethod
     def from_dict(cls, data: dict | None) -> AlertConfig:
@@ -150,12 +167,22 @@ class AlertConfig:
         # Parse templates
         templates = data.get("templates", {})
 
+        # Parse severity routing (None = backwards compatible, send all)
+        severity_routing: SeverityRoutingConfig | None = None
+        sr_data = data.get("severity_routing")
+        if sr_data is not None:
+            severity_routing = SeverityRoutingConfig(
+                min_severity=sr_data.get("min_severity", "medium"),
+                alert_on_success=sr_data.get("alert_on_success", False),
+            )
+
         return cls(
             enabled=data.get("enabled", True),
             failure_policy=failure_policy,
             channels=channels,
             circuit_breaker=circuit_breaker,
             templates=templates,
+            severity_routing=severity_routing,
         )
 
 

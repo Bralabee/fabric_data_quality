@@ -6,6 +6,8 @@ Fabric-specific integration for data quality validation.
 """
 
 import logging
+import time
+import warnings
 from datetime import datetime
 from typing import Any
 
@@ -33,7 +35,11 @@ from .constants import (
     FABRIC_SAMPLE_FRACTION,
     MAX_FAILURE_DISPLAY,
 )
+from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, create_channel
+from .constants import DEFAULT_RETENTION_DAYS
+from .schema_tracker import SchemaTracker
 from .storage import get_store, make_result_key
+from .validation_history import ValidationHistory
 from .validator import DataQualityValidator
 
 logger = logging.getLogger(__name__)
@@ -107,10 +113,94 @@ class FabricDataQualityRunner:
 
         logger.info(f"FabricDataQualityRunner initialized for workspace: {workspace_id}")
 
+        # ----- Lazy initialization of optional pipeline components -----
+        self._alert_dispatcher = None
+        self._schema_tracker = None
+        self._history = None
+
+        # Alerting (optional)
+        alerts_cfg = self.validator.config.get("alerts")
+        if alerts_cfg and alerts_cfg.get("enabled", False):
+            try:
+                alert_config = AlertConfig.from_dict(alerts_cfg)
+                formatter = AlertFormatter()
+                self._alert_dispatcher = AlertDispatcher(config=alert_config, formatter=formatter)
+                for idx, ch_cfg in enumerate(alert_config.channels):
+                    if ch_cfg.enabled:
+                        channel = create_channel(ch_cfg)
+                        ch_name = getattr(ch_cfg, "name", None) or ch_cfg.type
+                        self._alert_dispatcher.register_channel(ch_name, channel)
+                logger.info("AlertDispatcher initialized with %d channel(s)", len(alert_config.channels))
+            except Exception as e:
+                logger.warning("Failed to initialize AlertDispatcher: %s", e)
+                self._alert_dispatcher = None
+
+        # Schema tracking (optional)
+        schema_cfg = self.validator.config.get("schema_tracking")
+        if schema_cfg and schema_cfg.get("enabled", True) is not False:
+            try:
+                dataset_name = schema_cfg.get("dataset_name", self.validator.config.get("validation_name", "unknown"))
+                self._schema_tracker = SchemaTracker(store=self._store, dataset_name=dataset_name)
+                logger.info("SchemaTracker initialized for dataset: %s", dataset_name)
+            except Exception as e:
+                logger.warning("Failed to initialize SchemaTracker: %s", e)
+                self._schema_tracker = None
+
+        # Validation history (optional)
+        history_cfg = self.validator.config.get("history")
+        if history_cfg and history_cfg.get("enabled", True) is not False:
+            try:
+                dataset_name = history_cfg.get("dataset_name", self.validator.config.get("validation_name", "unknown"))
+                retention_days = history_cfg.get("retention_days", DEFAULT_RETENTION_DAYS)
+                self._history = ValidationHistory(dataset_name=dataset_name, retention_days=retention_days)
+                logger.info("ValidationHistory initialized for dataset: %s", dataset_name)
+            except Exception as e:
+                logger.warning("Failed to initialize ValidationHistory: %s", e)
+                self._history = None
+
     @property
     def config(self) -> dict[str, Any]:
         """Get current configuration."""
         return self.validator.config
+
+    def _build_schema_from_df(self, df) -> dict:
+        """Build a schema dict from a pandas DataFrame for schema tracking.
+
+        Args:
+            df: pandas DataFrame
+
+        Returns:
+            Dict with dataset_name, column_count, and columns sub-dict.
+        """
+        columns = {}
+        for col in df.columns:
+            null_count = int(df[col].isna().sum())
+            total = len(df)
+            columns[col] = {
+                "dtype": str(df[col].dtype),
+                "nullable": null_count > 0,
+                "null_percent": round((null_count / total * 100) if total > 0 else 0.0, 2),
+            }
+        return {
+            "dataset_name": self.validator.config.get("validation_name", "unknown"),
+            "column_count": len(df.columns),
+            "columns": columns,
+        }
+
+    def _determine_severity(self, results: dict) -> str:
+        """Determine alert severity from validation results.
+
+        Extracts severity_stats from results and returns highest failing severity.
+        Falls back to 'medium' if no severity_stats present.
+        """
+        severity_stats = results.get("severity_stats")
+        if not severity_stats:
+            return "medium"
+        for level in ("critical", "high", "medium", "low"):
+            stats = severity_stats.get(level, {})
+            if stats.get("total", 0) - stats.get("passed", 0) > 0:
+                return level
+        return "medium"
 
     def validate_spark_dataframe(
         self,
@@ -182,7 +272,21 @@ class FabricDataQualityRunner:
             logger.error(f"Failed to convert Spark DataFrame to Pandas: {e}")
             raise
 
-        # Run validation
+        start_time = time.time()
+
+        # --- Stage 1: Schema check (fire-and-forget) ---
+        schema_result = None
+        if self._schema_tracker:
+            try:
+                current_schema = self._build_schema_from_df(pdf)
+                schema_result = self._schema_tracker.check_and_alert(
+                    current_schema, dispatcher=self._alert_dispatcher
+                )
+            except Exception as e:
+                logger.error("Schema check failed (continuing): %s", e)
+                schema_result = None
+
+        # --- Stage 2: Validation (core, unchanged) ---
         results = self.validator.validate(
             df=pdf,
             batch_name=batch_name or f"spark_df_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -194,6 +298,32 @@ class FabricDataQualityRunner:
             self._store.write(key, results)
         except Exception as e:
             logger.error(f"Failed to save results: {e}")
+
+        elapsed = time.time() - start_time
+
+        # --- Stage 3: Record history (fire-and-forget) ---
+        history_recorded = False
+        if self._history:
+            try:
+                self._history.record(results, duration_seconds=elapsed)
+                self._history.apply_retention()
+                history_recorded = True
+            except Exception as e:
+                logger.error("History recording failed (continuing): %s", e)
+
+        # --- Stage 4: Alert on failure (fire-and-forget) ---
+        if self._alert_dispatcher and not results.get("success", True):
+            try:
+                severity = self._determine_severity(results)
+                self._alert_dispatcher.dispatch(results, severity=severity)
+            except Exception as e:
+                logger.error("Alert dispatch failed (continuing): %s", e)
+
+        # --- Augment results with pipeline metadata ---
+        if schema_result is not None:
+            results["schema_check"] = schema_result
+        if history_recorded:
+            results["history_recorded"] = True
 
         return results
 
@@ -488,50 +618,23 @@ class FabricDataQualityRunner:
         elif action == "alert":
             self._send_alert(results)
 
-    def _send_alert(
-        self,
-        results: dict[str, Any],
-        max_retries: int = 3,
-        retry_delay_seconds: float = 1.0,
-    ) -> bool:
-        """
-        Send alert about validation failure with retry logic.
-
-        Args:
-            results: Validation results dictionary
-            max_retries: Maximum number of retry attempts (default: 3)
-            retry_delay_seconds: Initial delay between retries in seconds (default: 1.0)
-
-        Returns:
-            True if alert was sent successfully, False otherwise
-        """
-        import time
-
-        alert_payload = {
-            "suite_name": results.get("suite_name", "unknown"),
-            "batch_name": results.get("batch_name", "unknown"),
-            "success_rate": results.get("success_rate", 0),
-            "failed_checks": results.get("failed_checks", 0),
-            "timestamp": results.get("timestamp", datetime.now().isoformat()),
-        }
-
-        for attempt in range(max_retries + 1):
+    def _send_alert(self, results: dict[str, Any], **_kwargs: Any) -> bool:
+        """Send alert about validation failure (DEPRECATED — use AlertDispatcher)."""
+        warnings.warn(
+            "_send_alert is deprecated, use AlertDispatcher",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if self._alert_dispatcher:
             try:
-                # TODO: Implement actual alert logic (Teams, email, webhook, etc.)
-                logger.info(f"Alert notification sent (attempt {attempt + 1}): {alert_payload}")
+                severity = self._determine_severity(results)
+                self._alert_dispatcher.dispatch(results, severity=severity)
                 return True
-
             except Exception as e:
-                if attempt < max_retries:
-                    delay = retry_delay_seconds * (2**attempt)
-                    logger.warning(
-                        f"Alert attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s..."
-                    )
-                    time.sleep(delay)
-                else:
-                    logger.error(f"Alert failed after {max_retries + 1} attempts. Last error: {e}")
-                    return False
+                logger.error("AlertDispatcher.dispatch failed in _send_alert: %s", e)
+                return False
 
+        logger.warning("No AlertDispatcher configured — alert not sent")
         return False
 
 

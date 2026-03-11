@@ -12,16 +12,16 @@ This roadmap takes the dq_framework from a working-but-rough validation library 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore
+- [x] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore (completed 2026-03-08)
 - [x] **Phase 2: CI and Tooling** - Align CI matrix and dev tooling on ruff/pyproject.toml (completed 2026-03-08)
 - [x] **Phase 3: Bug Fixes** - Fix all known bugs in validation, ingestion, and public API (completed 2026-03-08)
 - [x] **Phase 4: Test Coverage** - Raise module coverage to 60%+ and add characterization tests (completed 2026-03-08)
-- [ ] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends
+- [x] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends (completed 2026-03-08)
 - [x] **Phase 6: Alert Infrastructure** - Build alert formatting, config, failure handling, and retry (completed 2026-03-09)
-- [ ] **Phase 7: Alert Channels** - Implement Teams and email channels with severity routing
-- [ ] **Phase 8: Schema Evolution** - Detect, classify, and track schema changes over time
-- [ ] **Phase 9: Validation History** - Record results and provide trend analysis queries
-- [ ] **Phase 10: Pipeline Integration** - Wire all components into FabricRunner and update public API
+- [x] **Phase 7: Alert Channels** - Implement Teams and email channels with severity routing (completed 2026-03-09)
+- [x] **Phase 8: Schema Evolution** - Detect, classify, and track schema changes over time (completed 2026-03-10)
+- [x] **Phase 9: Validation History** - Record results and provide trend analysis queries (completed 2026-03-10)
+- [x] **Phase 10: Pipeline Integration** - Wire all components into FabricRunner and update public API (completed 2026-03-10)
 
 ## Phase Details
 
@@ -126,11 +126,11 @@ Plans:
   2. Email channel sends HTML-formatted messages with summary tables via SMTP
   3. Critical-severity failures trigger immediate alerts; low-severity results are batched or suppressed
   4. Both channels render correctly with validation result data (not raw JSON)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
+- [ ] 07-01-PLAN.md -- Implement TeamsChannel and EmailChannel with Adaptive Card template and channel factory
+- [ ] 07-02-PLAN.md -- Implement SeverityRouter and integrate severity-based routing into AlertDispatcher
 
 ### Phase 8: Schema Evolution
 **Goal**: Schema changes are automatically detected, classified, tracked over time, and surfaced as alerts
@@ -142,12 +142,11 @@ Plans:
   3. Changes are classified as breaking (removal, type change) or non-breaking (addition, nullability)
   4. Schema evolution history records all diffs with timestamps for audit purposes
   5. Breaking schema changes trigger critical alerts through the alerting system
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
-- [ ] 08-03: TBD
+- [x] 08-01-PLAN.md -- SchemaTracker core: baseline CRUD, deepdiff detection, change classification, baseline from profiler
+- [ ] 08-02-PLAN.md -- Schema history tracking, alert wiring for breaking changes, public API export
 
 ### Phase 9: Validation History
 **Goal**: Validation results are stored in structured format with trend analysis and retention policies
@@ -160,12 +159,11 @@ Plans:
   4. get_failure_history(dataset) returns failed expectations with frequency and recency data
   5. compare_periods(dataset, period_a, period_b) identifies quality changes between time ranges
   6. Retention policy automatically cleans up records older than configured retention_days
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
-- [ ] 09-03: TBD
+- [x] 09-01-PLAN.md -- ValidationHistory class with dual-backend storage (SQLite/Parquet) and record() method
+- [ ] 09-02-PLAN.md -- Query APIs (get_trend, get_failure_history, compare_periods) and retention policy
 
 ### Phase 10: Pipeline Integration
 **Goal**: All new components are wired into FabricRunner and the library's public API is updated
@@ -177,12 +175,12 @@ Plans:
   3. constants.py has default values for all new configuration; __init__.py exports AlertManager, SchemaTracker, ValidationHistory
   4. dq_framework dependency versions are compatible with AIMS Data Platform (GX version resolved)
   5. End-to-end integration tests cover the full pipeline with all new components using mock fixtures
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 10-01: TBD
-- [ ] 10-02: TBD
-- [ ] 10-03: TBD
+- [x] 10-01-PLAN.md -- Constants, public API exports, and ConfigLoader optional section validation
+- [x] 10-02-PLAN.md -- Wire SchemaTracker, ValidationHistory, AlertDispatcher into FabricDataQualityRunner pipeline
+- [x] 10-03-PLAN.md -- End-to-end integration tests and final regression verification
 
 ## Progress
 
@@ -198,7 +196,7 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 4. Test Coverage | 3/3 | Complete   | 2026-03-08 |
 | 5. Storage Abstraction | 0/2 | Not started | - |
 | 6. Alert Infrastructure | 2/2 | Complete   | 2026-03-09 |
-| 7. Alert Channels | 0/2 | Not started | - |
-| 8. Schema Evolution | 0/3 | Not started | - |
-| 9. Validation History | 0/3 | Not started | - |
-| 10. Pipeline Integration | 0/3 | Not started | - |
+| 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
+| 8. Schema Evolution | 2/2 | Complete   | 2026-03-10 |
+| 9. Validation History | 2/2 | Complete   | 2026-03-10 |
+| 10. Pipeline Integration | 3/3 | Complete    | 2026-03-10 |

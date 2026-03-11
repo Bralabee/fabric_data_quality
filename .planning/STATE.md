@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-09T00:11:36.539Z"
+last_updated: "2026-03-10T18:45:46.968Z"
 progress:
   total_phases: 10
-  completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 10
+  total_plans: 22
+  completed_plans: 22
   percent: 100
 ---
 
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-08)
 
 **Core value:** Reliable, configuration-driven data quality validation that works identically in local development and Microsoft Fabric production environments.
-**Current focus:** Phase 6 — Alert Infrastructure
+**Current focus:** All phases complete. v2.0 Health Audit milestone finished.
 
 ## Current Milestone
 
@@ -33,20 +33,19 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | 4 | Test Coverage | Complete | 3/3 |
 | 5 | Storage Abstraction | Complete | 2/2 |
 | 6 | Alert Infrastructure | Complete | 2/2 |
-| 7 | Alert Channels | Not started | 0/2 |
-| 8 | Schema Evolution | Not started | 0/3 |
-| 9 | Validation History | Not started | 0/3 |
-| 10 | Pipeline Integration | Not started | 0/3 |
+| 7 | Alert Channels | Complete | 2/2 |
+| 8 | Schema Evolution | Complete | 2/2 |
+| 9 | Validation History | Complete | 2/2 |
+| 10 | Pipeline Integration | Complete | 3/3 |
 
 **Progress:** [██████████] 100%
 
 ## Active Phase
 
-**Phase 6: Alert Infrastructure** -- COMPLETE
-- Goal: Build shared alerting layer with formatting, config, dispatcher, and circuit breaker
-- Requirements: ALRT-03, ALRT-05, ALRT-06, ALRT-07
-- Status: Complete
-- Plans: 2/2 complete
+**All phases complete.** v2.0 Health Audit & Production Hardening milestone finished.
+- Phase 10 Pipeline Integration: 3/3 plans done (config contracts, pipeline wiring, E2E tests)
+- 493 tests passing, 90.53% coverage
+- All INTG requirements satisfied
 
 ## Key Decisions
 
@@ -75,12 +74,34 @@ See: .planning/PROJECT.md (updated 2026-03-08)
 | Deep copy config dict before env var substitution | 6 | Prevents mutation of caller's data during config parsing |
 | In-memory per-process circuit breaker state | 6 | Correct for batch pipeline usage; each run starts fresh |
 | AlertChannel ABC with send() contract | 6 | Minimal interface for Phase 7 channel implementations |
+| Workflows envelope format for Teams | 7 | type:message + attachments array required by Power Automate |
+| Adaptive Card v1.3 for mobile compat | 7 | v1.5 features silently ignored on Teams mobile |
+| httpx as required dependency | 7 | Teams alerting is core v2.0 feature, not optional |
+| severity_routing=None for backwards compat | 7 | Existing configs without severity_routing send all alerts unconditionally |
+| Router before message rendering | 7 | Avoid unnecessary Jinja2 work when suppressing alerts |
+| Classify all dict additions/removals directly | 8 | DeepDiff operates on columns sub-dict, so all paths are column-level |
+| diff.to_dict() for raw diff serialization | 8 | Avoids DeepDiff object serialization issues in ResultStore |
+| Microsecond timestamps in history keys | 8 | Same-second key collisions would silently lose history entries |
+| Any-typed dispatcher in alert_on_breaking_changes | 8 | Keeps alerting dependency optional; no hard import of AlertDispatcher |
+| check_and_alert augments detect_changes result | 8 | Single return dict with history_key and alert_result rather than new structure |
+| Import _is_fabric_runtime from utils with try/except | 9 | utils.py is canonical location; try/except allows tests without full package |
+| JSON text for complex fields in both backends | 9 | severity_stats and failed_expectations stored as JSON strings in SQLite and Parquet |
+| Single Parquet file with read-concat-write | 9 | Start simple; partitioning added later if performance requires it |
+| Python-side JSON aggregation for failures | 9 | SQLite lacks JSON functions; Python parse-and-group ensures cross-backend consistency |
+| Constructor defaults from constants.py | 9 | Centralizes magic values; try/except fallback for standalone usage |
+| Filter-and-rewrite for Parquet retention | 9 | Consistent with existing append pattern; no new dependency |
+| OPTIONAL_SECTION_VALIDATORS registry | 10 | Dict maps section names to validator functions for extensible config validation |
+| AlertManager alias for AlertDispatcher | 10 | Matches INTG-04 requirement text for backward compatibility |
+| Fire-and-forget pipeline stages | 10 | Each stage wrapped in try/except; failures logged not propagated |
+| getattr fallback for ChannelConfig.name | 10 | ChannelConfig dataclass has no name field; use type_idx fallback |
+| Module attr swap for SPARK_AVAILABLE in E2E tests | 10 | patch.object context exits before validate call; set attr directly |
+| _build_runner helper for E2E pipeline tests | 10 | Single helper creates fully-mocked runner; keeps 6 E2E tests DRY |
 
 ## Environment
 
-- **Branch:** feature/gx-1x-migration
+- **Branch:** feature/10-pipeline-integration
 - **Conda env:** fabric-dq (from environment.yml)
 - **Python:** >=3.10
 
 ---
-*Last updated: 2026-03-09 after completing 06-02-PLAN.md (circuit breaker and alert dispatcher)*
+*Last updated: 2026-03-10 after completing 10-03-PLAN.md (E2E integration tests -- Phase 10 complete)*

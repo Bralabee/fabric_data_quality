@@ -7,9 +7,11 @@ Public API::
         CircuitBreakerConfig, FailurePolicy, AlertDeliveryError,
         CircuitBreaker, CircuitState,
         AlertChannel, AlertDispatcher,
+        TeamsChannel, EmailChannel, create_channel,
     )
 """
 
+from .channels import EmailChannel, TeamsChannel, create_channel
 from .circuit_breaker import CircuitBreaker, CircuitState
 from .config import (
     AlertConfig,
@@ -17,11 +19,14 @@ from .config import (
     ChannelConfig,
     CircuitBreakerConfig,
     FailurePolicy,
+    SeverityRoutingConfig,
 )
 from .dispatcher import AlertChannel, AlertDispatcher
 from .formatter import AlertFormatter
+from .routing import AlertAction, SeverityRouter
 
 __all__ = [
+    "AlertAction",
     "AlertChannel",
     "AlertConfig",
     "AlertDeliveryError",
@@ -31,5 +36,10 @@ __all__ = [
     "CircuitBreaker",
     "CircuitBreakerConfig",
     "CircuitState",
+    "EmailChannel",
     "FailurePolicy",
+    "SeverityRouter",
+    "SeverityRoutingConfig",
+    "TeamsChannel",
+    "create_channel",
 ]

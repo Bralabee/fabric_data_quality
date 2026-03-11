@@ -158,5 +158,95 @@ class TestConfigLoader:
             loader.load("/nonexistent/path/config.yml")
 
 
+class TestOptionalSectionValidation:
+    """Tests for optional config sections: alerts, history, schema_tracking."""
+
+    def _base_config(self, **extras):
+        config = {
+            "validation_name": "test",
+            "expectations": [
+                {"expectation_type": "expect_column_to_exist", "kwargs": {"column": "id"}}
+            ],
+        }
+        config.update(extras)
+        return config
+
+    def test_valid_alerts_section(self):
+        config = self._base_config(alerts={"channels": [{"type": "teams", "webhook_url": "https://example.com"}]})
+        loader = ConfigLoader()
+        loader.validate(config)  # Should not raise
+
+    def test_valid_history_section(self):
+        config = self._base_config(history={"retention_days": 30})
+        loader = ConfigLoader()
+        loader.validate(config)
+
+    def test_valid_schema_tracking_section(self):
+        config = self._base_config(schema_tracking={"baseline_dir": "/tmp/baselines"})
+        loader = ConfigLoader()
+        loader.validate(config)
+
+    def test_alerts_not_dict_raises(self):
+        config = self._base_config(alerts="not_a_dict")
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="alerts"):
+            loader.validate(config)
+
+    def test_alerts_channels_not_list_raises(self):
+        config = self._base_config(alerts={"channels": "not_a_list"})
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="channels"):
+            loader.validate(config)
+
+    def test_alerts_channel_missing_type_raises(self):
+        config = self._base_config(alerts={"channels": [{"webhook_url": "https://example.com"}]})
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="type"):
+            loader.validate(config)
+
+    def test_history_retention_days_not_positive_int_raises(self):
+        config = self._base_config(history={"retention_days": -5})
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="retention_days"):
+            loader.validate(config)
+
+    def test_history_retention_days_not_int_raises(self):
+        config = self._base_config(history={"retention_days": "thirty"})
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="retention_days"):
+            loader.validate(config)
+
+    def test_schema_tracking_not_dict_raises(self):
+        config = self._base_config(schema_tracking="not_a_dict")
+        loader = ConfigLoader()
+        with pytest.raises(ValueError, match="schema_tracking"):
+            loader.validate(config)
+
+    def test_backward_compat_no_optional_sections(self):
+        config = self._base_config()
+        loader = ConfigLoader()
+        loader.validate(config)  # Should not raise
+
+
+class TestConstants:
+    """Tests for new constants in constants.py."""
+
+    def test_cb_failure_threshold(self):
+        from dq_framework.constants import DEFAULT_CB_FAILURE_THRESHOLD
+        assert DEFAULT_CB_FAILURE_THRESHOLD == 5
+
+    def test_cb_cooldown_seconds(self):
+        from dq_framework.constants import DEFAULT_CB_COOLDOWN_SECONDS
+        assert DEFAULT_CB_COOLDOWN_SECONDS == 300.0
+
+    def test_failure_policy(self):
+        from dq_framework.constants import DEFAULT_FAILURE_POLICY
+        assert DEFAULT_FAILURE_POLICY == "warn"
+
+    def test_schema_baselines_dir(self):
+        from dq_framework.constants import DEFAULT_SCHEMA_BASELINES_DIR
+        assert DEFAULT_SCHEMA_BASELINES_DIR == "dq_results/schema_baselines"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
