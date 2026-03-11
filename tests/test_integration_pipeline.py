@@ -5,8 +5,7 @@ Verifies public API exports, constants defaults, dependency compatibility,
 and end-to-end pipeline flows with all components wired together.
 """
 
-import time
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -72,9 +71,9 @@ class TestDependencyCompatibility:
     """Verify no dependency conflicts between dq_framework and AIMS."""
 
     def test_dependency_compatibility(self):
-        import httpx  # noqa: F401 - Phase 7 additive dep
         import deepdiff  # noqa: F401 - Phase 8 additive dep
         import great_expectations  # noqa: F401 - core
+        import httpx  # noqa: F401 - Phase 7 additive dep
         import pandas  # noqa: F401 - core
         import yaml  # noqa: F401 - core
         # All imports succeeding proves no version conflicts
@@ -359,8 +358,8 @@ class TestChannelRegistrationWiring:
 
     def test_channel_name_matches_dispatch_lookup(self):
         """Registered channel name must match the key used in dispatch()."""
-        from dq_framework.alerting.dispatcher import AlertDispatcher, AlertChannel
         from dq_framework.alerting.config import AlertConfig, ChannelConfig
+        from dq_framework.alerting.dispatcher import AlertChannel, AlertDispatcher
         from dq_framework.alerting.formatter import AlertFormatter
 
         ch_cfg = ChannelConfig(type="teams", enabled=True, settings={"webhook_url": "https://example.com"})
@@ -382,6 +381,7 @@ class TestChannelRegistrationWiring:
     def test_determine_severity_uses_total_minus_passed(self, tmp_path):
         """_determine_severity must use total-passed, not a 'failed' key."""
         import yaml
+
         from dq_framework.fabric_connector import FabricDataQualityRunner
 
         config = {

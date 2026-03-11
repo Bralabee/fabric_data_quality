@@ -5,9 +5,9 @@ SCHM-03 (change classification), SCHM-04 (history tracking),
 SCHM-05 (baseline from profile), SCHM-06 (alert wiring).
 """
 
-import pytest
-
 from unittest.mock import MagicMock
+
+import pytest
 
 from dq_framework.schema_tracker import (
     SchemaTracker,
@@ -16,7 +16,6 @@ from dq_framework.schema_tracker import (
     create_baseline_from_profile,
 )
 from dq_framework.storage import JSONFileStore
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

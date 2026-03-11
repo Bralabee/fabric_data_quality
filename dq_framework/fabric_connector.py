@@ -29,14 +29,14 @@ from .utils import (
 # Get mssparkutils reference (None if not available)
 mssparkutils = get_mssparkutils()
 
+from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, create_channel
 from .constants import (
+    DEFAULT_RETENTION_DAYS,
     FABRIC_CONFIG_MAX_BYTES,
     FABRIC_LARGE_DATASET_THRESHOLD,
     FABRIC_SAMPLE_FRACTION,
     MAX_FAILURE_DISPLAY,
 )
-from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, create_channel
-from .constants import DEFAULT_RETENTION_DAYS
 from .schema_tracker import SchemaTracker
 from .storage import get_store, make_result_key
 from .validation_history import ValidationHistory
@@ -125,7 +125,7 @@ class FabricDataQualityRunner:
                 alert_config = AlertConfig.from_dict(alerts_cfg)
                 formatter = AlertFormatter()
                 self._alert_dispatcher = AlertDispatcher(config=alert_config, formatter=formatter)
-                for idx, ch_cfg in enumerate(alert_config.channels):
+                for ch_cfg in alert_config.channels:
                     if ch_cfg.enabled:
                         channel = create_channel(ch_cfg)
                         ch_name = getattr(ch_cfg, "name", None) or ch_cfg.type

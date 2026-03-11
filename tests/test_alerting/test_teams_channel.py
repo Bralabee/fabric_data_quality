@@ -12,7 +12,6 @@ from dq_framework.alerting.channels.teams import TeamsChannel
 from dq_framework.alerting.config import ChannelConfig
 from dq_framework.alerting.formatter import AlertFormatter
 
-
 # ---------------------------------------------------------------------------
 # TeamsChannel unit tests
 # ---------------------------------------------------------------------------

@@ -24,7 +24,7 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 
@@ -248,7 +248,7 @@ class ValidationHistory:
     # Query APIs
     # ------------------------------------------------------------------
 
-    _TREND_COLUMNS = ["timestamp", "success", "success_rate", "failed_checks", "duration_seconds"]
+    _TREND_COLUMNS: ClassVar[list[str]] = ["timestamp", "success", "success_rate", "failed_checks", "duration_seconds"]
 
     def get_trend(
         self,
@@ -319,7 +319,7 @@ class ValidationHistory:
             return self._get_failure_history_parquet(ds)
         return self._get_failure_history_sqlite(ds)
 
-    _FAILURE_COLUMNS = ["expectation_type", "column", "frequency", "most_recent_at", "severity"]
+    _FAILURE_COLUMNS: ClassVar[list[str]] = ["expectation_type", "column", "frequency", "most_recent_at", "severity"]
 
     def _get_failure_history_sqlite(self, dataset: str) -> pd.DataFrame:
         sql = (

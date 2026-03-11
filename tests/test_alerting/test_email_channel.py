@@ -5,8 +5,6 @@ from __future__ import annotations
 import smtplib
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from dq_framework.alerting.channels.email import EmailChannel
 from dq_framework.alerting.channels.factory import create_channel
 from dq_framework.alerting.config import ChannelConfig
