@@ -18,11 +18,11 @@ Requirements for production hardening milestone. Each maps to roadmap phases.
 
 ### Bug Fixes
 
-- [ ] **BUG-01**: Fix chunked Spark validation bug (monotonically_increasing_id misuse causes missed/inconsistent rows)
-- [ ] **BUG-02**: Fix aggregated chunk results miscounting (inflated statistics from counting expectations across all chunks)
-- [ ] **BUG-03**: Remove unused DataIngester.engine parameter (dead code misleading users)
-- [ ] **BUG-04**: Remove or relocate stale check_data.py script with hardcoded paths
-- [ ] **BUG-05**: Fix _is_fabric_runtime private function exposed in __init__.py __all__
+- [x] **BUG-01**: Fix chunked Spark validation bug (monotonically_increasing_id misuse causes missed/inconsistent rows)
+- [x] **BUG-02**: Fix aggregated chunk results miscounting (inflated statistics from counting expectations across all chunks)
+- [x] **BUG-03**: Remove unused DataIngester.engine parameter (dead code misleading users)
+- [x] **BUG-04**: Remove or relocate stale check_data.py script with hardcoded paths
+- [x] **BUG-05**: Fix _is_fabric_runtime private function exposed in __init__.py __all__
 
 ### Test Coverage
 
@@ -117,11 +117,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | PKG-04 | Phase 2 | Complete |
 | PKG-05 | Phase 2 | Complete |
 | PKG-06 | Phase 2 | Complete |
-| BUG-01 | Phase 3 | Pending |
-| BUG-02 | Phase 3 | Pending |
-| BUG-03 | Phase 3 | Pending |
-| BUG-04 | Phase 3 | Pending |
-| BUG-05 | Phase 3 | Pending |
+| BUG-01 | Phase 3 | Complete |
+| BUG-02 | Phase 3 | Complete |
+| BUG-03 | Phase 3 | Complete |
+| BUG-04 | Phase 3 | Complete |
+| BUG-05 | Phase 3 | Complete |
 | TEST-01 | Phase 4 | Complete |
 | TEST-02 | Phase 4 | Complete |
 | TEST-03 | Phase 4 | Complete |

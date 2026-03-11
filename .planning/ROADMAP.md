@@ -12,11 +12,11 @@ This roadmap takes the dq_framework from a working-but-rough validation library 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore
+- [x] **Phase 1: Repo Cleanup** - Remove legacy files, build artifacts, and fix .gitignore (completed 2026-03-08)
 - [x] **Phase 2: CI and Tooling** - Align CI matrix and dev tooling on ruff/pyproject.toml (completed 2026-03-08)
 - [x] **Phase 3: Bug Fixes** - Fix all known bugs in validation, ingestion, and public API (completed 2026-03-08)
 - [x] **Phase 4: Test Coverage** - Raise module coverage to 60%+ and add characterization tests (completed 2026-03-08)
-- [ ] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends
+- [x] **Phase 5: Storage Abstraction** - Build ResultStore with local and Fabric backends (completed 2026-03-08)
 - [x] **Phase 6: Alert Infrastructure** - Build alert formatting, config, failure handling, and retry (completed 2026-03-09)
 - [x] **Phase 7: Alert Channels** - Implement Teams and email channels with severity routing (completed 2026-03-09)
 - [x] **Phase 8: Schema Evolution** - Detect, classify, and track schema changes over time (completed 2026-03-10)
@@ -199,4 +199,4 @@ Note: Phases 5-7 and 8-9 have independent dependency chains. Parallelization is 
 | 7. Alert Channels | 2/2 | Complete   | 2026-03-09 |
 | 8. Schema Evolution | 2/2 | Complete   | 2026-03-10 |
 | 9. Validation History | 2/2 | Complete   | 2026-03-10 |
-| 10. Pipeline Integration | 3/3 | Complete   | 2026-03-10 |
+| 10. Pipeline Integration | 3/3 | Complete    | 2026-03-10 |

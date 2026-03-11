@@ -618,23 +618,8 @@ class FabricDataQualityRunner:
         elif action == "alert":
             self._send_alert(results)
 
-    def _send_alert(
-        self,
-        results: dict[str, Any],
-        max_retries: int = 3,
-        retry_delay_seconds: float = 1.0,
-    ) -> bool:
-        """
-        Send alert about validation failure with retry logic.
-
-        Args:
-            results: Validation results dictionary
-            max_retries: Maximum number of retry attempts (default: 3)
-            retry_delay_seconds: Initial delay between retries in seconds (default: 1.0)
-
-        Returns:
-            True if alert was sent successfully, False otherwise
-        """
+    def _send_alert(self, results: dict[str, Any], **_kwargs: Any) -> bool:
+        """Send alert about validation failure (DEPRECATED — use AlertDispatcher)."""
         warnings.warn(
             "_send_alert is deprecated, use AlertDispatcher",
             DeprecationWarning,
@@ -642,39 +627,14 @@ class FabricDataQualityRunner:
         )
         if self._alert_dispatcher:
             try:
-                self._alert_dispatcher.dispatch(results, severity="medium")
+                severity = self._determine_severity(results)
+                self._alert_dispatcher.dispatch(results, severity=severity)
                 return True
             except Exception as e:
                 logger.error("AlertDispatcher.dispatch failed in _send_alert: %s", e)
                 return False
 
-        import time
-
-        alert_payload = {
-            "suite_name": results.get("suite_name", "unknown"),
-            "batch_name": results.get("batch_name", "unknown"),
-            "success_rate": results.get("success_rate", 0),
-            "failed_checks": results.get("failed_checks", 0),
-            "timestamp": results.get("timestamp", datetime.now().isoformat()),
-        }
-
-        for attempt in range(max_retries + 1):
-            try:
-                # TODO: Implement actual alert logic (Teams, email, webhook, etc.)
-                logger.info(f"Alert notification sent (attempt {attempt + 1}): {alert_payload}")
-                return True
-
-            except Exception as e:
-                if attempt < max_retries:
-                    delay = retry_delay_seconds * (2**attempt)
-                    logger.warning(
-                        f"Alert attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s..."
-                    )
-                    time.sleep(delay)
-                else:
-                    logger.error(f"Alert failed after {max_retries + 1} attempts. Last error: {e}")
-                    return False
-
+        logger.warning("No AlertDispatcher configured — alert not sent")
         return False
 
 
