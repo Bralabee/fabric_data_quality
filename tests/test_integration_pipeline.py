@@ -348,3 +348,63 @@ class TestFullPipeline:
         runner.validate_spark_dataframe(mock_spark_df)
 
         assert call_order == ["schema", "validate", "history", "alert"]
+
+
+class TestChannelRegistrationWiring:
+    """Regression tests for channel registration name matching dispatch lookup.
+
+    Bug 1 (v1.0 audit): channels were registered as 'teams_0' but dispatch
+    looked up 'teams', causing all alerts to be silently dropped.
+    """
+
+    def test_channel_name_matches_dispatch_lookup(self):
+        """Registered channel name must match the key used in dispatch()."""
+        from dq_framework.alerting.dispatcher import AlertDispatcher, AlertChannel
+        from dq_framework.alerting.config import AlertConfig, ChannelConfig
+        from dq_framework.alerting.formatter import AlertFormatter
+
+        ch_cfg = ChannelConfig(type="teams", enabled=True, settings={"webhook_url": "https://example.com"})
+        config = AlertConfig(enabled=True, channels=[ch_cfg])
+        dispatcher = AlertDispatcher(config=config, formatter=AlertFormatter())
+
+        mock_channel = MagicMock(spec=AlertChannel)
+        mock_channel.send.return_value = True
+        # Register using ch_cfg.type (the fix) — must match dispatch lookup
+        dispatcher.register_channel(ch_cfg.type, mock_channel)
+
+        results = {"success": False, "suite_name": "test", "severity_stats": {"critical": {"total": 1, "passed": 0}}}
+        outcomes = dispatcher.dispatch(results)
+
+        # Channel must have been called — not silently skipped
+        assert mock_channel.send.called, "Channel was registered but never called during dispatch"
+        assert "teams" in outcomes
+
+    def test_determine_severity_uses_total_minus_passed(self, tmp_path):
+        """_determine_severity must use total-passed, not a 'failed' key."""
+        import yaml
+        from dq_framework.fabric_connector import FabricDataQualityRunner
+
+        config = {
+            "validation_name": "sev_regression",
+            "expectations": [
+                {"expectation_type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}}
+            ],
+        }
+        config_file = tmp_path / "sev.yml"
+        with open(config_file, "w") as f:
+            yaml.dump(config, f)
+        runner = FabricDataQualityRunner(str(config_file))
+
+        # Severity stats use total/passed (not 'failed')
+        results = {"severity_stats": {
+            "critical": {"total": 5, "passed": 3},  # 2 failures
+            "high": {"total": 4, "passed": 4},       # 0 failures
+        }}
+        assert runner._determine_severity(results) == "critical"
+
+        # All passed — should fall through to default
+        results_ok = {"severity_stats": {
+            "critical": {"total": 5, "passed": 5},
+            "high": {"total": 4, "passed": 4},
+        }}
+        assert runner._determine_severity(results_ok) == "medium"

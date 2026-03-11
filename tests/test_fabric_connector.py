@@ -983,7 +983,7 @@ class TestDetermineSeverity:
         with open(config_file, "w") as f:
             yaml.dump(config, f)
         runner = FabricDataQualityRunner(str(config_file))
-        results = {"severity_stats": {"critical": {"failed": 1}, "high": {"failed": 0}}}
+        results = {"severity_stats": {"critical": {"total": 2, "passed": 1}, "high": {"total": 3, "passed": 3}}}
         assert runner._determine_severity(results) == "critical"
 
 

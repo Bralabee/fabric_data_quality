@@ -128,7 +128,7 @@ class FabricDataQualityRunner:
                 for idx, ch_cfg in enumerate(alert_config.channels):
                     if ch_cfg.enabled:
                         channel = create_channel(ch_cfg)
-                        ch_name = getattr(ch_cfg, "name", None) or f"{ch_cfg.type}_{idx}"
+                        ch_name = getattr(ch_cfg, "name", None) or ch_cfg.type
                         self._alert_dispatcher.register_channel(ch_name, channel)
                 logger.info("AlertDispatcher initialized with %d channel(s)", len(alert_config.channels))
             except Exception as e:
@@ -198,7 +198,7 @@ class FabricDataQualityRunner:
             return "medium"
         for level in ("critical", "high", "medium", "low"):
             stats = severity_stats.get(level, {})
-            if stats.get("failed", 0) > 0:
+            if stats.get("total", 0) - stats.get("passed", 0) > 0:
                 return level
         return "medium"
 
