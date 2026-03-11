@@ -180,9 +180,7 @@ class TestSchemaDetection:
     def test_detect_column_removal(self, tracker, baseline_schema):
         """detect_changes finds column removals."""
         tracker.save_baseline(baseline_schema)
-        current_columns = {
-            k: v for k, v in baseline_schema["columns"].items() if k != "amount"
-        }
+        current_columns = {k: v for k, v in baseline_schema["columns"].items() if k != "amount"}
         current = {**baseline_schema, "columns": current_columns}
         result = tracker.detect_changes(current)
         assert result["has_changes"] is True
@@ -335,7 +333,10 @@ class TestSchemaHistory:
 
     def test_record_change_stores_entry(self, tracker, store):
         """record_change persists a timestamped history entry."""
-        classified = {"breaking": [{"type": "column_removed", "path": "root['amount']"}], "non_breaking": []}
+        classified = {
+            "breaking": [{"type": "column_removed", "path": "root['amount']"}],
+            "non_breaking": [],
+        }
         diff_raw = {"dictionary_item_removed": ["root['amount']"]}
         key = tracker.record_change(classified, diff_raw)
         assert key.startswith("schema_history_orders_")
@@ -345,7 +346,10 @@ class TestSchemaHistory:
 
     def test_record_change_entry_fields(self, tracker, store):
         """History entry contains timestamp, dataset, breaking lists, diff_raw."""
-        classified = {"breaking": [], "non_breaking": [{"type": "column_added", "path": "root['email']"}]}
+        classified = {
+            "breaking": [],
+            "non_breaking": [{"type": "column_added", "path": "root['email']"}],
+        }
         diff_raw = {"dictionary_item_added": ["root['email']"]}
         key = tracker.record_change(classified, diff_raw)
         entry = store.read(key)
@@ -393,7 +397,10 @@ class TestAlertIntegration:
         """alert_on_breaking_changes calls dispatcher.dispatch with severity=critical."""
         dispatcher = MagicMock()
         dispatcher.dispatch.return_value = {"teams": True}
-        classified = {"breaking": [{"type": "column_removed", "path": "root['x']"}], "non_breaking": []}
+        classified = {
+            "breaking": [{"type": "column_removed", "path": "root['x']"}],
+            "non_breaking": [],
+        }
         result = alert_on_breaking_changes(dispatcher, "orders", classified)
         dispatcher.dispatch.assert_called_once()
         call_args = dispatcher.dispatch.call_args
@@ -403,7 +410,10 @@ class TestAlertIntegration:
     def test_alert_returns_none_when_no_breaking(self):
         """alert_on_breaking_changes returns None when no breaking changes."""
         dispatcher = MagicMock()
-        classified = {"breaking": [], "non_breaking": [{"type": "column_added", "path": "root['x']"}]}
+        classified = {
+            "breaking": [],
+            "non_breaking": [{"type": "column_added", "path": "root['x']"}],
+        }
         result = alert_on_breaking_changes(dispatcher, "orders", classified)
         assert result is None
         dispatcher.dispatch.assert_not_called()

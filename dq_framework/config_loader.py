@@ -20,7 +20,9 @@ def _validate_alerts_section(data: Any, section_name: str = "alerts") -> None:
         raise ValueError(f"'{section_name}' must be a dict, got {type(data).__name__}")
     if "channels" in data:
         if not isinstance(data["channels"], list):
-            raise ValueError(f"'{section_name}.channels' must be a list, got {type(data['channels']).__name__}")
+            raise ValueError(
+                f"'{section_name}.channels' must be a list, got {type(data['channels']).__name__}"
+            )
         for i, channel in enumerate(data["channels"]):
             if not isinstance(channel, dict) or "type" not in channel:
                 raise ValueError(f"'{section_name}.channels[{i}]' must be a dict with a 'type' key")
@@ -33,7 +35,9 @@ def _validate_history_section(data: Any, section_name: str = "history") -> None:
     if "retention_days" in data:
         val = data["retention_days"]
         if not isinstance(val, int) or val <= 0:
-            raise ValueError(f"'{section_name}.retention_days' must be a positive integer, got {val!r}")
+            raise ValueError(
+                f"'{section_name}.retention_days' must be a positive integer, got {val!r}"
+            )
 
 
 def _validate_schema_tracking_section(data: Any, section_name: str = "schema_tracking") -> None:

@@ -16,6 +16,7 @@ import pytest
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def sample_result() -> dict:
     """Return a dict matching validator._format_results() output shape."""
@@ -58,6 +59,7 @@ def sample_failure_result(sample_result: dict) -> dict:
 # TestSQLiteBackend
 # ===========================================================================
 
+
 class TestSQLiteBackend:
     """Tests for SQLite backend initialization and basic record operations."""
 
@@ -82,9 +84,7 @@ class TestSQLiteBackend:
         assert cursor.fetchone() is not None, "idx_history_dataset_ts index should exist"
         conn.close()
 
-    def test_record_inserts_row(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_record_inserts_row(self, tmp_path: Path, sample_result: dict) -> None:
         """record() inserts a row; SELECT returns 1 row."""
         from dq_framework.validation_history import ValidationHistory
 
@@ -97,9 +97,7 @@ class TestSQLiteBackend:
         assert cursor.fetchone()[0] == 1
         conn.close()
 
-    def test_record_multiple(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_record_multiple(self, tmp_path: Path, sample_result: dict) -> None:
         """Recording 3 results yields 3 rows in the table."""
         from dq_framework.validation_history import ValidationHistory
 
@@ -119,6 +117,7 @@ class TestSQLiteBackend:
 # TestRecordSchema
 # ===========================================================================
 
+
 class TestRecordSchema:
     """Tests for the record schema: field presence, types, and round-trips."""
 
@@ -136,9 +135,7 @@ class TestRecordSchema:
         conn.close()
         return row
 
-    def test_all_fields_present(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_all_fields_present(self, tmp_path: Path, sample_result: dict) -> None:
         """Recorded row has all required columns."""
         row = self._get_row(tmp_path, sample_result, duration_seconds=1.5)
         expected_columns = {
@@ -156,17 +153,13 @@ class TestRecordSchema:
         }
         assert set(row.keys()) == expected_columns
 
-    def test_severity_stats_roundtrip(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_severity_stats_roundtrip(self, tmp_path: Path, sample_result: dict) -> None:
         """severity_stats dict survives json round-trip through SQLite TEXT."""
         row = self._get_row(tmp_path, sample_result)
         recovered = json.loads(row["severity_stats"])
         assert recovered == sample_result["severity_stats"]
 
-    def test_failed_expectations_roundtrip(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_failed_expectations_roundtrip(self, tmp_path: Path, sample_result: dict) -> None:
         """failed_expectations list survives json round-trip through SQLite TEXT."""
         row = self._get_row(tmp_path, sample_result)
         recovered = json.loads(row["failed_expectations"])
@@ -185,16 +178,12 @@ class TestRecordSchema:
         row_false = self._get_row(sub, sample_failure_result)
         assert row_false["success"] == 0
 
-    def test_optional_duration(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_optional_duration(self, tmp_path: Path, sample_result: dict) -> None:
         """record() without duration_seconds stores None/NULL."""
         row = self._get_row(tmp_path, sample_result)
         assert row["duration_seconds"] is None
 
-    def test_dataset_from_constructor(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_dataset_from_constructor(self, tmp_path: Path, sample_result: dict) -> None:
         """dataset column populated from constructor dataset_name."""
         row = self._get_row(tmp_path, sample_result)
         assert row["dataset"] == "orders"
@@ -204,50 +193,39 @@ class TestRecordSchema:
 # TestParquetBackend
 # ===========================================================================
 
+
 class TestParquetBackend:
     """Tests for the Parquet backend (Fabric environment)."""
 
-    def test_creates_parquet_on_first_record(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_creates_parquet_on_first_record(self, tmp_path: Path, sample_result: dict) -> None:
         """record() creates parquet file when none exists."""
         from dq_framework.validation_history import ValidationHistory
 
         pq_dir = str(tmp_path / "history")
-        vh = ValidationHistory(
-            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
-        )
+        vh = ValidationHistory(dataset_name="orders", backend="fabric", parquet_dir=pq_dir)
         vh.record(sample_result)
 
         pq_file = tmp_path / "history" / "validation_history.parquet"
         assert pq_file.exists(), "Parquet file should be created on first record"
 
-    def test_record_appends(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_record_appends(self, tmp_path: Path, sample_result: dict) -> None:
         """Second record() appends row (read_parquet returns 2 rows)."""
         from dq_framework.validation_history import ValidationHistory
 
         pq_dir = str(tmp_path / "history")
-        vh = ValidationHistory(
-            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
-        )
+        vh = ValidationHistory(dataset_name="orders", backend="fabric", parquet_dir=pq_dir)
         vh.record(sample_result)
         vh.record(sample_result)
 
         df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
         assert len(df) == 2
 
-    def test_schema_matches_sqlite(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_schema_matches_sqlite(self, tmp_path: Path, sample_result: dict) -> None:
         """Parquet columns match SQLite columns."""
         from dq_framework.validation_history import ValidationHistory
 
         pq_dir = str(tmp_path / "history")
-        vh = ValidationHistory(
-            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
-        )
+        vh = ValidationHistory(dataset_name="orders", backend="fabric", parquet_dir=pq_dir)
         vh.record(sample_result)
 
         df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
@@ -265,16 +243,12 @@ class TestParquetBackend:
         }
         assert set(df.columns) == expected_cols
 
-    def test_severity_stats_as_string(
-        self, tmp_path: Path, sample_result: dict
-    ) -> None:
+    def test_severity_stats_as_string(self, tmp_path: Path, sample_result: dict) -> None:
         """severity_stats stored as string column in Parquet (JSON text)."""
         from dq_framework.validation_history import ValidationHistory
 
         pq_dir = str(tmp_path / "history")
-        vh = ValidationHistory(
-            dataset_name="orders", backend="fabric", parquet_dir=pq_dir
-        )
+        vh = ValidationHistory(dataset_name="orders", backend="fabric", parquet_dir=pq_dir)
         vh.record(sample_result)
 
         df = pd.read_parquet(tmp_path / "history" / "validation_history.parquet")
@@ -284,9 +258,7 @@ class TestParquetBackend:
         assert recovered == sample_result["severity_stats"]
 
     @patch("dq_framework.validation_history._is_fabric_runtime", return_value=False)
-    def test_backend_auto_detect_local(
-        self, mock_runtime: Any, tmp_path: Path
-    ) -> None:
+    def test_backend_auto_detect_local(self, mock_runtime: Any, tmp_path: Path) -> None:
         """backend=None with _is_fabric_runtime()=False uses SQLite."""
         from dq_framework.validation_history import ValidationHistory
 
@@ -295,9 +267,7 @@ class TestParquetBackend:
         assert vh._is_fabric is False
 
     @patch("dq_framework.validation_history._is_fabric_runtime", return_value=True)
-    def test_backend_auto_detect_fabric(
-        self, mock_runtime: Any, tmp_path: Path
-    ) -> None:
+    def test_backend_auto_detect_fabric(self, mock_runtime: Any, tmp_path: Path) -> None:
         """backend=None with _is_fabric_runtime()=True uses Parquet."""
         from dq_framework.validation_history import ValidationHistory
 
@@ -309,6 +279,7 @@ class TestParquetBackend:
 # ===========================================================================
 # Query test helpers
 # ===========================================================================
+
 
 def _make_result(
     *,
@@ -450,6 +421,7 @@ def history_with_failures(tmp_path: Path):
 # TestGetTrend
 # ===========================================================================
 
+
 class TestGetTrend:
     """Tests for the get_trend() query method."""
 
@@ -497,6 +469,7 @@ class TestGetTrend:
 # ===========================================================================
 # TestGetFailureHistory
 # ===========================================================================
+
 
 class TestGetFailureHistory:
     """Tests for the get_failure_history() query method."""
@@ -556,6 +529,7 @@ class TestGetFailureHistory:
 # ===========================================================================
 # TestComparePeriods
 # ===========================================================================
+
 
 class TestComparePeriods:
     """Tests for the compare_periods() query method."""
@@ -626,6 +600,7 @@ class TestComparePeriods:
 # ===========================================================================
 # TestRetention
 # ===========================================================================
+
 
 class TestRetention:
     """Tests for the apply_retention() method."""
@@ -750,6 +725,7 @@ class TestRetention:
 # ===========================================================================
 # TestConstants
 # ===========================================================================
+
 
 class TestConstants:
     """Tests for validation history constants in constants.py."""

@@ -130,7 +130,9 @@ class FabricDataQualityRunner:
                         channel = create_channel(ch_cfg)
                         ch_name = getattr(ch_cfg, "name", None) or ch_cfg.type
                         self._alert_dispatcher.register_channel(ch_name, channel)
-                logger.info("AlertDispatcher initialized with %d channel(s)", len(alert_config.channels))
+                logger.info(
+                    "AlertDispatcher initialized with %d channel(s)", len(alert_config.channels)
+                )
             except Exception as e:
                 logger.warning("Failed to initialize AlertDispatcher: %s", e)
                 self._alert_dispatcher = None
@@ -139,7 +141,9 @@ class FabricDataQualityRunner:
         schema_cfg = self.validator.config.get("schema_tracking")
         if schema_cfg and schema_cfg.get("enabled", True) is not False:
             try:
-                dataset_name = schema_cfg.get("dataset_name", self.validator.config.get("validation_name", "unknown"))
+                dataset_name = schema_cfg.get(
+                    "dataset_name", self.validator.config.get("validation_name", "unknown")
+                )
                 self._schema_tracker = SchemaTracker(store=self._store, dataset_name=dataset_name)
                 logger.info("SchemaTracker initialized for dataset: %s", dataset_name)
             except Exception as e:
@@ -150,9 +154,13 @@ class FabricDataQualityRunner:
         history_cfg = self.validator.config.get("history")
         if history_cfg and history_cfg.get("enabled", True) is not False:
             try:
-                dataset_name = history_cfg.get("dataset_name", self.validator.config.get("validation_name", "unknown"))
+                dataset_name = history_cfg.get(
+                    "dataset_name", self.validator.config.get("validation_name", "unknown")
+                )
                 retention_days = history_cfg.get("retention_days", DEFAULT_RETENTION_DAYS)
-                self._history = ValidationHistory(dataset_name=dataset_name, retention_days=retention_days)
+                self._history = ValidationHistory(
+                    dataset_name=dataset_name, retention_days=retention_days
+                )
                 logger.info("ValidationHistory initialized for dataset: %s", dataset_name)
             except Exception as e:
                 logger.warning("Failed to initialize ValidationHistory: %s", e)
