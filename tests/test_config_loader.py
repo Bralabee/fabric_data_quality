@@ -172,7 +172,9 @@ class TestOptionalSectionValidation:
         return config
 
     def test_valid_alerts_section(self):
-        config = self._base_config(alerts={"channels": [{"type": "teams", "webhook_url": "https://example.com"}]})
+        config = self._base_config(
+            alerts={"channels": [{"type": "teams", "webhook_url": "https://example.com"}]}
+        )
         loader = ConfigLoader()
         loader.validate(config)  # Should not raise
 
@@ -233,18 +235,22 @@ class TestConstants:
 
     def test_cb_failure_threshold(self):
         from dq_framework.constants import DEFAULT_CB_FAILURE_THRESHOLD
+
         assert DEFAULT_CB_FAILURE_THRESHOLD == 5
 
     def test_cb_cooldown_seconds(self):
         from dq_framework.constants import DEFAULT_CB_COOLDOWN_SECONDS
+
         assert DEFAULT_CB_COOLDOWN_SECONDS == 300.0
 
     def test_failure_policy(self):
         from dq_framework.constants import DEFAULT_FAILURE_POLICY
+
         assert DEFAULT_FAILURE_POLICY == "warn"
 
     def test_schema_baselines_dir(self):
         from dq_framework.constants import DEFAULT_SCHEMA_BASELINES_DIR
+
         assert DEFAULT_SCHEMA_BASELINES_DIR == "dq_results/schema_baselines"
 
 

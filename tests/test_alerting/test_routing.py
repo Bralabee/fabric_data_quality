@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
-
-from dq_framework.alerting.routing import AlertAction, SeverityRouter
 from dq_framework.alerting.config import (
     AlertConfig,
     ChannelConfig,
-    CircuitBreakerConfig,
     SeverityRoutingConfig,
 )
 from dq_framework.alerting.dispatcher import AlertChannel, AlertDispatcher
 from dq_framework.alerting.formatter import AlertFormatter
-
+from dq_framework.alerting.routing import AlertAction, SeverityRouter
 
 # ---------------------------------------------------------------------------
 # Helpers

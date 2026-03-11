@@ -24,12 +24,14 @@ except PackageNotFoundError:
     __version__ = "2.0.0"
 __author__ = "HS2 Data Engineering Team"
 
+from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, SeverityRouter, create_channel
 from .batch_profiler import BatchProfiler
 from .config_loader import ConfigLoader
 from .data_profiler import DataProfiler
 from .fabric_connector import FabricDataQualityRunner
 from .ingestion import DataIngester
 from .loader import DataLoader
+from .schema_tracker import SchemaTracker
 from .storage import JSONFileStore, LakehouseStore, ResultStore, get_store
 from .utils import (
     FABRIC_AVAILABLE,
@@ -38,9 +40,6 @@ from .utils import (
     _is_fabric_runtime,
     get_mssparkutils,
 )
-from .alerting import AlertConfig, AlertDispatcher, AlertFormatter, create_channel
-from .alerting import SeverityRouter
-from .schema_tracker import SchemaTracker
 from .validation_history import ValidationHistory
 from .validator import DataQualityValidator
 

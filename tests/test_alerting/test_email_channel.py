@@ -5,8 +5,6 @@ from __future__ import annotations
 import smtplib
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from dq_framework.alerting.channels.email import EmailChannel
 from dq_framework.alerting.channels.factory import create_channel
 from dq_framework.alerting.config import ChannelConfig
@@ -57,10 +55,7 @@ class TestEmailChannel:
 
         sent_msg = mock_server.send_message.call_args[0][0]
         # The message should be multipart with HTML content
-        html_parts = [
-            part for part in sent_msg.walk()
-            if part.get_content_type() == "text/html"
-        ]
+        html_parts = [part for part in sent_msg.walk() if part.get_content_type() == "text/html"]
         assert len(html_parts) == 1
         assert "<h1>Test HTML</h1>" in html_parts[0].get_content()
 

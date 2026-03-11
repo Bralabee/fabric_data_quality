@@ -24,7 +24,7 @@ import logging
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 
@@ -173,9 +173,13 @@ class ValidationHistory:
                 float(result.get("success_rate", 0.0)),
                 int(result.get("evaluated_checks", 0)),
                 int(result.get("failed_checks", 0)),
-                json.dumps(result.get("severity_stats")) if result.get("severity_stats") is not None else None,
+                json.dumps(result.get("severity_stats"))
+                if result.get("severity_stats") is not None
+                else None,
                 duration_seconds,
-                json.dumps(result.get("failed_expectations")) if result.get("failed_expectations") is not None else None,
+                json.dumps(result.get("failed_expectations"))
+                if result.get("failed_expectations") is not None
+                else None,
             ),
         )
         self._conn.commit()
@@ -201,9 +205,13 @@ class ValidationHistory:
             "success_rate": float(result.get("success_rate", 0.0)),
             "evaluated_checks": int(result.get("evaluated_checks", 0)),
             "failed_checks": int(result.get("failed_checks", 0)),
-            "severity_stats": json.dumps(result.get("severity_stats")) if result.get("severity_stats") is not None else None,
+            "severity_stats": json.dumps(result.get("severity_stats"))
+            if result.get("severity_stats") is not None
+            else None,
             "duration_seconds": duration_seconds,
-            "failed_expectations": json.dumps(result.get("failed_expectations")) if result.get("failed_expectations") is not None else None,
+            "failed_expectations": json.dumps(result.get("failed_expectations"))
+            if result.get("failed_expectations") is not None
+            else None,
         }
         new_df = pd.DataFrame([row], columns=PARQUET_COLUMNS)
 
@@ -248,7 +256,13 @@ class ValidationHistory:
     # Query APIs
     # ------------------------------------------------------------------
 
-    _TREND_COLUMNS = ["timestamp", "success", "success_rate", "failed_checks", "duration_seconds"]
+    _TREND_COLUMNS: ClassVar[list[str]] = [
+        "timestamp",
+        "success",
+        "success_rate",
+        "failed_checks",
+        "duration_seconds",
+    ]
 
     def get_trend(
         self,
@@ -319,7 +333,13 @@ class ValidationHistory:
             return self._get_failure_history_parquet(ds)
         return self._get_failure_history_sqlite(ds)
 
-    _FAILURE_COLUMNS = ["expectation_type", "column", "frequency", "most_recent_at", "severity"]
+    _FAILURE_COLUMNS: ClassVar[list[str]] = [
+        "expectation_type",
+        "column",
+        "frequency",
+        "most_recent_at",
+        "severity",
+    ]
 
     def _get_failure_history_sqlite(self, dataset: str) -> pd.DataFrame:
         sql = (
@@ -462,9 +482,7 @@ class ValidationHistory:
         return self._apply_retention_sqlite(cutoff)
 
     def _apply_retention_sqlite(self, cutoff: str) -> int:
-        cursor = self._conn.execute(
-            "DELETE FROM validation_history WHERE timestamp < ?", (cutoff,)
-        )
+        cursor = self._conn.execute("DELETE FROM validation_history WHERE timestamp < ?", (cutoff,))
         self._conn.commit()
         return cursor.rowcount
 

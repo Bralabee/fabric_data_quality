@@ -12,7 +12,6 @@ from dq_framework.alerting.channels.teams import TeamsChannel
 from dq_framework.alerting.config import ChannelConfig
 from dq_framework.alerting.formatter import AlertFormatter
 
-
 # ---------------------------------------------------------------------------
 # TeamsChannel unit tests
 # ---------------------------------------------------------------------------
@@ -21,7 +20,9 @@ from dq_framework.alerting.formatter import AlertFormatter
 class TestTeamsChannel:
     """Tests for TeamsChannel.send() with mocked httpx."""
 
-    def _make_channel(self, url: str = "https://test.logic.azure.com/workflows/abc") -> TeamsChannel:
+    def _make_channel(
+        self, url: str = "https://test.logic.azure.com/workflows/abc"
+    ) -> TeamsChannel:
         return TeamsChannel(webhook_url=url, timeout=5.0)
 
     def _valid_card_json(self) -> str:
@@ -151,8 +152,16 @@ class TestAdaptiveCardTemplate:
         """Rendered template includes failed expectation text."""
         sample_results["success"] = False
         sample_results["failed_expectations"] = [
-            {"expectation": "expect_column_values_to_not_be_null", "column": "order_id", "severity": "high"},
-            {"expectation": "expect_column_values_to_be_unique", "column": "email", "severity": "critical"},
+            {
+                "expectation": "expect_column_values_to_not_be_null",
+                "column": "order_id",
+                "severity": "high",
+            },
+            {
+                "expectation": "expect_column_values_to_be_unique",
+                "column": "email",
+                "severity": "critical",
+            },
         ]
 
         rendered = formatter.render("adaptive_card.json.j2", sample_results)

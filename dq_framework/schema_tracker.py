@@ -60,30 +60,36 @@ def classify_changes(diff: DeepDiff) -> dict[str, list[dict[str, Any]]]:
     # Type changes (Python type changed) are breaking
     for path, detail in diff.get("type_changes", {}).items():
         path_str = str(path)
-        breaking.append({
-            "type": "type_changed",
-            "path": path_str,
-            "old": str(detail.get("old_type", "")),
-            "new": str(detail.get("new_type", "")),
-        })
+        breaking.append(
+            {
+                "type": "type_changed",
+                "path": path_str,
+                "old": str(detail.get("old_type", "")),
+                "new": str(detail.get("new_type", "")),
+            }
+        )
 
     # Value changes: dtype changes are breaking, nullability changes are non-breaking
     for path, detail in diff.get("values_changed", {}).items():
         path_str = str(path)
         if "dtype" in path_str:
-            breaking.append({
-                "type": "dtype_changed",
-                "path": path_str,
-                "old_value": detail.get("old_value"),
-                "new_value": detail.get("new_value"),
-            })
+            breaking.append(
+                {
+                    "type": "dtype_changed",
+                    "path": path_str,
+                    "old_value": detail.get("old_value"),
+                    "new_value": detail.get("new_value"),
+                }
+            )
         elif "nullable" in path_str or "null_percent" in path_str:
-            non_breaking.append({
-                "type": "nullability_changed",
-                "path": path_str,
-                "old_value": detail.get("old_value"),
-                "new_value": detail.get("new_value"),
-            })
+            non_breaking.append(
+                {
+                    "type": "nullability_changed",
+                    "path": path_str,
+                    "old_value": detail.get("old_value"),
+                    "new_value": detail.get("new_value"),
+                }
+            )
 
     return {"breaking": breaking, "non_breaking": non_breaking}
 
@@ -267,9 +273,7 @@ class SchemaTracker:
                 logger.warning("History entry '%s' not readable, skipping", key)
         return sorted(entries, key=lambda e: e.get("timestamp", ""))
 
-    def detect_changes(
-        self, current_schema: dict[str, Any]
-    ) -> dict[str, Any]:
+    def detect_changes(self, current_schema: dict[str, Any]) -> dict[str, Any]:
         """Detect schema changes between current and stored baseline.
 
         Compares the 'columns' sub-dict of both schemas using DeepDiff,
@@ -345,9 +349,7 @@ class SchemaTracker:
             history_key = self.record_change(classified, result["diff_raw"])
 
             if result["breaking"] and dispatcher is not None:
-                alert_result = alert_on_breaking_changes(
-                    dispatcher, self._dataset_name, classified
-                )
+                alert_result = alert_on_breaking_changes(dispatcher, self._dataset_name, classified)
 
         result["history_key"] = history_key
         result["alert_result"] = alert_result
